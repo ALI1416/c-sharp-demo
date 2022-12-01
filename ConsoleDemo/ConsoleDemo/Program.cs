@@ -7,6 +7,7 @@ namespace ConsoleDemo
         static void Main(string[] args)
         {
             HttpServer.Start();
+            SocketServer.Start();
             Console.ReadKey();
         }
     }
