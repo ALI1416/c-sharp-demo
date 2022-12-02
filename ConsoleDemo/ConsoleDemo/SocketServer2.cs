@@ -1,5 +1,8 @@
-﻿using System;
+﻿using ConsoleDemo.Properties;
+using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,7 +13,7 @@ namespace ConsoleDemo
     /// <summary>
     /// socket服务器
     /// </summary>
-    internal class SocketServer
+    internal class SocketServer2
     {
         /// <summary>
         /// socket服务器
@@ -25,6 +28,10 @@ namespace ConsoleDemo
         /// </summary>
         static readonly byte[] buffer = new byte[1024];
 
+        /********** 常量 **********/
+        private readonly static byte[] socketResponseHeader = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\nContent-Type: multipart/x-mixed-replace; boundary=--boundary\n");
+        private readonly static byte[] socketResponseEnd = Encoding.ASCII.GetBytes("\n");
+
         /// <summary>
         /// 启动
         /// </summary>
@@ -36,7 +43,7 @@ namespace ConsoleDemo
                 // 新建socket服务器
                 socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 // 指定URI
-                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081));
+                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
                 // 设置监听数量
                 socketServer.Listen(10);
                 // 异步监听客户端请求
@@ -63,9 +70,11 @@ namespace ConsoleDemo
             client.SendTimeout = 10000;
             // 把当前客户端添加进列表
             socketClient.Add(client);
-            Console.WriteLine("客户端 " + client.RemoteEndPoint + " 已连接");
+            Console.WriteLine("用户 " + client.RemoteEndPoint + " 已连接");
             // 接收消息
             client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, Recevice, client);
+            // 发送响应头
+            Send(client, socketResponseHeader);
         }
 
         /// <summary>
@@ -85,21 +94,19 @@ namespace ConsoleDemo
             // 超时后失去连接，会抛出异常
             catch
             {
-                Console.WriteLine("客户端 " + client.RemoteEndPoint + " 失去连接");
+                Console.WriteLine("用户 " + client.RemoteEndPoint + " 失去连接");
                 CloseClient(client);
+                return;
             }
             // 用户主动断开连接时，会发送0字节消息
             if (length == 0)
             {
-                Console.WriteLine("客户端 " + client.RemoteEndPoint + " 断开连接");
+                Console.WriteLine("用户 " + client.RemoteEndPoint + " 断开连接");
                 CloseClient(client);
                 return;
             }
-            // 解码消息
-            string msg = Encoding.UTF8.GetString(buffer, 0, length);
             // 继续接收消息
             client.BeginReceive(buffer, 0, length, SocketFlags.None, Recevice, client);
-            Console.WriteLine("收到客户端 " + client.RemoteEndPoint + " 消息：" + msg);
         }
 
         /// <summary>
@@ -119,10 +126,51 @@ namespace ConsoleDemo
         {
             while (true)
             {
-                string s = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                foreach (Socket client in socketClient)
+                MemoryStream stream = new MemoryStream();
+                Random random = new Random();
+                int index = random.Next(6);
+                switch (index)
                 {
-                    Send(client, s);
+                    case 0:
+                    default:
+                        {
+                            Resources.apple.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                    case 1:
+                        {
+                            Resources.banana.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                    case 2:
+                        {
+                            Resources.grape.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                    case 3:
+                        {
+                            Resources.pear.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                    case 4:
+                        {
+                            Resources.tangerine.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                    case 5:
+                        {
+                            Resources.watermelon.Save(stream, ImageFormat.Png);
+                            break;
+                        }
+                }
+                string header = "\n--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
+                byte[] data = new byte[header.Length + stream.Length + 1];
+                Encoding.ASCII.GetBytes(header).CopyTo(data, 0);
+                stream.ToArray().CopyTo(data, header.Length);
+                socketResponseEnd.CopyTo(data, data.Length - 1);
+                foreach (var client in socketClient)
+                {
+                    Send(client, data);
                 }
                 Thread.Sleep(1000);
             }
@@ -131,11 +179,10 @@ namespace ConsoleDemo
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">Socket客户端</param>
-        /// <param name="s">字符串</param>
-        private static void Send(Socket client, string s)
+        /// <param name="client">客户端</param>
+        /// <param name="data">byte[]</param>
+        private static void Send(Socket client, byte[] data)
         {
-            byte[] data = Encoding.UTF8.GetBytes(s);
             // 发送消息
             client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
             {
@@ -150,7 +197,7 @@ namespace ConsoleDemo
                     CloseClient(client);
                     return;
                 }
-                Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送消息：" + s);
+                Console.WriteLine("向用户 " + client.RemoteEndPoint + " 发送 " + length + " 字节的消息");
             }, null);
         }
 

@@ -8,6 +8,7 @@ namespace ConsoleDemo
         {
             HttpServer.Start();
             SocketServer.Start();
+            SocketServer2.Start();
             Console.ReadKey();
         }
     }

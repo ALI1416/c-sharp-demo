@@ -62,6 +62,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SocketServer.cs" />
+    <Compile Include="SocketServer2.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
