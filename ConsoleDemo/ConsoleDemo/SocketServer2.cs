@@ -173,51 +173,55 @@ namespace ConsoleDemo
         {
             while (isRunning)
             {
-                MemoryStream stream = new MemoryStream();
-                Random random = new Random();
-                int index = random.Next(6);
-                switch (index)
+                var socketClientArray = socketClient.ToArray();
+                if (socketClientArray.Length != 0)
                 {
-                    case 0:
-                    default:
-                        {
-                            Resources.apple.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                    case 1:
-                        {
-                            Resources.banana.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                    case 2:
-                        {
-                            Resources.grape.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                    case 3:
-                        {
-                            Resources.pear.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                    case 4:
-                        {
-                            Resources.tangerine.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                    case 5:
-                        {
-                            Resources.watermelon.Save(stream, ImageFormat.Png);
-                            break;
-                        }
-                }
-                string header = "\n--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
-                byte[] data = new byte[header.Length + stream.Length + 1];
-                Encoding.ASCII.GetBytes(header).CopyTo(data, 0);
-                stream.ToArray().CopyTo(data, header.Length);
-                socketResponseEnd.CopyTo(data, data.Length - 1);
-                foreach (var client in socketClient)
-                {
-                    Send(client, data);
+                    MemoryStream stream = new MemoryStream();
+                    Random random = new Random();
+                    int index = random.Next(6);
+                    switch (index)
+                    {
+                        case 0:
+                        default:
+                            {
+                                Resources.apple.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                        case 1:
+                            {
+                                Resources.banana.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                        case 2:
+                            {
+                                Resources.grape.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                        case 3:
+                            {
+                                Resources.pear.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                        case 4:
+                            {
+                                Resources.tangerine.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                        case 5:
+                            {
+                                Resources.watermelon.Save(stream, ImageFormat.Png);
+                                break;
+                            }
+                    }
+                    string header = "\n--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
+                    byte[] data = new byte[header.Length + stream.Length + 1];
+                    Encoding.ASCII.GetBytes(header).CopyTo(data, 0);
+                    stream.ToArray().CopyTo(data, header.Length);
+                    socketResponseEnd.CopyTo(data, data.Length - 1);
+                    foreach (var client in socketClientArray)
+                    {
+                        Send(client, data);
+                    }
                 }
                 Thread.Sleep(1000);
             }

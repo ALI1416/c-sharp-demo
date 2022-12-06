@@ -166,10 +166,14 @@ namespace ConsoleDemo
         {
             while (isRunning)
             {
-                string s = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                foreach (Socket client in socketClient.ToArray())
+                var socketClientArray = socketClient.ToArray();
+                if (socketClientArray.Length != 0)
                 {
-                    Send(client, s);
+                    string s = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    foreach (Socket client in socketClientArray)
+                    {
+                        Send(client, s);
+                    }
                 }
                 Thread.Sleep(1000);
             }
