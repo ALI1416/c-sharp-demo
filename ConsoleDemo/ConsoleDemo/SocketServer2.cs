@@ -16,6 +16,10 @@ namespace ConsoleDemo
     internal class SocketServer2
     {
         /// <summary>
+        /// 正在运行
+        /// </summary>
+        private static bool isRunning = false;
+        /// <summary>
         /// socket服务器
         /// </summary>
         private static Socket socketServer;
@@ -42,18 +46,43 @@ namespace ConsoleDemo
             {
                 // 新建socket服务器
                 socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                // 指定URI
-                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
+                try
+                {
+                    // 指定URI
+                    socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
+                }
+                catch
+                {
+                    // 端口号冲突
+                    Console.WriteLine("端口号冲突");
+                    return;
+                }
+                isRunning = true;
                 // 设置监听数量
                 socketServer.Listen(10);
                 // 异步监听客户端请求
                 socketServer.BeginAccept(SocketHandle, null);
+                Console.WriteLine("socket2服务器已启动");
                 // 定时向客户端发送消息
                 IntervalSend();
+                Console.WriteLine("socket2进程已退出");
             })
             {
                 IsBackground = true
             }.Start();
+        }
+
+        /// <summary>
+        /// 关闭
+        /// </summary>
+        public static void Close()
+        {
+            isRunning = false;
+            foreach (Socket client in socketClient.ToArray())
+            {
+                CloseClient(client);
+            }
+            socketServer.Close();
         }
 
         /// <summary>
@@ -62,8 +91,17 @@ namespace ConsoleDemo
         /// <param name="ar">IAsyncResult</param>
         private static void SocketHandle(IAsyncResult ar)
         {
-            // 继续异步监听客户端请求
-            socketServer.BeginAccept(SocketHandle, null);
+            try
+            {
+                // 继续异步监听客户端请求
+                socketServer.BeginAccept(SocketHandle, null);
+            }
+            catch
+            {
+                // 主动关闭socket服务器会触发异常
+                Console.WriteLine("主动关闭socket服务器");
+                return;
+            }
             // 获取Socket对象
             Socket client = socketServer.EndAccept(ar);
             // 设置超时10秒
@@ -94,7 +132,16 @@ namespace ConsoleDemo
             // 超时后失去连接，会抛出异常
             catch
             {
-                Console.WriteLine("用户 " + client.RemoteEndPoint + " 失去连接");
+                try
+                {
+                    // 超时后失去连接，会抛出异常
+                    Console.WriteLine("客户端 " + client.RemoteEndPoint + " 失去连接");
+                }
+                catch
+                {
+                    // 客户端已被移除
+                    Console.WriteLine("客户端 ?? 失去连接");
+                }
                 CloseClient(client);
                 return;
             }
@@ -124,7 +171,7 @@ namespace ConsoleDemo
         /// </summary>
         private static void IntervalSend()
         {
-            while (true)
+            while (isRunning)
             {
                 MemoryStream stream = new MemoryStream();
                 Random random = new Random();
@@ -187,13 +234,13 @@ namespace ConsoleDemo
             client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
             {
                 int length = 0;
-                // 可能已失去连接
                 try
                 {
                     length = client.EndSend(asyncResult);
                 }
                 catch
                 {
+                    // 已失去连接
                     CloseClient(client);
                     return;
                 }

@@ -16,32 +16,42 @@ namespace ConsoleDemo
         /// http服务器
         /// </summary>
         private static HttpListener httpServer;
-        /// <summary>
-        /// 图标MemoryStream
-        /// </summary>
-        private static readonly MemoryStream faviconStream = new MemoryStream();
 
         /// <summary>
         /// 启动
         /// </summary>
         public static void Start()
         {
-            // 初始化图标
-            Resources.favicon.Save(faviconStream);
             // 新建http服务器
             httpServer = new HttpListener
             {
                 // 忽视客户端写入异常
                 IgnoreWriteExceptions = true
             };
-            // 清空URI
-            httpServer.Prefixes.Clear();
             // 指定URI
             httpServer.Prefixes.Add("http://127.0.0.1:8080/");
-            // 开启http服务器
-            httpServer.Start();
+            try
+            {
+                // 开启http服务器
+                httpServer.Start();
+            }
+            catch
+            {
+                // 端口号冲突
+                Console.WriteLine("端口号冲突");
+                return;
+            }
             // 异步监听客户端请求
             httpServer.BeginGetContext(HttpHandle, null);
+            Console.WriteLine("http服务器已启动");
+        }
+
+        /// <summary>
+        /// 关闭
+        /// </summary>
+        public static void Close()
+        {
+            httpServer.Close();
         }
 
         /// <summary>
@@ -50,8 +60,17 @@ namespace ConsoleDemo
         /// <param name="ar">IAsyncResult</param>
         private static void HttpHandle(IAsyncResult ar)
         {
-            // 继续异步监听客户端请求
-            httpServer.BeginGetContext(HttpHandle, null);
+            try
+            {
+                // 继续异步监听客户端请求
+                httpServer.BeginGetContext(HttpHandle, null);
+            }
+            catch
+            {
+                // 主动关闭http服务器
+                Console.WriteLine("主动关闭http服务器");
+                return;
+            }
             // 获取context对象
             var context = httpServer.EndGetContext(ar);
             var request = context.Request;
@@ -59,10 +78,10 @@ namespace ConsoleDemo
             // 打印request信息：请求方式，URL
             Console.WriteLine("Method:" + request.HttpMethod + " ,URL:" + request.Url.PathAndQuery);
             // 账号密码验证
-            if (!Authorization("admin", "123456", request, response))
-            {
-                return;
-            }
+            //if (!Authorization("admin", "123456", request, response))
+            //{
+            //    return;
+            //}
             // 响应
             Response(request, response);
         }
@@ -127,6 +146,8 @@ namespace ConsoleDemo
                     {
                         // 设置response类型：图标
                         response.ContentType = "image/x-icon";
+                        MemoryStream faviconStream = new MemoryStream();
+                        Resources.favicon.Save(faviconStream);
                         ResponseWrite(response, faviconStream.ToArray());
                         break;
                     }
@@ -227,8 +248,15 @@ namespace ConsoleDemo
         /// <param name="buffer">buffer</param>
         private static void ResponseWrite(HttpListenerResponse response, byte[] buffer)
         {
-            // 返回给客户端
-            response.OutputStream.Write(buffer, 0, buffer.Length);
+            try
+            {
+                // 返回给客户端
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
+            catch
+            {
+                // 用户主动关闭连接
+            }
         }
 
     }
