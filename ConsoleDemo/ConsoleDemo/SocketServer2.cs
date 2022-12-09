@@ -41,31 +41,29 @@ namespace ConsoleDemo
         /// </summary>
         public static void Start()
         {
-            // 新建线程
+            // 新建socket服务器
+            socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            try
+            {
+                // 指定URI
+                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
+            }
+            catch
+            {
+                // 端口号冲突
+                Console.WriteLine("端口号冲突");
+                return;
+            }
+            isRunning = true;
+            // 设置监听数量
+            socketServer.Listen(10);
+            // 异步监听客户端请求
+            socketServer.BeginAccept(SocketHandle, null);
+            Console.WriteLine("socket2服务器已启动");
             new Thread(t =>
             {
-                // 新建socket服务器
-                socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                try
-                {
-                    // 指定URI
-                    socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
-                }
-                catch
-                {
-                    // 端口号冲突
-                    Console.WriteLine("端口号冲突");
-                    return;
-                }
-                isRunning = true;
-                // 设置监听数量
-                socketServer.Listen(10);
-                // 异步监听客户端请求
-                socketServer.BeginAccept(SocketHandle, null);
-                Console.WriteLine("socket2服务器已启动");
                 // 定时向客户端发送消息
                 IntervalSend();
-                Console.WriteLine("socket2进程已退出");
             })
             {
                 IsBackground = true
