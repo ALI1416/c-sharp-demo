@@ -61,42 +61,6 @@ namespace ConsoleDemo.Properties {
         }
         
         /// <summary>
-        ///   查找类似 &lt;!DOCTYPE html&gt;
-        ///&lt;html lang=&quot;zh-cmn-Hans&quot;&gt;
-        ///&lt;head&gt;
-        ///  &lt;meta charset=&quot;UTF-8&quot;&gt;
-        ///  &lt;title&gt;屏幕共享&lt;/title&gt;
-        ///&lt;/head&gt;
-        ///&lt;body&gt;
-        ///  &lt;h1 align=&quot;center&quot;&gt;屏幕共享&lt;/h1&gt;
-        ///  &lt;h2 align=&quot;center&quot;&gt;版本：2.0.0&lt;/h2&gt;
-        ///  &lt;hr&gt;
-        ///  &lt;h3&gt;功能&lt;/h3&gt;
-        ///  &lt;ul&gt;
-        ///    &lt;li&gt;加密传输&lt;/li&gt;
-        ///    &lt;li&gt;支持多显示器&lt;/li&gt;
-        ///    &lt;li&gt;支持高DPI&lt;/li&gt;
-        ///    &lt;li&gt;自定义选择区域&lt;/li&gt;
-        ///    &lt;li&gt;视频尺寸调节&lt;/li&gt;
-        ///    &lt;li&gt;视频质量调节&lt;/li&gt;
-        ///    &lt;li&gt;视频帧数调节&lt;/li&gt;
-        ///    &lt;li&gt;光标显示&lt;/li&gt;
-        ///    &lt;li&gt;视频预览&lt;/li&gt;
-        ///    &lt;li&gt;托盘运行&lt;/li&gt;
-        ///  &lt;/ul&gt;
-        ///  &lt;h3&gt;接口&lt;/h3&gt;
-        ///  &lt;ul&gt;
-        ///   &lt;li&gt;&lt;code&gt;/api/getVideoInfo&lt;/code&gt;获取视频信息&lt;/li&gt;
-        ///  &lt;/ul&gt;
-        ///  [字符串的其余部分被截断]&quot;; 的本地化字符串。
-        /// </summary>
-        internal static string about {
-            get {
-                return ResourceManager.GetString("about", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
         internal static System.Drawing.Bitmap apple {
@@ -143,6 +107,15 @@ namespace ConsoleDemo.Properties {
             get {
                 object obj = ResourceManager.GetObject("pear", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string socket {
+            get {
+                return ResourceManager.GetString("socket", resourceCulture);
             }
         }
         

@@ -163,11 +163,11 @@ namespace ConsoleDemo
                         break;
                     }
                 // 网页
-                case "/about.html":
+                case "/socket.html":
                     {
                         // 设置response类型：网页
                         response.ContentType = "text/html;charset=UTF-8";
-                        ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.about));
+                        ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.socket));
                         break;
                     }
                 // JSON

@@ -97,7 +97,7 @@
     <None Include="Resources\水果\香蕉.PNG" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\html\about.html" />
+    <None Include="Resources\html\socket.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
