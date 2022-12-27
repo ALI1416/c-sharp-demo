@@ -303,11 +303,20 @@ namespace ConsoleDemo
                 // 发送消息
                 client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
                 {
-                    int length = client.EndSend(asyncResult);
-                    Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送 " + length + " 字节的消息");
+                    try
+                    {
+                        int length = client.EndSend(asyncResult);
+                        Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送 " + length + " 字节的消息");
+                    }
+                    // 已失去连接
+                    catch
+                    {
+                        ClientOffline(client);
+                        return;
+                    }
                 }, null);
             }
-            // 未知错误、已失去连接
+            // 未知错误
             catch
             {
                 ClientOffline(client);

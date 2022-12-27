@@ -284,11 +284,20 @@ namespace ConsoleDemo
                 // 发送消息
                 client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
                 {
-                    client.EndSend(asyncResult);
-                    Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送消息：" + s);
+                    try
+                    {
+                        client.EndSend(asyncResult);
+                        Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送消息：" + s);
+                    }
+                    // 已失去连接
+                    catch
+                    {
+                        ClientOffline(client);
+                        return;
+                    }
                 }, null);
             }
-            // 未知错误、已失去连接
+            // 未知错误
             catch
             {
                 ClientOffline(client);

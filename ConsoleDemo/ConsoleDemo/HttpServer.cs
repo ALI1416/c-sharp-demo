@@ -35,9 +35,9 @@ namespace ConsoleDemo
                 // 开启http服务器
                 httpServer.Start();
             }
+            // 端口号冲突
             catch
             {
-                // 端口号冲突
                 Console.WriteLine("端口号冲突");
                 return;
             }
@@ -65,9 +65,9 @@ namespace ConsoleDemo
                 // 继续异步监听客户端请求
                 httpServer.BeginGetContext(HttpHandle, null);
             }
+            // 主动关闭http服务器
             catch
             {
-                // 主动关闭http服务器
                 Console.WriteLine("主动关闭http服务器");
                 return;
             }
@@ -253,9 +253,9 @@ namespace ConsoleDemo
                 // 返回给客户端
                 response.OutputStream.Write(buffer, 0, buffer.Length);
             }
+            // 用户主动关闭连接
             catch
             {
-                // 用户主动关闭连接
             }
         }
 
