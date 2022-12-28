@@ -9,9 +9,10 @@ namespace ConsoleDemo
             HttpServer.Start();
             SocketServer.Start();
             SocketServer2.Start();
+            SocketHttpServer.Start();
             while (true)
             {
-                Console.WriteLine("\n关闭程序:0\nhttp服务器\t-> 关闭:Q 启动:A\nsocket服务器\t-> 关闭:W 启动:S\nsocket2服务器\t-> 关闭:E 启动:D\n");
+                Console.WriteLine("\n关闭程序:0\nhttp服务器\t-> 关闭:Q 启动:A\nsocket服务器\t-> 关闭:W 启动:S\nsocket2服务器\t-> 关闭:E 启动:D\nsocket模拟http服务器\t-> 关闭:R 启动:F\n");
                 switch (Console.ReadKey().Key)
                 {
                     case ConsoleKey.D0:
@@ -46,6 +47,16 @@ namespace ConsoleDemo
                     case ConsoleKey.D:
                         {
                             SocketServer2.Start();
+                            break;
+                        }
+                    case ConsoleKey.R:
+                        {
+                            SocketHttpServer.Close();
+                            break;
+                        }
+                    case ConsoleKey.F:
+                        {
+                            SocketHttpServer.Start();
                             break;
                         }
                 }

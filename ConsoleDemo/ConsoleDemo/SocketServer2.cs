@@ -12,7 +12,7 @@ using System.Threading;
 namespace ConsoleDemo
 {
     /// <summary>
-    /// socket服务器
+    /// socket服务器2
     /// </summary>
     internal class SocketServer2
     {
