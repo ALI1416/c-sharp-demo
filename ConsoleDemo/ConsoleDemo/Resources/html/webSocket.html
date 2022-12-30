@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webSocket演示</title>
+</head>
+<body>
+  <h1>webSocket演示</h1>
+  <div>
+    <input type="text" id="address" value="127.0.0.1:8084">
+    <button id="connect">连接</button>
+  </div>
+  <div>
+    <input type="text" id="msg" disabled>
+    <button id="send" disabled>发送</button>
+  </div>
+  <textarea cols="40" rows="10" readonly id="log"></textarea>
+  <script>
+    const addressText = document.getElementById('address')
+    const connectBtn = document.getElementById('connect')
+    const msgText = document.getElementById('msg')
+    const sendBtn = document.getElementById('send')
+    const logText = document.getElementById('log')
+
+    let status = false;
+    let ws;
+    connectBtn.addEventListener('click', function () {
+      if (!status) {
+        ws = new WebSocket("ws://" + address.value + "/")
+        ws.onopen = function () {
+          connect(true);
+          log("连接成功！")
+        }
+        ws.onmessage = function (e) {
+          log("收到消息：" + e.data);
+        }
+        ws.onclose = function () {
+          connect(false);
+          log("连接已断开！");
+        }
+        ws.onerror = function () {
+          connect(false);
+          log("发生错误！");
+        }
+      } else {
+        ws.close();
+        connect(false);
+      }
+    })
+
+    sendBtn.addEventListener('click', function () {
+      ws.send(msg.value);
+      log("发送消息：" + msg.value)
+    })
+
+    function connect(connect) {
+      status = connect;
+      addressText.disabled = connect;
+      connectBtn.innerText = connect ? "断开" : "连接";
+      msgText.disabled = !connect;
+      sendBtn.disabled = !connect;
+    }
+
+    function log(msg) {
+      logText.value = (msg + '\n' + logText.value);
+    }
+  </script>
+</body>
+</html>

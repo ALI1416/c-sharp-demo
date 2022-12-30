@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ConsoleDemo
 {
@@ -24,6 +26,31 @@ namespace ConsoleDemo
         {
             Ip = ip;
             Online = online;
+        }
+
+        /// <summary>
+        /// 遍历socket客户端历史
+        /// </summary>
+        public static void Iterate(Dictionary<int, SocketHistory> socketClientHistory)
+        {
+            Console.WriteLine("\n----- 遍历socket客户端历史 开始 -----");
+            Console.WriteLine("ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)");
+            var now = DateTime.Now;
+            foreach (var history in socketClientHistory.ToArray())
+            {
+                var value = history.Value;
+                string msg = value.Ip + "\t | " + value.Online.ToString("HH:mm:ss.fff") + "\t | ";
+                if (value.Offline == DateTime.MinValue)
+                {
+                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(value.Online).TotalMinutes).ToString("0.00");
+                }
+                else
+                {
+                    msg += value.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(value.Offline.Subtract(value.Online).TotalMinutes).ToString("0.00");
+                }
+                Console.WriteLine(msg);
+            }
+            Console.WriteLine("----- 遍历socket客户端历史 结束 -----\n");
         }
 
     }

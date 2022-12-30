@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>socket推流演示</title>
+  <title>webSocket演示2</title>
 </head>
 <body>
-  <h1>socket推流演示</h1>
+  <h1>webSocket演示2</h1>
   <div>
-    <input type="text" id="address" value="127.0.0.1:8082">
+    <input type="text" id="address" value="127.0.0.1:8085">
     <button id="connect">连接</button>
   </div>
   <img id="img" />
@@ -19,18 +19,32 @@
     const img = document.getElementById('img')
 
     let status = false;
+    let ws;
     connectBtn.addEventListener('click', function () {
       if (!status) {
-        img.src = "http://" + address.value;
-        connect(true);
+        ws = new WebSocket("ws://" + address.value + "/")
+        ws.onopen = function () {
+          connect(true);
+        }
+        ws.onmessage = function (e) {
+          URL.revokeObjectURL(img.src);
+          img.src = URL.createObjectURL(new Blob([e.data], { type: 'image/png' }));
+        }
+        ws.onclose = function () {
+          connect(false);
+        }
+        ws.onerror = function () {
+          connect(false);
+        }
       } else {
-        img.src = "";
+        ws.close();
         connect(false);
       }
     })
 
     function connect(connect) {
       status = connect;
+      addressText.disabled = connect;
       connectBtn.innerText = connect ? "断开" : "连接";
     }
   </script>

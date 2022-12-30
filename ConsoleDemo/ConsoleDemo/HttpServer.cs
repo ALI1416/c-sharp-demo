@@ -170,6 +170,18 @@ namespace ConsoleDemo
                         ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.socket));
                         break;
                     }
+                case "/webSocket.html":
+                    {
+                        response.ContentType = "text/html;charset=UTF-8";
+                        ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.webSocket));
+                        break;
+                    }
+                case "/webSocket2.html":
+                    {
+                        response.ContentType = "text/html;charset=UTF-8";
+                        ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.webSocket2));
+                        break;
+                    }
                 // JSON
                 case "/json":
                     {

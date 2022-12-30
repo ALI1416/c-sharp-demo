@@ -138,5 +138,23 @@ namespace ConsoleDemo.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string webSocket {
+            get {
+                return ResourceManager.GetString("webSocket", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string webSocket2 {
+            get {
+                return ResourceManager.GetString("webSocket2", resourceCulture);
+            }
+        }
     }
 }

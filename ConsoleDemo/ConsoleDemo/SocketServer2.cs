@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -35,7 +34,7 @@ namespace ConsoleDemo
         /// <summary>
         /// 接收数据缓冲区
         /// </summary>
-        static readonly byte[] buffer = new byte[1024];
+        private static readonly byte[] buffer = new byte[1024];
 
         /********** 常量 **********/
         private readonly static byte[] socketResponseHeader = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\nContent-Type: multipart/x-mixed-replace; boundary=--boundary\n");
@@ -106,15 +105,8 @@ namespace ConsoleDemo
                 Console.WriteLine("主动关闭socket2服务器");
                 return;
             }
-            try
-            {
-                // 客户端上线
-                ClientOnline(socketServer.EndAccept(ar));
-            }
-            // 未知错误
-            catch
-            {
-            }
+            // 客户端上线
+            ClientOnline(socketServer.EndAccept(ar));
         }
 
         /// <summary>
@@ -128,27 +120,26 @@ namespace ConsoleDemo
             {
                 return;
             }
-            string ip;
             try
             {
                 // 获取IP地址
-                ip = client.RemoteEndPoint.ToString();
+                string ip = client.RemoteEndPoint.ToString();
                 // 设置超时10秒
                 client.SendTimeout = 10000;
                 // 接收消息
                 client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, Recevice, client);
                 // 发送响应头
                 Send(client, socketResponseHeader);
+                socketClient.Add(client);
+                socketClientHistory.Add(client.GetHashCode(), new SocketHistory(ip, DateTime.Now));
+                Console.WriteLine("客户端 " + ip + " 已上线");
+                SocketHistory.Iterate(socketClientHistory);
             }
             catch
             {
                 client.Close();
                 return;
             }
-            socketClient.Add(client);
-            socketClientHistory.Add(client.GetHashCode(), new SocketHistory(ip, DateTime.Now));
-            Console.WriteLine("客户端 " + ip + " 已上线");
-            IterateSocketClientHistory();
         }
 
         /// <summary>
@@ -172,33 +163,9 @@ namespace ConsoleDemo
                 {
                     history.Offline = DateTime.Now;
                     Console.WriteLine("客户端 " + history.Ip + " 已下线");
-                    IterateSocketClientHistory();
+                    SocketHistory.Iterate(socketClientHistory);
                 }
             }
-        }
-
-        /// <summary>
-        /// 遍历socket客户端历史
-        /// </summary>
-        private static void IterateSocketClientHistory()
-        {
-            Console.WriteLine("\n----- 遍历socket2客户端历史 开始 -----");
-            Console.WriteLine("ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)");
-            foreach (var history in socketClientHistory.ToArray())
-            {
-                var value = history.Value;
-                string msg = value.Ip + "\t | " + value.Online.ToString("HH:mm:ss.fff") + "\t | ";
-                if (value.Offline == DateTime.MinValue)
-                {
-                    msg += "-\t\t | -";
-                }
-                else
-                {
-                    msg += value.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(value.Offline.Subtract(value.Online).TotalMinutes).ToString("0.00");
-                }
-                Console.WriteLine(msg);
-            }
-            Console.WriteLine("----- 遍历socket2客户端历史 结束 -----\n");
         }
 
         /// <summary>
@@ -235,14 +202,13 @@ namespace ConsoleDemo
         /// </summary>
         private static void IntervalSend()
         {
+            int index = 0;
             while (isRunning)
             {
                 var socketClientArray = socketClient.ToArray();
                 if (socketClientArray.Length != 0)
                 {
                     MemoryStream stream = new MemoryStream();
-                    Random random = new Random();
-                    int index = random.Next(6);
                     switch (index)
                     {
                         case 0:
@@ -285,6 +251,10 @@ namespace ConsoleDemo
                     foreach (var client in socketClientArray)
                     {
                         Send(client, data);
+                    }
+                    if (++index > 5)
+                    {
+                        index = 0;
                     }
                 }
                 Thread.Sleep(1000);

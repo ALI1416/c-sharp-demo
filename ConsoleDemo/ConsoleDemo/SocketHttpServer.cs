@@ -3,8 +3,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 
 namespace ConsoleDemo
@@ -21,7 +19,7 @@ namespace ConsoleDemo
         /// <summary>
         /// 接收数据缓冲区
         /// </summary>
-        static readonly byte[] buffer = new byte[1024];
+        private static readonly byte[] buffer = new byte[1024];
 
         /// <summary>
         /// 启动
@@ -156,7 +154,7 @@ namespace ConsoleDemo
                     }
                 case "/favicon.ico":
                     {
-                        string header = "HTTP/1.0 200 OK\nContent-Type: image/x-icon;charset=utf-8\nConnection: close\n\n";
+                        string header = "HTTP/1.0 200 OK\nContent-Type: image/x-icon\nConnection: close\n\n";
                         MemoryStream faviconStream = new MemoryStream();
                         Resources.favicon.Save(faviconStream);
                         data = new byte[header.Length + faviconStream.Length];
