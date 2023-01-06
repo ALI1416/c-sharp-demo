@@ -1,17 +1,16 @@
-﻿using ConsoleDemo.Properties;
-using ConsoleDemo.Util;
+﻿using ConsoleDemo.Util;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using ConsoleDemo.Model;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// socket服务器2
     /// </summary>

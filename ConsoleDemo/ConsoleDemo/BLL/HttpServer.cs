@@ -6,8 +6,9 @@ using System.IO;
 using System.Net;
 using System.Text;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// http服务器
     /// </summary>

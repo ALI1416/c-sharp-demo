@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net.WebSockets;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.Model
 {
+
     /// <summary>
     /// webSocket客户端
     /// </summary>

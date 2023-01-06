@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleDemo.BLL;
+using System;
 
 namespace ConsoleDemo
 {

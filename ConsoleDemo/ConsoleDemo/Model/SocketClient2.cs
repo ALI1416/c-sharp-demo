@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.Model
 {
+
     /// <summary>
     /// socket客户端2
     /// </summary>

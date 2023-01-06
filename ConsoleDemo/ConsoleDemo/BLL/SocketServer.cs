@@ -5,9 +5,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using ConsoleDemo.Model;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// socket服务器
     /// </summary>

@@ -3,9 +3,11 @@ using System;
 using System.IO;
 using ConsoleDemo.Properties;
 using System.Drawing.Imaging;
+using ConsoleDemo.Model;
 
 namespace ConsoleDemo.Util
 {
+
     /// <summary>
     /// 通用工具
     /// </summary>

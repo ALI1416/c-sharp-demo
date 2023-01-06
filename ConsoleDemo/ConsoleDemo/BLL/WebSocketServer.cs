@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using ConsoleDemo.Util;
+using ConsoleDemo.Model;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// webSocket服务器
     /// </summary>

@@ -5,11 +5,12 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
-using System.IO;
 using ConsoleDemo.Util;
+using ConsoleDemo.Model;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// webSocket2服务器
     /// </summary>

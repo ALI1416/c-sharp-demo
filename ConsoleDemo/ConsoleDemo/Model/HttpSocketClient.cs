@@ -2,6 +2,7 @@
 
 namespace ConsoleDemo.Model
 {
+
     /// <summary>
     /// httpSocket客户端
     /// </summary>

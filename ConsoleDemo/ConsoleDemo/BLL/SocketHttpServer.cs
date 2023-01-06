@@ -6,8 +6,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace ConsoleDemo
+namespace ConsoleDemo.BLL
 {
+
     /// <summary>
     /// socket模拟http服务器
     /// </summary>

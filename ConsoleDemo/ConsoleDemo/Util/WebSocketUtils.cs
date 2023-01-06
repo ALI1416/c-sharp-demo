@@ -5,6 +5,7 @@ using System;
 
 namespace ConsoleDemo.Util
 {
+
     /// <summary>
     /// webSocket工具
     /// </summary>
