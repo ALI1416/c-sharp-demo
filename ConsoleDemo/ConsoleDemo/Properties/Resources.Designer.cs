@@ -156,5 +156,14 @@ namespace ConsoleDemo.Properties {
                 return ResourceManager.GetString("webSocket2", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        internal static string webSocket3 {
+            get {
+                return ResourceManager.GetString("webSocket3", resourceCulture);
+            }
+        }
     }
 }

@@ -1,5 +1,10 @@
-﻿using System;
+﻿using ConsoleDemo.Properties;
+using ConsoleDemo.Util;
+using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,9 +13,9 @@ using System.Threading;
 namespace ConsoleDemo
 {
     /// <summary>
-    /// socket服务器
+    /// socket服务器2
     /// </summary>
-    internal class SocketServer
+    internal class SocketServer2
     {
         /// <summary>
         /// 正在运行
@@ -23,15 +28,10 @@ namespace ConsoleDemo
         /// <summary>
         /// socket客户端
         /// </summary>
-        private static readonly List<Socket> socketClient = new List<Socket>();
-        /// <summary>
-        /// socket客户端历史
-        /// </summary>
-        private static readonly Dictionary<int, SocketHistory> socketClientHistory = new Dictionary<int, SocketHistory>();
-        /// <summary>
-        /// 接收数据缓冲区
-        /// </summary>
-        private static readonly byte[] buffer = new byte[1024];
+        private static readonly List<SocketClient> socketClientList = new List<SocketClient>();
+
+        private readonly static byte[] socketResponseHeader = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\nContent-Type: multipart/x-mixed-replace; boundary=--boundary\n\n");
+        private readonly static byte[] socketResponseEnd = Encoding.ASCII.GetBytes("\n\n");
 
         /// <summary>
         /// 启动
@@ -43,7 +43,7 @@ namespace ConsoleDemo
                 // 新建socket服务器
                 socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 // 指定URI
-                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8081));
+                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8082));
                 // 设置监听数量
                 socketServer.Listen(10);
                 // 异步监听客户端请求
@@ -53,11 +53,11 @@ namespace ConsoleDemo
             catch
             {
                 socketServer.Close();
-                Console.WriteLine("socket服务器端口号冲突 或 未知错误");
+                Console.WriteLine("socket服务器2端口号冲突 或 未知错误");
                 return;
             }
             isRunning = true;
-            Console.WriteLine("socket服务器已启动");
+            Console.WriteLine("socket服务器2已启动");
             new Thread(t =>
             {
                 // 定时向客户端发送消息
@@ -74,9 +74,9 @@ namespace ConsoleDemo
         public static void Close()
         {
             isRunning = false;
-            foreach (Socket client in socketClient.ToArray())
+            foreach (var socketClient in socketClientList.ToArray())
             {
-                ClientOffline(client);
+                ClientOffline(socketClient);
             }
             socketServer.Close();
         }
@@ -95,7 +95,7 @@ namespace ConsoleDemo
             // 主动关闭socket服务器
             catch
             {
-                Console.WriteLine("主动关闭socket服务器");
+                Console.WriteLine("主动关闭socket服务器2");
                 return;
             }
             // 客户端上线
@@ -109,26 +109,29 @@ namespace ConsoleDemo
         private static void ClientOnline(Socket client)
         {
             // 已存在
-            if (socketClient.Contains(client))
+            if (socketClientList.Exists(e => e.Client == client))
             {
                 return;
             }
+            SocketClient socketClient = null;
             try
             {
-                // 获取IP地址
-                string ip = client.RemoteEndPoint.ToString();
+                socketClient = new SocketClient(client);
                 // 设置超时10秒
                 client.SendTimeout = 10000;
                 // 接收消息
-                client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, Recevice, client);
-                socketClient.Add(client);
-                socketClientHistory.Add(client.GetHashCode(), new SocketHistory(ip, DateTime.Now));
-                Console.WriteLine("客户端 " + ip + " 已上线");
-                SocketHistory.Iterate(socketClientHistory);
+                client.BeginReceive(socketClient.Buffer, 0, socketClient.Buffer.Length, SocketFlags.None, Recevice, socketClient);
+                // 发送响应头
+                Send(socketClient, socketResponseHeader);
+                socketClientList.Add(socketClient);
+                Utils.IterateSocketClient(socketClientList);
             }
             catch
             {
-                client.Close();
+                if (socketClient != null)
+                {
+                    socketClient.Close();
+                }
                 return;
             }
         }
@@ -136,27 +139,16 @@ namespace ConsoleDemo
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">客户端</param>
-        private static void ClientOffline(Socket client)
+        /// <param name="socketClient">SocketClient</param>
+        private static void ClientOffline(SocketClient socketClient)
         {
             // 不存在
-            if (!socketClient.Contains(client))
+            if (!socketClientList.FindAll(e => e.Client != null).Contains(socketClient))
             {
                 return;
             }
-            client.Close();
-            socketClient.Remove(client);
-            // 获取该客户端
-            if (socketClientHistory.TryGetValue(client.GetHashCode(), out SocketHistory history))
-            {
-                // 没有下线的客户端才可以下线
-                if (history.Offline == DateTime.MinValue)
-                {
-                    history.Offline = DateTime.Now;
-                    Console.WriteLine("客户端 " + history.Ip + " 已下线");
-                    SocketHistory.Iterate(socketClientHistory);
-                }
-            }
+            socketClient.Close();
+            Utils.IterateSocketClient(socketClientList);
         }
 
         /// <summary>
@@ -166,27 +158,24 @@ namespace ConsoleDemo
         private static void Recevice(IAsyncResult ar)
         {
             // 获取当前客户端
-            Socket client = ar.AsyncState as Socket;
+            SocketClient socketClient = ar.AsyncState as SocketClient;
             try
             {
                 // 获取接收数据长度
-                int length = client.EndReceive(ar);
+                int length = socketClient.Client.EndReceive(ar);
                 // 客户端主动断开连接时，会发送0字节消息
                 if (length == 0)
                 {
-                    ClientOffline(client);
+                    ClientOffline(socketClient);
                     return;
                 }
                 // 继续接收消息
-                client.BeginReceive(buffer, 0, length, SocketFlags.None, Recevice, client);
-                // 解码消息
-                string msg = Encoding.UTF8.GetString(buffer, 0, length);
-                Console.WriteLine("收到客户端 " + client.RemoteEndPoint + " 消息：" + msg);
+                socketClient.Client.BeginReceive(socketClient.Buffer, 0, length, SocketFlags.None, Recevice, socketClient);
             }
-            // 超时后失去连接、未知错误
+            // 超时后失去连接，会抛出异常
             catch
             {
-                ClientOffline(client);
+                ClientOffline(socketClient);
                 return;
             }
         }
@@ -198,13 +187,18 @@ namespace ConsoleDemo
         {
             while (isRunning)
             {
-                var socketClientArray = socketClient.ToArray();
-                if (socketClientArray.Length != 0)
+                var list = socketClientList.FindAll(e => e.Client != null);
+                if (list.Count != 0)
                 {
-                    string s = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    foreach (Socket client in socketClientArray)
+                    MemoryStream stream = Utils.GetSendMemoryStream();
+                    string header = "--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
+                    byte[] data = new byte[header.Length + stream.Length + 2];
+                    Encoding.ASCII.GetBytes(header).CopyTo(data, 0);
+                    stream.ToArray().CopyTo(data, header.Length);
+                    socketResponseEnd.CopyTo(data, data.Length - 2);
+                    foreach (var socketClient in list)
                     {
-                        Send(client, s);
+                        Send(socketClient, data);
                     }
                 }
                 Thread.Sleep(1000);
@@ -214,25 +208,24 @@ namespace ConsoleDemo
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">Socket客户端</param>
-        /// <param name="s">字符串</param>
-        private static void Send(Socket client, string s)
+        /// <param name="socketClient">SocketClient</param>
+        /// <param name="data">byte[]</param>
+        private static void Send(SocketClient socketClient, byte[] data)
         {
-            byte[] data = Encoding.UTF8.GetBytes(s);
             try
             {
                 // 发送消息
-                client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
+                socketClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
                 {
                     try
                     {
-                        client.EndSend(asyncResult);
-                        Console.WriteLine("向客户端 " + client.RemoteEndPoint + " 发送消息：" + s);
+                        int length = socketClient.Client.EndSend(asyncResult);
+                        Console.WriteLine("向客户端 " + socketClient.Ip + " 发送 " + length + " 字节的消息");
                     }
                     // 已失去连接
                     catch
                     {
-                        ClientOffline(client);
+                        ClientOffline(socketClient);
                         return;
                     }
                 }, null);
@@ -240,7 +233,7 @@ namespace ConsoleDemo
             // 未知错误
             catch
             {
-                ClientOffline(client);
+                ClientOffline(socketClient);
                 return;
             }
         }

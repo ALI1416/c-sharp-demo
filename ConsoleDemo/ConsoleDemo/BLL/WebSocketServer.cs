@@ -5,6 +5,7 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
+using ConsoleDemo.Util;
 
 namespace ConsoleDemo
 {
@@ -24,15 +25,7 @@ namespace ConsoleDemo
         /// <summary>
         /// webSocket客户端
         /// </summary>
-        private static readonly List<WebSocket> webSocketClient = new List<WebSocket>();
-        /// <summary>
-        /// webSocket客户端历史
-        /// </summary>
-        private static readonly Dictionary<int, SocketHistory> webSocketClientHistory = new Dictionary<int, SocketHistory>();
-        /// <summary>
-        /// 接收数据缓冲区
-        /// </summary>
-        private static readonly ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[0xFFFF]);
+        private static readonly List<WebSocketClient> webSocketClientList = new List<WebSocketClient>();
 
         /// <summary>
         /// 启动
@@ -55,7 +48,7 @@ namespace ConsoleDemo
             // 端口号冲突
             catch
             {
-                Console.WriteLine("端口号冲突");
+                Console.WriteLine("webSocket服务器端口号冲突");
                 return;
             }
             // 异步监听客户端请求
@@ -78,9 +71,9 @@ namespace ConsoleDemo
         public static void Close()
         {
             isRunning = false;
-            foreach (WebSocket client in webSocketClient.ToArray())
+            foreach (var webSocketClient in webSocketClientList.ToArray())
             {
-                ClientOffline(client);
+                ClientOffline(webSocketClient);
             }
             httpServer.Close();
         }
@@ -107,67 +100,41 @@ namespace ConsoleDemo
         }
 
         /// <summary>
-        /// 客户端上线
-        /// </summary>
-        /// <param name="client">客户端</param>
-        /// <param name="ip">IP地址</param>
-        private static void ClientOnline(WebSocket client, string ip)
-        {
-            // 已存在
-            if (webSocketClient.Contains(client))
-            {
-                return;
-            }
-            webSocketClient.Add(client);
-            webSocketClientHistory.Add(client.GetHashCode(), new SocketHistory(ip, DateTime.Now));
-            Console.WriteLine("客户端 " + ip + " 已上线");
-            SocketHistory.Iterate(webSocketClientHistory);
-        }
-
-        /// <summary>
-        /// 客户端下线
-        /// </summary>
-        /// <param name="client">客户端</param>
-        private static void ClientOffline(WebSocket client)
-        {
-            // 不存在
-            if (!webSocketClient.Contains(client))
-            {
-                return;
-            }
-            webSocketClient.Remove(client);
-            // 获取该客户端
-            if (webSocketClientHistory.TryGetValue(client.GetHashCode(), out SocketHistory history))
-            {
-                // 没有下线的客户端才可以下线
-                if (history.Offline == DateTime.MinValue)
-                {
-                    history.Offline = DateTime.Now;
-                    Console.WriteLine("客户端 " + history.Ip + " 已下线");
-                    SocketHistory.Iterate(webSocketClientHistory);
-                }
-            }
-        }
-
-        /// <summary>
         /// webSocket处理
         /// </summary>
         /// <param name="context">HttpListenerContext</param>
         private static async void WebSocketHandle(HttpListenerContext context)
         {
-            var wsContext = await context.AcceptWebSocketAsync(null);
+            HttpListenerWebSocketContext wsContext;
+            try
+            {
+                wsContext = await context.AcceptWebSocketAsync(null);
+            }
+            // 不是webSocket连接
+            catch
+            {
+                context.Response.Close();
+                return;
+            }
             using (var ws = wsContext.WebSocket)
             {
-                // 客户端上线
-                ClientOnline(ws, context.Request.RemoteEndPoint.ToString());
-                // 接收消息
+                /* 客户端上线 */
+                // 已存在
+                if (webSocketClientList.Exists(e => e.Client == ws))
+                {
+                    return;
+                }
+                WebSocketClient webSocketClient = new WebSocketClient(ws, context.Request.RemoteEndPoint.ToString());
+                webSocketClientList.Add(webSocketClient);
+                Utils.IterateWebSocketClient(webSocketClientList);
+                /* 接收消息 */
                 WebSocketReceiveResult webSocketReceiveResult;
                 while (true)
                 {
                     try
                     {
                         // 接收消息
-                        webSocketReceiveResult = await ws.ReceiveAsync(buffer, CancellationToken.None);
+                        webSocketReceiveResult = await ws.ReceiveAsync(webSocketClient.Buffer, CancellationToken.None);
                     }
                     // 断开连接
                     catch
@@ -176,13 +143,28 @@ namespace ConsoleDemo
                     }
                     // 解码消息
                     byte[] data = new byte[webSocketReceiveResult.Count];
-                    Array.Copy(buffer.Array, data, webSocketReceiveResult.Count);
+                    Array.Copy(webSocketClient.Buffer.Array, data, webSocketReceiveResult.Count);
                     string msg = Encoding.UTF8.GetString(data);
-                    Console.WriteLine("收到客户端 " + context.Request.RemoteEndPoint + " 消息：" + msg);
+                    Console.WriteLine("收到客户端 " + webSocketClient.Ip + " 消息：" + msg);
                 }
-                // 客户端下线
-                ClientOffline(ws);
+                /* 客户端下线 */
+                ClientOffline(webSocketClient);
             }
+        }
+
+        /// <summary>
+        /// 客户端下线
+        /// </summary>
+        /// <param name="webSocketClient">WebSocketClient</param>
+        private static void ClientOffline(WebSocketClient webSocketClient)
+        {
+            // 不存在
+            if (!webSocketClientList.FindAll(e => e.Client != null).Contains(webSocketClient))
+            {
+                return;
+            }
+            webSocketClient.Close();
+            Utils.IterateWebSocketClient(webSocketClientList);
         }
 
         /// <summary>
@@ -192,14 +174,10 @@ namespace ConsoleDemo
         {
             while (isRunning)
             {
-                var webSocketClientArray = webSocketClient.ToArray();
-                if (webSocketClientArray.Length != 0)
+                string s = Utils.GetSendString();
+                foreach (var webSocketClient in webSocketClientList.FindAll(e => e.Client != null))
                 {
-                    string s = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-                    foreach (WebSocket client in webSocketClientArray)
-                    {
-                        Send(client, s);
-                    }
+                    Send(webSocketClient, s);
                 }
                 Thread.Sleep(1000);
             }
@@ -208,25 +186,20 @@ namespace ConsoleDemo
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">webSocket客户端</param>
+        /// <param name="webSocketClient">WebSocketClient</param>
         /// <param name="s">字符串</param>
-        private static void Send(WebSocket client, string s)
+        private static void Send(WebSocketClient webSocketClient, string s)
         {
-            var data = new ArraySegment<byte>(Encoding.UTF8.GetBytes(s));
             try
             {
                 // 发送消息
-                client.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None).Wait();
-                // 获取该客户端
-                if (webSocketClientHistory.TryGetValue(client.GetHashCode(), out SocketHistory history))
-                {
-                    Console.WriteLine("向客户端 " + history.Ip + " 发送消息：" + s);
-                }
+                webSocketClient.Client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(s)), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+                Console.WriteLine("向客户端 " + webSocketClient.Ip + " 发送消息：" + s);
             }
             // 未知错误
             catch
             {
-                ClientOffline(client);
+                ClientOffline(webSocketClient);
                 return;
             }
         }

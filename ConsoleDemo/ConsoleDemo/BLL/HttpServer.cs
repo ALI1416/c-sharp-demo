@@ -1,4 +1,5 @@
 ﻿using ConsoleDemo.Properties;
+using ConsoleDemo.Util;
 using System;
 using System.Drawing.Imaging;
 using System.IO;
@@ -38,7 +39,7 @@ namespace ConsoleDemo
             // 端口号冲突
             catch
             {
-                Console.WriteLine("端口号冲突");
+                Console.WriteLine("http服务器端口号冲突");
                 return;
             }
             // 异步监听客户端请求
@@ -182,6 +183,12 @@ namespace ConsoleDemo
                         ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.webSocket2));
                         break;
                     }
+                case "/webSocket3.html":
+                    {
+                        response.ContentType = "text/html;charset=UTF-8";
+                        ResponseWrite(response, Encoding.UTF8.GetBytes(Resources.webSocket3));
+                        break;
+                    }
                 // JSON
                 case "/json":
                     {
@@ -194,6 +201,7 @@ namespace ConsoleDemo
                 // 带参数
                 case "/fruit":
                     {
+                        MemoryStream stream;
                         int index = -1;
                         try
                         {
@@ -205,47 +213,14 @@ namespace ConsoleDemo
                         }
                         if (index < 0 || index > 6)
                         {
-                            Random random = new Random();
-                            index = random.Next(6);
+                            stream = Utils.GetSendMemoryStream();
+                        }
+                        else
+                        {
+                            stream = Utils.GetSendMemoryStream(index);
                         }
                         response.ContentType = "image/png";
-                        MemoryStream stream = new MemoryStream();
-                        switch (index)
-                        {
-                            case 0:
-                            default:
-                                {
-                                    Resources.apple.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                            case 1:
-                                {
-                                    Resources.banana.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    Resources.grape.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                            case 3:
-                                {
-                                    Resources.pear.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                            case 4:
-                                {
-                                    Resources.tangerine.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                            case 5:
-                                {
-                                    Resources.watermelon.Save(stream, ImageFormat.Png);
-                                    break;
-                                }
-                        }
                         ResponseWrite(response, stream.ToArray());
-                        stream.Dispose();
                         break;
                     }
             }

@@ -14,6 +14,7 @@ namespace ConsoleDemo
             WebSocketServer2.Start();
             SocketWebSocketServer.Start();
             SocketWebSocketServer2.Start();
+            SocketWebSocketServer3.Start();
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0\n" +
@@ -24,7 +25,8 @@ namespace ConsoleDemo
                     "webSocket服务器\t-> 关闭:T 启动:G\n" +
                     "webSocket2服务器\t-> 关闭:Y 启动:H\n" +
                     "socket模拟webSocket服务器\t-> 关闭:U 启动:J\n" +
-                    "socket模拟webSocket2服务器\t-> 关闭:I 启动:L\n");
+                    "socket模拟webSocket2服务器\t-> 关闭:I 启动:K\n" +
+                    "socket模拟webSocket3服务器\t-> 关闭:O 启动:L\n");
                 switch (Console.ReadKey().Key)
                 {
                     case ConsoleKey.D0:
@@ -109,6 +111,16 @@ namespace ConsoleDemo
                     case ConsoleKey.K:
                         {
                             SocketWebSocketServer2.Start();
+                            break;
+                        }
+                    case ConsoleKey.O:
+                        {
+                            SocketWebSocketServer3.Close();
+                            break;
+                        }
+                    case ConsoleKey.L:
+                        {
+                            SocketWebSocketServer3.Start();
                             break;
                         }
                 }

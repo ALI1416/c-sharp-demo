@@ -54,7 +54,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpServer.cs" />
+    <Compile Include="BLL\HttpServer.cs" />
+    <Compile Include="BLL\SocketHttpServer.cs" />
+    <Compile Include="BLL\SocketServer2.cs" />
+    <Compile Include="BLL\SocketWebSocketServer.cs" />
+    <Compile Include="BLL\SocketWebSocketServer2.cs" />
+    <Compile Include="BLL\SocketWebSocketServer3.cs" />
+    <Compile Include="BLL\WebSocketServer.cs" />
+    <Compile Include="BLL\WebSocketServer2.cs" />
+    <Compile Include="Model\HttpSocketClient.cs" />
+    <Compile Include="Model\SocketClient2.cs" />
+    <Compile Include="Model\WebSocketClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -62,14 +72,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SocketHistory.cs" />
-    <Compile Include="SocketHttpServer.cs" />
-    <Compile Include="SocketServer.cs" />
-    <Compile Include="SocketServer2.cs" />
-    <Compile Include="SocketWebSocketServer.cs" />
-    <Compile Include="SocketWebSocketServer2.cs" />
-    <Compile Include="WebSocketServer.cs" />
-    <Compile Include="WebSocketServer2.cs" />
+    <Compile Include="Model\SocketClient.cs" />
+    <Compile Include="BLL\SocketServer.cs" />
+    <Compile Include="Util\Utils.cs" />
+    <Compile Include="Util\WebSocketUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -109,6 +115,7 @@
   <ItemGroup>
     <Content Include="Resources\html\webSocket.html" />
     <Content Include="Resources\html\webSocket2.html" />
+    <Content Include="Resources\html\webSocket3.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

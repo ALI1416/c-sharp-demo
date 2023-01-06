@@ -1,4 +1,5 @@
-﻿using ConsoleDemo.Properties;
+﻿using ConsoleDemo.Model;
+using ConsoleDemo.Properties;
 using System;
 using System.IO;
 using System.Net;
@@ -16,10 +17,6 @@ namespace ConsoleDemo
         /// socket服务器
         /// </summary>
         private static Socket socketServer;
-        /// <summary>
-        /// 接收数据缓冲区
-        /// </summary>
-        private static readonly byte[] buffer = new byte[1024];
 
         /// <summary>
         /// 启动
@@ -72,15 +69,8 @@ namespace ConsoleDemo
                 Console.WriteLine("主动关闭socket模拟http服务器");
                 return;
             }
-            try
-            {
-                // 客户端上线
-                ClientOnline(socketServer.EndAccept(ar));
-            }
-            // 未知错误
-            catch
-            {
-            }
+            // 客户端上线
+            ClientOnline(socketServer.EndAccept(ar));
         }
 
         /// <summary>
@@ -89,16 +79,21 @@ namespace ConsoleDemo
         /// <param name="client">客户端</param>
         private static void ClientOnline(Socket client)
         {
+            HttpSocketClient httpSocketClient = null;
             try
             {
+                httpSocketClient = new HttpSocketClient(client);
                 // 设置超时10秒
                 client.SendTimeout = 10000;
                 // 接收消息
-                client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, Recevice, client);
+                client.BeginReceive(httpSocketClient.Buffer, 0, httpSocketClient.Buffer.Length, SocketFlags.None, Recevice, httpSocketClient);
             }
             catch
             {
-                client.Close();
+                if (httpSocketClient != null)
+                {
+                    httpSocketClient.Close();
+                }
                 return;
             }
         }
@@ -110,28 +105,28 @@ namespace ConsoleDemo
         private static void Recevice(IAsyncResult ar)
         {
             // 获取当前客户端
-            Socket client = ar.AsyncState as Socket;
+            HttpSocketClient httpSocketClient = ar.AsyncState as HttpSocketClient;
             try
             {
                 // 获取接收数据长度
-                int length = client.EndReceive(ar);
+                int length = httpSocketClient.Client.EndReceive(ar);
                 // 客户端主动断开连接时，会发送0字节消息
                 if (length == 0)
                 {
-                    client.Close();
+                    httpSocketClient.Close();
                     return;
                 }
                 // 解码消息
-                string msg = Encoding.UTF8.GetString(buffer, 0, length);
+                string msg = Encoding.UTF8.GetString(httpSocketClient.Buffer, 0, length);
                 // request处理
-                RequestHandle(client, msg);
+                RequestHandle(httpSocketClient, msg);
                 // 关闭连接
-                client.Close();
+                httpSocketClient.Close();
             }
             // 超时后失去连接、未知错误
             catch
             {
-                client.Close();
+                httpSocketClient.Close();
                 return;
             }
         }
@@ -139,9 +134,9 @@ namespace ConsoleDemo
         /// <summary>
         /// request处理
         /// </summary>
-        /// <param name="client">Socket客户端</param>
+        /// <param name="httpSocketClient">HttpSocketClient</param>
         /// <param name="request">request字符串</param>
-        private static void RequestHandle(Socket client, string request)
+        private static void RequestHandle(HttpSocketClient httpSocketClient, string request)
         {
             string pathAndQuery = request.Substring(4, request.IndexOf('\r') - 13);
             byte[] data;
@@ -163,37 +158,25 @@ namespace ConsoleDemo
                         break;
                     }
             }
-            Send(client, data);
+            Send(httpSocketClient, data);
         }
 
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">Socket客户端</param>
+        /// <param name="httpSocketClient">HttpSocketClient</param>
         /// <param name="data">byte[]</param>
-        private static void Send(Socket client, byte[] data)
+        private static void Send(HttpSocketClient httpSocketClient, byte[] data)
         {
             try
             {
                 // 发送消息
-                client.BeginSend(data, 0, data.Length, SocketFlags.None, asyncResult =>
-                {
-                    try
-                    {
-                        client.EndSend(asyncResult);
-                    }
-                    // 已失去连接
-                    catch
-                    {
-                        client.Close();
-                        return;
-                    }
-                }, null);
+                httpSocketClient.Client.BeginSend(data, 0, data.Length, SocketFlags.None, null, null);
             }
             // 未知错误
             catch
             {
-                client.Close();
+                httpSocketClient.Close();
                 return;
             }
         }

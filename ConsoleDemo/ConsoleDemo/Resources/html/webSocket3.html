@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webSocket演示3</title>
+</head>
+<body>
+  <h1>webSocket演示3</h1>
+  <div>
+    <input type="text" id="address" value="127.0.0.1:8088">
+    <button id="connect">连接</button>
+  </div>
+  <img id="img" />
+  <script>
+    const addressText = document.getElementById('address')
+    const connectBtn = document.getElementById('connect')
+    const img = document.getElementById('img')
+
+    let status = false;
+    let ws;
+    connectBtn.addEventListener('click', function () {
+      if (!status) {
+        ws = new WebSocket("ws://" + address.value + "/")
+        ws.onopen = function () {
+          connect(true);
+        }
+        ws.onmessage = function (e) {
+          ws.send("\0");
+          URL.revokeObjectURL(img.src);
+          img.src = URL.createObjectURL(new Blob([e.data], { type: 'image/png' }));
+        }
+        ws.onclose = function () {
+          connect(false);
+        }
+        ws.onerror = function () {
+          connect(false);
+        }
+      } else {
+        ws.close();
+        connect(false);
+      }
+    })
+
+    function connect(connect) {
+      status = connect;
+      addressText.disabled = connect;
+      connectBtn.innerText = connect ? "断开" : "连接";
+    }
+  </script>
+</body>
+</html>
