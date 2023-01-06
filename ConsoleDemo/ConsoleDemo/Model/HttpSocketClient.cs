@@ -6,7 +6,7 @@ namespace ConsoleDemo.Model
     /// <summary>
     /// httpSocket客户端
     /// </summary>
-    internal class HttpSocketClient
+    public class HttpSocketClient
     {
         /// <summary>
         /// 客户端

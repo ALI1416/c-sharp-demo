@@ -73,11 +73,12 @@ namespace ConsoleDemo.BLL
         public static void Close()
         {
             isRunning = false;
-            foreach (var webSocketClient in webSocketClientList.ToArray())
+            foreach (var webSocketClient in webSocketClientList.FindAll(e => e.Client != null))
             {
-                ClientOffline(webSocketClient);
+                webSocketClient.Close();
             }
             httpServer.Close();
+            Utils.IterateWebSocketClient(webSocketClientList);
         }
 
         /// <summary>

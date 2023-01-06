@@ -68,11 +68,12 @@ namespace ConsoleDemo.BLL
         public static void Close()
         {
             isRunning = false;
-            foreach (var socketClient in socketClientList.ToArray())
+            foreach (var socketClient in socketClientList.FindAll(e => e.Client != null))
             {
-                ClientOffline(socketClient);
+                socketClient.Close();
             }
             socketServer.Close();
+            Utils.IterateSocketClient(socketClientList);
         }
 
         /// <summary>

@@ -7,7 +7,7 @@ namespace ConsoleDemo.Model
     /// <summary>
     /// webSocket客户端
     /// </summary>
-    internal class WebSocketClient
+    public class WebSocketClient
     {
         /// <summary>
         /// 客户端

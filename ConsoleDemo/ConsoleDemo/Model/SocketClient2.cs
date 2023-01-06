@@ -7,7 +7,7 @@ namespace ConsoleDemo.Model
     /// <summary>
     /// socket客户端2
     /// </summary>
-    internal class SocketClient2
+    public class SocketClient2
     {
         /// <summary>
         /// 客户端
