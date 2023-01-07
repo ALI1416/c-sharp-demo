@@ -75,7 +75,7 @@ namespace ConsoleDemo.BLL
             isRunning = false;
             foreach (var webSocketClient in webSocketClientList.FindAll(e => e.Client != null))
             {
-                webSocketClient.Close();
+                ClientOffline(webSocketClient);
             }
             httpServer.Close();
             Utils.IterateWebSocketClient(webSocketClientList);

@@ -18,7 +18,7 @@ namespace ConsoleDemo.Model
         public byte[] Buffer { set; get; }
 
         /// <summary>
-        /// 新建客户端
+        /// 创建客户端
         /// </summary>
         /// <param name="client">Socket</param>
         /// 

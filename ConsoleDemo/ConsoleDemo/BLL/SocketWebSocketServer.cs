@@ -19,9 +19,9 @@ namespace ConsoleDemo.BLL
         /// </summary>
         private static bool isRunning = false;
         /// <summary>
-        /// socket服务器
+        /// socket服务端
         /// </summary>
-        private static Socket socketServer;
+        private static Model.SocketServer socketServer;
         /// <summary>
         /// socket客户端
         /// </summary>
@@ -35,13 +35,13 @@ namespace ConsoleDemo.BLL
             try
             {
                 // 新建socket服务器
-                socketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socketServer = new Model.SocketServer();
                 // 指定URI
-                socketServer.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8086));
+                socketServer.Server.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8086));
                 // 设置监听数量
-                socketServer.Listen(10);
+                socketServer.Server.Listen(10);
                 // 异步监听客户端请求
-                socketServer.BeginAccept(SocketHandle, null);
+                socketServer.Server.BeginAccept(SocketHandle, null);
             }
             // 端口号冲突、未知错误
             catch
@@ -70,7 +70,7 @@ namespace ConsoleDemo.BLL
             isRunning = false;
             foreach (var socketClient in socketClientList.FindAll(e => e.Client != null))
             {
-                socketClient.Close();
+                ClientOffline(socketClient);
             }
             socketServer.Close();
             Utils.IterateSocketClient(socketClientList);
@@ -85,7 +85,7 @@ namespace ConsoleDemo.BLL
             try
             {
                 // 继续异步监听客户端请求
-                socketServer.BeginAccept(SocketHandle, null);
+                socketServer.Server.BeginAccept(SocketHandle, null);
             }
             // 主动关闭socket服务器
             catch
@@ -94,7 +94,7 @@ namespace ConsoleDemo.BLL
                 return;
             }
             // 客户端上线
-            ClientOnline(socketServer.EndAccept(ar));
+            ClientOnline(socketServer.Server.EndAccept(ar));
         }
 
         /// <summary>
@@ -167,15 +167,16 @@ namespace ConsoleDemo.BLL
                 {
                     // 解码消息
                     string msg = Encoding.UTF8.GetString(socketClient.Buffer, 0, length);
-                    // 判断是否符合webSocket报文格式
-                    if (msg.Contains("Sec-WebSocket-Key"))
+                    // 获取握手信息
+                    byte[] data = WebSocketUtils.HandShake(msg);
+                    if (data != null)
                     {
-                        // 握手
-                        SendRaw(socketClient, WebSocketUtils.HandShake(msg));
+                        // 发送握手信息
+                        SendRaw(socketClient, data);
                         // 继续接收消息
                         socketClient.Client.BeginReceive(socketClient.Buffer, 0, length, SocketFlags.None, Recevice, socketClient);
                     }
-                    // 不符合格式，关闭连接
+                    // 无法握手
                     else
                     {
                         ClientOffline(socketClient);
@@ -186,6 +187,7 @@ namespace ConsoleDemo.BLL
                 {
                     // 继续接收消息
                     socketClient.Client.BeginReceive(socketClient.Buffer, 0, length, SocketFlags.None, Recevice, socketClient);
+                    // 解码消息
                     string data = WebSocketUtils.DecodeDataString(socketClient.Buffer, length);
                     // 客户端关闭连接
                     if (data == null)

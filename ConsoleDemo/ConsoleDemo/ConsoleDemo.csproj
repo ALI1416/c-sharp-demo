@@ -64,6 +64,7 @@
     <Compile Include="BLL\WebSocketServer2.cs" />
     <Compile Include="Model\HttpSocketClient.cs" />
     <Compile Include="Model\SocketClient2.cs" />
+    <Compile Include="Model\SocketServer.cs" />
     <Compile Include="Model\WebSocketClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

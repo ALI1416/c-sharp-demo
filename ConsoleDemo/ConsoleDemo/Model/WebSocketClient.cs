@@ -31,7 +31,7 @@ namespace ConsoleDemo.Model
         public DateTime Offline { set; get; }
 
         /// <summary>
-        /// 新建客户端
+        /// 创建客户端
         /// </summary>
         /// <param name="client">WebSocket</param>
         /// <param name="ip">IP地址</param>
