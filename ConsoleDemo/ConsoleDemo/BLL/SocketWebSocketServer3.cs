@@ -28,6 +28,8 @@ namespace ConsoleDemo.BLL
         /// </summary>
         private static readonly List<SocketClient2> socketClientList = new List<SocketClient2>();
 
+        private readonly static byte[] httpCloseHeader = Encoding.UTF8.GetBytes("HTTP/1.0 200 OK\nConnection: close\n\n");
+
         /// <summary>
         /// 启动
         /// </summary>
@@ -180,6 +182,8 @@ namespace ConsoleDemo.BLL
                     // 无法握手
                     else
                     {
+                        // 关闭连接
+                        SendRaw(socketClient, httpCloseHeader);
                         ClientOffline(socketClient);
                         return;
                     }
