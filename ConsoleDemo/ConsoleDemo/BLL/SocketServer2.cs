@@ -124,6 +124,7 @@ namespace ConsoleDemo.BLL
                 // 发送响应头
                 Send(socketClient, socketResponseHeader);
                 socketClientList.Add(socketClient);
+                Console.WriteLine("客户端 " + socketClient.Ip + " 已上线");
                 Utils.IterateSocketClient(socketClientList);
             }
             catch
@@ -148,6 +149,7 @@ namespace ConsoleDemo.BLL
                 return;
             }
             socketClient.Close();
+            Console.WriteLine("客户端 " + socketClient.Ip + " 已下线");
             Utils.IterateSocketClient(socketClientList);
         }
 

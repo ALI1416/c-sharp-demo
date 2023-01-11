@@ -129,6 +129,7 @@ namespace ConsoleDemo.BLL
                 }
                 WebSocketClient webSocketClient = new WebSocketClient(ws, context.Request.RemoteEndPoint.ToString());
                 webSocketClientList.Add(webSocketClient);
+                Console.WriteLine("客户端 " + webSocketClient.Ip + " 已上线");
                 Utils.IterateWebSocketClient(webSocketClientList);
                 /* 接收消息 */
                 WebSocketReceiveResult webSocketReceiveResult;
@@ -167,6 +168,7 @@ namespace ConsoleDemo.BLL
                 return;
             }
             webSocketClient.Close();
+            Console.WriteLine("客户端 " + webSocketClient.Ip + " 已下线");
             Utils.IterateWebSocketClient(webSocketClientList);
         }
 

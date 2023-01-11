@@ -118,8 +118,6 @@ namespace ConsoleDemo.BLL
                 client.SendTimeout = 10000;
                 // 接收消息
                 client.BeginReceive(socketClient.Buffer, 0, socketClient.Buffer.Length, SocketFlags.None, Recevice, socketClient);
-                socketClientList.Add(socketClient);
-                Utils.IterateSocketClient(socketClientList);
             }
             catch
             {
@@ -143,6 +141,7 @@ namespace ConsoleDemo.BLL
                 return;
             }
             socketClient.Close();
+            Console.WriteLine("客户端 " + socketClient.Ip + " 已下线");
             Utils.IterateSocketClient(socketClientList);
         }
 
@@ -177,13 +176,16 @@ namespace ConsoleDemo.BLL
                         SendRaw(socketClient, data);
                         // 继续接收消息
                         socketClient.Client.BeginReceive(socketClient.Buffer, 0, length, SocketFlags.None, Recevice, socketClient);
+                        socketClientList.Add(socketClient);
+                        Console.WriteLine("客户端 " + socketClient.Ip + " 已上线");
+                        Utils.IterateSocketClient(socketClientList);
                     }
                     // 无法握手
                     else
                     {
                         // 关闭连接
                         SendRaw(socketClient, httpCloseHeader);
-                        ClientOffline(socketClient);
+                        socketClient.Close();
                         return;
                     }
                 }

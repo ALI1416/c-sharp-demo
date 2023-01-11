@@ -41,7 +41,6 @@ namespace ConsoleDemo.Model
             Buffer = new ArraySegment<byte>(new byte[1024]);
             Ip = ip;
             Online = DateTime.Now;
-            Console.WriteLine("客户端 " + Ip + " 已上线");
         }
 
         /// <summary>
@@ -53,7 +52,6 @@ namespace ConsoleDemo.Model
             {
                 Client = null;
                 Offline = DateTime.Now;
-                Console.WriteLine("客户端 " + Ip + " 已下线");
             }
         }
 

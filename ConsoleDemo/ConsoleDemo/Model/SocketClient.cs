@@ -40,7 +40,6 @@ namespace ConsoleDemo.Model
             Buffer = new byte[1024];
             Ip = client.RemoteEndPoint.ToString();
             Online = DateTime.Now;
-            Console.WriteLine("客户端 " + Ip + " 已上线");
         }
 
         /// <summary>
@@ -54,7 +53,6 @@ namespace ConsoleDemo.Model
                 Client = null;
                 Buffer = null;
                 Offline = DateTime.Now;
-                Console.WriteLine("客户端 " + Ip + " 已下线");
             }
         }
 

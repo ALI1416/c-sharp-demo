@@ -118,6 +118,7 @@ namespace ConsoleDemo.BLL
                 // 接收消息
                 client.BeginReceive(socketClient.Buffer, 0, socketClient.Buffer.Length, SocketFlags.None, Recevice, socketClient);
                 socketClientList.Add(socketClient);
+                Console.WriteLine("客户端 " + socketClient.Ip + " 已上线");
                 Utils.IterateSocketClient(socketClientList);
             }
             catch
@@ -142,6 +143,7 @@ namespace ConsoleDemo.BLL
                 return;
             }
             socketClient.Close();
+            Console.WriteLine("客户端 " + socketClient.Ip + " 已下线");
             Utils.IterateSocketClient(socketClientList);
         }
 
