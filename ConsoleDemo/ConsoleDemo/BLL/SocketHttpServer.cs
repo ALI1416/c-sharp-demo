@@ -1,10 +1,13 @@
 ﻿using ConsoleDemo.Model;
 using ConsoleDemo.Properties;
 using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Web;
 
 namespace ConsoleDemo.BLL
 {
@@ -19,11 +22,22 @@ namespace ConsoleDemo.BLL
         /// </summary>
         private static Model.SocketServer socketServer;
 
+        private static readonly string httpHtmlHeader = "HTTP/1.0 200 OK\nContent-Type: text/html;charset=utf-8\nConnection: close\n\n";
+        private static readonly string httpJsonHeader = "HTTP/1.0 200 OK\nContent-Type: application/json;charset=utf-8\nConnection: close\n\n";
+        private static byte[] httpIconHeaderBytes;
+
         /// <summary>
         /// 启动
         /// </summary>
         public static void Start()
         {
+            // 图标
+            byte[] bytes = Encoding.UTF8.GetBytes("HTTP/1.0 200 OK\nContent-Type: image/x-icon\nConnection: close\n\n");
+            MemoryStream faviconStream = new MemoryStream();
+            Resources.favicon.Save(faviconStream);
+            httpIconHeaderBytes = new byte[bytes.Length + faviconStream.Length];
+            bytes.CopyTo(httpIconHeaderBytes, 0);
+            faviconStream.ToArray().CopyTo(httpIconHeaderBytes, bytes.Length);
             try
             {
                 // 新建socket服务器
@@ -139,23 +153,49 @@ namespace ConsoleDemo.BLL
         /// <param name="request">request字符串</param>
         private static void RequestHandle(HttpSocketClient httpSocketClient, string request)
         {
-            string pathAndQuery = request.Substring(4, request.IndexOf('\r') - 13);
-            byte[] data;
-            switch (pathAndQuery)
+            string[] pathAndQuery = HttpUtility.UrlDecode(request.Substring(4, request.IndexOf('\r') - 13)).Split('?');
+            string path = pathAndQuery[0];
+            NameValueCollection param = null;
+            if (pathAndQuery.Length > 1)
             {
+                param = HttpUtility.ParseQueryString(pathAndQuery[1]);
+            }
+            byte[] data;
+            switch (path)
+            {
+                // 网页
                 default:
                     {
-                        data = Encoding.UTF8.GetBytes("HTTP/1.0 200 OK\nContent-Type: text/html;charset=utf-8\nConnection: close\n\n" + Resources.socket);
+                        data = Encoding.UTF8.GetBytes(httpHtmlHeader + Resources.socket);
                         break;
                     }
+                // 图标
                 case "/favicon.ico":
                     {
-                        string header = "HTTP/1.0 200 OK\nContent-Type: image/x-icon\nConnection: close\n\n";
-                        MemoryStream faviconStream = new MemoryStream();
-                        Resources.favicon.Save(faviconStream);
-                        data = new byte[header.Length + faviconStream.Length];
-                        Encoding.ASCII.GetBytes(header).CopyTo(data, 0);
-                        faviconStream.ToArray().CopyTo(data, header.Length);
+                        data = httpIconHeaderBytes;
+                        break;
+                    }
+                // JSON
+                case "/json":
+                    {
+                        string json = "{";
+                        if (param == null)
+                        {
+                            json += "}";
+                        }
+                        else
+                        {
+                            foreach (string key in param.Keys)
+                            {
+                                json += "\"" + key + "\":\"" + param[key].ToString() + "\",";
+                            }
+                            if (json.Length > 1)
+                            {
+                                json = json.Substring(0, json.Length - 1);
+                            }
+                            json += "}";
+                        }
+                        data = Encoding.UTF8.GetBytes(httpJsonHeader + json);
                         break;
                     }
             }
