@@ -14,7 +14,7 @@ namespace ConsoleDemo.BLL
     /// <summary>
     /// webSocket服务器
     /// </summary>
-    internal class WebSocketServer
+    public class WebSocketServer
     {
         /// <summary>
         /// 正在运行

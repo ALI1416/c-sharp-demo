@@ -11,7 +11,7 @@ namespace ConsoleDemo.Util
     /// <summary>
     /// 通用工具
     /// </summary>
-    internal class Utils
+    public class Utils
     {
         private static int index = 0;
         private static readonly MemoryStream appleStream = new MemoryStream();

@@ -9,7 +9,7 @@ namespace ConsoleDemo.Util
     /// <summary>
     /// webSocket工具
     /// </summary>
-    internal class WebSocketUtils
+    public class WebSocketUtils
     {
         /// <summary>
         /// 握手

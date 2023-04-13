@@ -1,7 +1,6 @@
 ﻿using ConsoleDemo.Model;
 using ConsoleDemo.Properties;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -15,7 +14,7 @@ namespace ConsoleDemo.BLL
     /// <summary>
     /// socket模拟http服务器
     /// </summary>
-    internal class SocketHttpServer
+    public class SocketHttpServer
     {
         /// <summary>
         /// socket服务端

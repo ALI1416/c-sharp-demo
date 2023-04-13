@@ -7,6 +7,7 @@ namespace ConsoleDemo
     {
         static void Main(string[] args)
         {
+            Qr.Start();
             HttpServer.Start();
             SocketServer.Start();
             SocketServer2.Start();

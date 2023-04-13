@@ -13,7 +13,7 @@ namespace ConsoleDemo.BLL
     /// <summary>
     /// socket模拟webSocket服务器2
     /// </summary>
-    internal class SocketWebSocketServer2
+    public class SocketWebSocketServer2
     {
         /// <summary>
         /// 正在运行

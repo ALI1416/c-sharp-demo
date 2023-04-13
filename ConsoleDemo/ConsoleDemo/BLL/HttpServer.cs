@@ -12,7 +12,7 @@ namespace ConsoleDemo.BLL
     /// <summary>
     /// http服务器
     /// </summary>
-    internal class HttpServer
+    public class HttpServer
     {
         /// <summary>
         /// http服务器

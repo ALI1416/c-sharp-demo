@@ -13,7 +13,7 @@ namespace ConsoleDemo.BLL
     /// <summary>
     /// socket服务器
     /// </summary>
-    internal class SocketServer
+    public class SocketServer
     {
         /// <summary>
         /// 正在运行

@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BLL\HttpServer.cs" />
+    <Compile Include="BLL\Qr.cs" />
     <Compile Include="BLL\SocketHttpServer.cs" />
     <Compile Include="BLL\SocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer.cs" />
@@ -73,6 +74,7 @@
     </Compile>
     <Compile Include="Model\SocketClient.cs" />
     <Compile Include="BLL\SocketServer.cs" />
+    <Compile Include="Util\ImageUtils.cs" />
     <Compile Include="Util\Utils.cs" />
     <Compile Include="Util\WebSocketUtils.cs" />
   </ItemGroup>
@@ -115,6 +117,11 @@
     <Content Include="Resources\html\webSocket.html" />
     <Content Include="Resources\html\webSocket2.html" />
     <Content Include="Resources\html\webSocket3.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ZXing.Net">
+      <Version>0.16.9</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
