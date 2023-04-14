@@ -3,11 +3,10 @@ using System.Drawing;
 
 namespace ConsoleDemo.BLL
 {
-
     /// <summary>
-    /// 二维码
+    /// 二维码2
     /// </summary>
-    public class Qr
+    public class Qr2
     {
 
         /// <summary>
@@ -15,11 +14,10 @@ namespace ConsoleDemo.BLL
         /// </summary>
         public static void Start()
         {
-            ZXing.QrCode.Internal.QRCode qr = ZXing.QrCode.Internal.Encoder.encode("ConsoleDemo", ZXing.QrCode.Internal.ErrorCorrectionLevel.H);
+            QRCode qr = QrUtils.encode("ConsoleDemo", ErrorCorrectionLevel.H);
             Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);
-            ImageUtils.SaveBitmap(bitmap, "E:/qr.png");
+            ImageUtils.SaveBitmap(bitmap, "E:/qr2.png");
         }
 
     }
-
 }

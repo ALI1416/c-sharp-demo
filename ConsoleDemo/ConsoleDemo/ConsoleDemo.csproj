@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="BLL\HttpServer.cs" />
     <Compile Include="BLL\Qr.cs" />
+    <Compile Include="BLL\Qr2.cs" />
     <Compile Include="BLL\SocketHttpServer.cs" />
     <Compile Include="BLL\SocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer.cs" />
@@ -74,8 +75,21 @@
     </Compile>
     <Compile Include="Model\SocketClient.cs" />
     <Compile Include="BLL\SocketServer.cs" />
+    <Compile Include="Util\Qr\BitArray.cs" />
+    <Compile Include="Util\Qr\BitMatrix.cs" />
+    <Compile Include="Util\Qr\BlockPair.cs" />
+    <Compile Include="Util\Qr\ByteMatrix.cs" />
+    <Compile Include="Util\Qr\ErrorCorrectionLevel.cs" />
+    <Compile Include="Util\Qr\GenericGF.cs" />
+    <Compile Include="Util\Qr\GenericGFPoly.cs" />
     <Compile Include="Util\ImageUtils.cs" />
+    <Compile Include="Util\Qr\MaskUtil.cs" />
+    <Compile Include="Util\Qr\MatrixUtil.cs" />
+    <Compile Include="Util\Qr\QrCode.cs" />
+    <Compile Include="Util\QrUtils.cs" />
+    <Compile Include="Util\Qr\ReedSolomonEncoder.cs" />
     <Compile Include="Util\Utils.cs" />
+    <Compile Include="Util\Qr\Version.cs" />
     <Compile Include="Util\WebSocketUtils.cs" />
   </ItemGroup>
   <ItemGroup>

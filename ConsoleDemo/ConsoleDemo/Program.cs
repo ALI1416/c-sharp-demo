@@ -8,15 +8,16 @@ namespace ConsoleDemo
         static void Main(string[] args)
         {
             Qr.Start();
-            HttpServer.Start();
-            SocketServer.Start();
-            SocketServer2.Start();
-            SocketHttpServer.Start();
-            WebSocketServer.Start();
-            WebSocketServer2.Start();
-            SocketWebSocketServer.Start();
-            SocketWebSocketServer2.Start();
-            SocketWebSocketServer3.Start();
+            Qr2.Start();
+            //HttpServer.Start();
+            //SocketServer.Start();
+            //SocketServer2.Start();
+            //SocketHttpServer.Start();
+            //WebSocketServer.Start();
+            //WebSocketServer2.Start();
+            //SocketWebSocketServer.Start();
+            //SocketWebSocketServer2.Start();
+            //SocketWebSocketServer3.Start();
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0\n" +
