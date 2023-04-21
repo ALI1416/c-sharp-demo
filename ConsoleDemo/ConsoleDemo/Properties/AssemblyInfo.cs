@@ -13,3 +13,5 @@ using System.Runtime.InteropServices;
 [assembly: Guid("4cf157ba-0a52-43e7-a595-77f584830f28")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+// 注册log4net
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "log4net.config", ConfigFileExtension = "config", Watch = true)]

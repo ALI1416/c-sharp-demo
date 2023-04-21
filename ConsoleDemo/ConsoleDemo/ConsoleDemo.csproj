@@ -52,7 +52,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BLL\HttpServer.cs" />
+    <Compile Include="Test\HttpServiceTest.cs" />
+    <Compile Include="Tool\HttpService.cs" />
     <Compile Include="BLL\Qr.cs" />
     <Compile Include="BLL\Qr2.cs" />
     <Compile Include="BLL\SocketHttpServer.cs" />
@@ -75,6 +76,8 @@
     </Compile>
     <Compile Include="Model\SocketClient.cs" />
     <Compile Include="BLL\SocketServer.cs" />
+    <Compile Include="Test\Log4NetTest.cs" />
+    <Compile Include="Test\NUnitTest.cs" />
     <Compile Include="Util\Qr\BitArray.cs" />
     <Compile Include="Util\Qr\BitMatrix.cs" />
     <Compile Include="Util\Qr\BlockPair.cs" />
@@ -93,6 +96,9 @@
     <Compile Include="Util\WebSocketUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="App.config" />
     <None Include="Properties\app.manifest" />
   </ItemGroup>
@@ -133,6 +139,15 @@
     <Content Include="Resources\html\webSocket3.html" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="log4net">
+      <Version>2.0.15</Version>
+    </PackageReference>
+    <PackageReference Include="NUnit">
+      <Version>3.13.3</Version>
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter">
+      <Version>4.4.2</Version>
+    </PackageReference>
     <PackageReference Include="ZXing.Net">
       <Version>0.16.9</Version>
     </PackageReference>

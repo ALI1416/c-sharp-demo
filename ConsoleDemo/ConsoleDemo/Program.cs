@@ -1,15 +1,23 @@
 ﻿using ConsoleDemo.BLL;
+using ConsoleDemo.Test;
 using System;
 
 namespace ConsoleDemo
 {
-    internal class Program
+
+    public class Program
     {
-        static void Main(string[] args)
+
+        /// <summary>
+        /// 启动类
+        /// </summary>
+        /// <param name="args">参数</param>
+        public static void Main(string[] args)
         {
-            Qr.Start();
-            Qr2.Start();
-            //HttpServer.Start();
+            //Log4NetTest.Test();
+            //Qr.Start();
+            //Qr2.Start();
+            HttpServiceTest.Start();
             //SocketServer.Start();
             //SocketServer2.Start();
             //SocketHttpServer.Start();
@@ -38,12 +46,12 @@ namespace ConsoleDemo
                         }
                     case ConsoleKey.Q:
                         {
-                            HttpServer.Close();
+                            HttpServiceTest.Close();
                             break;
                         }
                     case ConsoleKey.A:
                         {
-                            HttpServer.Start();
+                            HttpServiceTest.Start();
                             break;
                         }
                     case ConsoleKey.W:
