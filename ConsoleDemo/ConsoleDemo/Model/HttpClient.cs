@@ -4,9 +4,9 @@ namespace ConsoleDemo.Model
 {
 
     /// <summary>
-    /// httpSocket客户端
+    /// http客户端
     /// </summary>
-    public class HttpSocketClient
+    public class HttpClient
     {
         /// <summary>
         /// 客户端
@@ -22,7 +22,7 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="client">Socket</param>
         /// 
-        public HttpSocketClient(Socket client)
+        public HttpClient(Socket client)
         {
             Client = client;
             Buffer = new byte[1024];

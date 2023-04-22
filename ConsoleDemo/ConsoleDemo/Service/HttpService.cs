@@ -1,18 +1,13 @@
-﻿using ConsoleDemo.Properties;
-using ConsoleDemo.Util;
-using log4net;
+﻿using log4net;
 using System;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Net;
-using System.Security.Principal;
 using System.Text;
 
-namespace ConsoleDemo.Tool
+namespace ConsoleDemo.Service
 {
 
     /// <summary>
-    /// http服务
+    /// http服务(使用HttpListener)
     /// </summary>
     public class HttpService
     {
@@ -27,33 +22,68 @@ namespace ConsoleDemo.Tool
         /// </summary>
         private HttpListener server;
         /// <summary>
-        /// 响应处理函数&lt;HttpListenerRequest,HttpListenerResponse,返回值>
+        /// 服务器关闭回调函数
         /// </summary>
-        private Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseHandleFunc;
+        private Action serviceCloseCallback;
+        /// <summary>
+        /// 响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值>
+        /// </summary>
+        private Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback;
         /// <summary>
         /// 账号和密码
         /// </summary>
         private string accountAndPassword = null;
 
-
         /// <summary>
         /// 启动
         /// </summary>
-        /// <param name="uri">URI</param>
-        /// <param name="responseHandleFunc">响应处理函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
-        public void Start(string uri, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseHandleFunc)
+        /// <param name="ip">IP地址</param>
+        /// <param name="port">端口号</param>
+        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <returns>是否启动成功</returns>
+        public bool Start(IPAddress ip, int port, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
         {
-            Start(uri, null, null, responseHandleFunc);
+            return Start(ip, port, null, null, () => { }, responseCallback);
         }
 
         /// <summary>
         /// 启动
         /// </summary>
-        /// <param name="uri">URI</param>
+        /// <param name="ip">IP地址</param>
+        /// <param name="port">端口号</param>
+        /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
+        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <returns>是否启动成功</returns>
+        public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
+        {
+            return Start(ip, port, null, null, serviceCloseCallback, responseCallback);
+        }
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        /// <param name="ip">IP地址</param>
+        /// <param name="port">端口号</param>
         /// <param name="account">账号</param>
         /// <param name="password">密码</param>
-        /// <param name="responseHandleFunc">响应处理函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
-        public void Start(string uri, string account, string password, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseHandleFunc)
+        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <returns>是否启动成功</returns>
+        public bool Start(IPAddress ip, int port, string account, string password, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
+        {
+            return Start(ip, port, account, password, () => { }, responseCallback);
+        }
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        /// <param name="ip">IP地址</param>
+        /// <param name="port">端口号</param>
+        /// <param name="account">账号</param>
+        /// <param name="password">密码</param>
+        /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
+        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <returns>是否启动成功</returns>
+        public bool Start(IPAddress ip, int port, string account, string password, Action serviceCloseCallback, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
         {
             // 新建服务器
             server = new HttpListener
@@ -61,8 +91,8 @@ namespace ConsoleDemo.Tool
                 // 忽视客户端写入异常
                 IgnoreWriteExceptions = true
             };
-            // 指定URI
-            server.Prefixes.Add(uri);
+            // 指定IP地址和端口号
+            server.Prefixes.Add("http://" + ip + ":" + port + "/");
             try
             {
                 // 启动服务器
@@ -72,16 +102,19 @@ namespace ConsoleDemo.Tool
             catch
             {
                 log.Error("http服务器端口号冲突");
-                return;
+                return false;
             }
             if (account != null && password != null)
             {
-                accountAndPassword = account + ":" + password;
+                // 把账号密码转换为`Authorization`形式
+                accountAndPassword = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(account + ":" + password));
             }
-            this.responseHandleFunc = responseHandleFunc;
+            this.serviceCloseCallback = serviceCloseCallback;
+            this.responseCallback = responseCallback;
             // 异步监听客户端请求
             server.BeginGetContext(Handle, null);
             log.Info("http服务器已启动");
+            return true;
         }
 
         /// <summary>
@@ -106,6 +139,8 @@ namespace ConsoleDemo.Tool
             // 主动关闭服务器
             catch
             {
+                // 服务器关闭回调函数
+                serviceCloseCallback();
                 log.Info("主动关闭http服务器");
                 return;
             }
@@ -121,8 +156,8 @@ namespace ConsoleDemo.Tool
                 log.Warn("密码错误");
                 return;
             }
-            // 响应
-            Response(request, response);
+            // 请求消息处理
+            RequestHandle(request, response);
         }
 
         /// <summary>
@@ -137,10 +172,6 @@ namespace ConsoleDemo.Tool
             string auth = request.Headers["Authorization"];
             if (auth != null)
             {
-                // 移除头部"Basic "字符串
-                auth = auth.Remove(0, 6);
-                // 解码账号密码
-                auth = Encoding.UTF8.GetString(Convert.FromBase64String(auth));
                 // 账号密码正确
                 if (auth == accountAndPassword)
                 {
@@ -156,15 +187,15 @@ namespace ConsoleDemo.Tool
         }
 
         /// <summary>
-        /// 响应
+        /// 请求消息处理
         /// </summary>
         /// <param name="request">HttpListenerRequest</param>
         /// <param name="response">HttpListenerResponse</param>
-        private void Response(HttpListenerRequest request, HttpListenerResponse response)
+        private void RequestHandle(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // 响应处理函数
-            var data = responseHandleFunc(request, response);
-            ResponseWrite(response, data);
+            // 请求消息处理函数
+            var data = responseCallback(request, response);
+            Response(response, data);
             // 关闭连接
             response.Close();
         }
@@ -174,7 +205,7 @@ namespace ConsoleDemo.Tool
         /// </summary>
         /// <param name="response">HttpListenerResponse</param>
         /// <param name="buffer">buffer</param>
-        private void ResponseWrite(HttpListenerResponse response, byte[] buffer)
+        private void Response(HttpListenerResponse response, byte[] buffer)
         {
             try
             {

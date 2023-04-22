@@ -17,8 +17,9 @@ namespace ConsoleDemo
             //Log4NetTest.Test();
             //Qr.Start();
             //Qr2.Start();
-            HttpServiceTest.Start();
-            //SocketServer.Start();
+            //HttpServiceTest.Start();
+            //HttpService2Test.Start();
+            SocketServiceTest.Start();
             //SocketServer2.Start();
             //SocketHttpServer.Start();
             //WebSocketServer.Start();
@@ -29,29 +30,39 @@ namespace ConsoleDemo
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0\n" +
-                    "http服务器\t-> 关闭:Q 启动:A\n" +
-                    "socket服务器\t-> 关闭:W 启动:S\n" +
-                    "socket2服务器\t-> 关闭:E 启动:D\n" +
-                    "socket模拟http服务器\t-> 关闭:R 启动:F\n" +
-                    "webSocket服务器\t-> 关闭:T 启动:G\n" +
-                    "webSocket2服务器\t-> 关闭:Y 启动:H\n" +
-                    "socket模拟webSocket服务器\t-> 关闭:U 启动:J\n" +
-                    "socket模拟webSocket2服务器\t-> 关闭:I 启动:K\n" +
-                    "socket模拟webSocket3服务器\t-> 关闭:O 启动:L\n");
+                    "http服务(使用HttpListener)\t-> 关闭:1 启动:2\n" +
+                    "http服务2(使用Socket)\t-> 关闭:3 启动:4\n" +
+                    "socket服务(文本)\t-> 关闭:5 启动:6\n" +
+                    "socket2服务(图片)\t-> 关闭:7 启动:8\n" +
+                    "webSocket服务(使用HttpListener,文本)\t-> 关闭:Q 启动:W\n" +
+                    "webSocket2服务(使用HttpListener,图片)\t-> 关闭:E 启动:R\n" +
+                    "webSocket3服务器(使用Socket,文本)\t-> 关闭:T 启动:Y\n" +
+                    "webSocket4服务器(使用Socket,图片)\t-> 关闭:U 启动:I\n" +
+                    "webSocket5服务器(使用Socket,图片,确认)\t-> 关闭:O 启动:P\n");
                 switch (Console.ReadKey().Key)
                 {
                     case ConsoleKey.D0:
                         {
                             return;
                         }
-                    case ConsoleKey.Q:
+                    case ConsoleKey.D1:
                         {
                             HttpServiceTest.Close();
                             break;
                         }
-                    case ConsoleKey.A:
+                    case ConsoleKey.D2:
                         {
                             HttpServiceTest.Start();
+                            break;
+                        }
+                    case ConsoleKey.D3:
+                        {
+                            HttpService2Test.Close();
+                            break;
+                        }
+                    case ConsoleKey.D4:
+                        {
+                            HttpService2Test.Start();
                             break;
                         }
                     case ConsoleKey.W:
@@ -72,16 +83,6 @@ namespace ConsoleDemo
                     case ConsoleKey.D:
                         {
                             SocketServer2.Start();
-                            break;
-                        }
-                    case ConsoleKey.R:
-                        {
-                            SocketHttpServer.Close();
-                            break;
-                        }
-                    case ConsoleKey.F:
-                        {
-                            SocketHttpServer.Start();
                             break;
                         }
                     case ConsoleKey.T:

@@ -35,6 +35,33 @@ namespace ConsoleDemo.Util
         }
 
         /// <summary>
+        /// 遍历客户端
+        /// </summary>
+        /// <param name="clientList">SocketClient[]</param>
+        public static string IterateClient(SocketClient[] clientList)
+        {
+            string msg = "\n\n----- 遍历客户端 开始 -----\n";
+            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
+            var now = DateTime.Now;
+            foreach (var client in clientList)
+            {
+                msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
+                // 在线
+                if (client.Offline == DateTime.MinValue)
+                {
+                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                }
+                // 离线
+                else
+                {
+                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                }
+            }
+            msg += "----- 遍历客户端 结束 -----\n\n";
+            return msg;
+        }
+
+        /// <summary>
         /// 遍历socket客户端
         /// </summary>
         /// <param name="socketClientList">List SocketClient</param>

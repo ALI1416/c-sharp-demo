@@ -1,30 +1,36 @@
 ﻿using ConsoleDemo.Properties;
-using ConsoleDemo.Tool;
+using ConsoleDemo.Service;
 using ConsoleDemo.Util;
 using System.Drawing.Imaging;
 using System.IO;
 using System;
 using System.Net;
 using System.Text;
+using log4net;
 
 namespace ConsoleDemo.Test
 {
 
     /// <summary>
-    /// http服务测试
+    /// http服务(使用HttpListener)测试
     /// </summary>
     public class HttpServiceTest
     {
 
-        private static readonly string uri = "http://127.0.0.1:8080/";
+        private static readonly ILog log = LogManager.GetLogger(typeof(HttpServiceTest));
+
         private static readonly HttpService httpService = new HttpService();
+        private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
+        private static readonly int port = 8080;
+        private static readonly string account = "admin";
+        private static readonly string password = "123456";
 
         /// <summary>
         /// 启动
         /// </summary>
         public static void Start()
         {
-            httpService.Start(uri, ResponseHandle);
+            httpService.Start(ip, port, ResponseCallback);
         }
 
         /// <summary>
@@ -32,7 +38,7 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Start2()
         {
-            httpService.Start(uri, "admin", "123456", ResponseHandle);
+            httpService.Start(ip, port, account, password, ServiceCloseCallback, ResponseCallback);
         }
 
         /// <summary>
@@ -44,11 +50,19 @@ namespace ConsoleDemo.Test
         }
 
         /// <summary>
-        /// 响应处理函数
+        /// 服务器关闭回调函数
+        /// </summary>
+        private static void ServiceCloseCallback()
+        {
+            log.Warn("服务器关闭回调函数");
+        }
+
+        /// <summary>
+        /// 响应回调函数
         /// </summary>
         /// <param name="request">HttpListenerRequest</param>
         /// <param name="response">HttpListenerResponse</param>
-        private static byte[] ResponseHandle(HttpListenerRequest request, HttpListenerResponse response)
+        private static byte[] ResponseCallback(HttpListenerRequest request, HttpListenerResponse response)
         {
             byte[] data;
             // 设置response状态码：请求成功

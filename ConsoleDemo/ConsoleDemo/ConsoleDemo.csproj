@@ -52,18 +52,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\HttpServer.cs" />
+    <Compile Include="Service\HttpService2.cs" />
+    <Compile Include="Service\SocketService.cs" />
+    <Compile Include="Test\HttpService2Test.cs" />
     <Compile Include="Test\HttpServiceTest.cs" />
-    <Compile Include="Tool\HttpService.cs" />
-    <Compile Include="BLL\Qr.cs" />
-    <Compile Include="BLL\Qr2.cs" />
-    <Compile Include="BLL\SocketHttpServer.cs" />
+    <Compile Include="Service\HttpService.cs" />
+    <Compile Include="Test\SocketServiceTest.cs" />
+    <Compile Include="Test\ZXingQrCodeTest.cs" />
+    <Compile Include="Test\QrCodeTest.cs" />
     <Compile Include="BLL\SocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer.cs" />
     <Compile Include="BLL\SocketWebSocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer3.cs" />
     <Compile Include="BLL\WebSocketServer.cs" />
     <Compile Include="BLL\WebSocketServer2.cs" />
-    <Compile Include="Model\HttpSocketClient.cs" />
+    <Compile Include="Model\HttpClient.cs" />
     <Compile Include="Model\SocketClient2.cs" />
     <Compile Include="Model\SocketServer.cs" />
     <Compile Include="Model\WebSocketClient.cs" />
@@ -78,6 +82,7 @@
     <Compile Include="BLL\SocketServer.cs" />
     <Compile Include="Test\Log4NetTest.cs" />
     <Compile Include="Test\NUnitTest.cs" />
+    <Compile Include="Tool\QrCode.cs" />
     <Compile Include="Util\Qr\BitArray.cs" />
     <Compile Include="Util\Qr\BitMatrix.cs" />
     <Compile Include="Util\Qr\BlockPair.cs" />

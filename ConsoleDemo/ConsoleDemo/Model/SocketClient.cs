@@ -10,6 +10,11 @@ namespace ConsoleDemo.Model
     public class SocketClient
     {
         /// <summary>
+        /// 最大数据接收长度
+        /// </summary>
+        public static readonly int MAX_LENGTH = 10;
+
+        /// <summary>
         /// 客户端
         /// </summary>
         public Socket Client { set; get; }
@@ -17,6 +22,10 @@ namespace ConsoleDemo.Model
         /// 接收数据缓冲区
         /// </summary>
         public byte[] Buffer { set; get; }
+        /// <summary>
+        /// 数据接收长度
+        /// </summary>
+        public int Length { get; set; }
         /// <summary>
         /// IP地址
         /// </summary>
@@ -37,7 +46,8 @@ namespace ConsoleDemo.Model
         public SocketClient(Socket client)
         {
             Client = client;
-            Buffer = new byte[1024];
+            Buffer = new byte[MAX_LENGTH];
+            Length = 0;
             Ip = client.RemoteEndPoint.ToString();
             Online = DateTime.Now;
         }
