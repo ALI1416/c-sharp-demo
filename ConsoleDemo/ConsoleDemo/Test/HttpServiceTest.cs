@@ -22,6 +22,7 @@ namespace ConsoleDemo.Test
         private static readonly HttpService httpService = new HttpService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
         private static readonly int port = 8080;
+        private static readonly int port2 = 8081;
         private static readonly string account = "admin";
         private static readonly string password = "123456";
 
@@ -38,7 +39,7 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Start2()
         {
-            httpService.Start(ip, port, account, password, ServiceCloseCallback, ResponseCallback);
+            httpService.Start(ip, port2, account, password, ServiceCloseCallback, ResponseCallback);
         }
 
         /// <summary>

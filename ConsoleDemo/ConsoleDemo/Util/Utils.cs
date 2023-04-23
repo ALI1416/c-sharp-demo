@@ -40,7 +40,7 @@ namespace ConsoleDemo.Util
         /// <param name="clientList">SocketClient[]</param>
         public static string IterateClient(SocketClient[] clientList)
         {
-            string msg = "\n\n----- 遍历客户端 开始 -----\n";
+            string msg = "\n\n----- 遍历 客户端 开始 -----\n";
             msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
             var now = DateTime.Now;
             foreach (var client in clientList)
@@ -57,7 +57,7 @@ namespace ConsoleDemo.Util
                     msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
                 }
             }
-            msg += "----- 遍历客户端 结束 -----\n\n";
+            msg += "----- 遍历 客户端 结束 -----\n";
             return msg;
         }
 

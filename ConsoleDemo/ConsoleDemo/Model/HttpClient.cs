@@ -9,6 +9,11 @@ namespace ConsoleDemo.Model
     public class HttpClient
     {
         /// <summary>
+        /// 接收数据缓冲区长度
+        /// </summary>
+        public static readonly int MAX_BUFFER_LENGTH = 4096;
+
+        /// <summary>
         /// 客户端
         /// </summary>
         public Socket Client { set; get; }
@@ -25,7 +30,7 @@ namespace ConsoleDemo.Model
         public HttpClient(Socket client)
         {
             Client = client;
-            Buffer = new byte[1024];
+            Buffer = new byte[MAX_BUFFER_LENGTH];
         }
 
         /// <summary>

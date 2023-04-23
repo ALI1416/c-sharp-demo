@@ -172,10 +172,8 @@ namespace ConsoleDemo.Service
             try
             {
                 client = new HttpClient(socket);
-                // 设置超时10秒
-                socket.SendTimeout = 10000;
                 // 接收消息
-                socket.BeginReceive(client.Buffer, 0, client.Buffer.Length, SocketFlags.None, Recevice, client);
+                socket.BeginReceive(client.Buffer, 0, HttpClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
             }
             catch
             {
@@ -205,10 +203,8 @@ namespace ConsoleDemo.Service
                     client.Close();
                     return;
                 }
-                // 解码消息
-                string msg = Encoding.UTF8.GetString(client.Buffer, 0, length);
                 // 请求消息处理
-                RequestHandle(client, msg);
+                RequestHandle(client, length);
                 // 关闭连接
                 client.Close();
             }
@@ -224,11 +220,16 @@ namespace ConsoleDemo.Service
         /// 请求消息处理
         /// </summary>
         /// <param name="client">HttpClient</param>
-        /// <param name="msg">请求消息</param>
-        private void RequestHandle(HttpClient client, string msg)
+        /// <param name="length">消息长度</param>
+        private void RequestHandle(HttpClient client, int length)
         {
+            // 解码消息
+            string msg = Encoding.UTF8.GetString(client.Buffer, 0, length);
+            // 路径、参数
             string[] pathAndQuery = HttpUtility.UrlDecode(msg.Substring(4, msg.IndexOf('\r') - 13)).Split('?');
+            // 路径
             string path = pathAndQuery[0];
+            // 参数
             NameValueCollection param = null;
             if (pathAndQuery.Length > 1)
             {
@@ -236,7 +237,7 @@ namespace ConsoleDemo.Service
             }
             // 打印request信息：path，param
             log.Info("path:" + path + " ,param:" + param);
-            // 请求消息处理函数
+            // 响应回调函数
             byte[] data = responseCallback(path, param);
             Send(client, data);
         }

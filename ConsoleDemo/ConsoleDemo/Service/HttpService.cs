@@ -145,9 +145,9 @@ namespace ConsoleDemo.Service
                 return;
             }
             // 获取context对象
-            var context = server.EndGetContext(ar);
-            var request = context.Request;
-            var response = context.Response;
+            HttpListenerContext context = server.EndGetContext(ar);
+            HttpListenerRequest request = context.Request;
+            HttpListenerResponse response = context.Response;
             // 打印request信息：请求方式，URL
             log.Info("Method:" + request.HttpMethod + " ,URL:" + request.Url.PathAndQuery);
             // 账号密码验证
@@ -194,7 +194,7 @@ namespace ConsoleDemo.Service
         private void RequestHandle(HttpListenerRequest request, HttpListenerResponse response)
         {
             // 请求消息处理函数
-            var data = responseCallback(request, response);
+            byte[] data = responseCallback(request, response);
             Response(response, data);
             // 关闭连接
             response.Close();

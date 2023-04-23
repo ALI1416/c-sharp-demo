@@ -55,13 +55,14 @@
     <Compile Include="Model\HttpServer.cs" />
     <Compile Include="Service\HttpService2.cs" />
     <Compile Include="Service\SocketService.cs" />
+    <Compile Include="Service\WebSocketService.cs" />
     <Compile Include="Test\HttpService2Test.cs" />
     <Compile Include="Test\HttpServiceTest.cs" />
     <Compile Include="Service\HttpService.cs" />
+    <Compile Include="Test\SocketService2Test.cs" />
     <Compile Include="Test\SocketServiceTest.cs" />
     <Compile Include="Test\ZXingQrCodeTest.cs" />
     <Compile Include="Test\QrCodeTest.cs" />
-    <Compile Include="BLL\SocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer.cs" />
     <Compile Include="BLL\SocketWebSocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer3.cs" />
@@ -79,7 +80,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\SocketClient.cs" />
-    <Compile Include="BLL\SocketServer.cs" />
     <Compile Include="Test\Log4NetTest.cs" />
     <Compile Include="Test\NUnitTest.cs" />
     <Compile Include="Tool\QrCode.cs" />

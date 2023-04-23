@@ -4,12 +4,9 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 using log4net;
-using System.Text;
-using System.Threading;
 
 namespace ConsoleDemo.Service
 {
-
 
     /// <summary>
     /// socket服务
@@ -56,7 +53,7 @@ namespace ConsoleDemo.Service
         /// 获取在线客户端列表
         /// </summary>
         /// <returns>List&lt;SocketClient></returns>
-        public List<SocketClient> ClientOnlineCount()
+        public List<SocketClient> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
         }
@@ -119,7 +116,7 @@ namespace ConsoleDemo.Service
         /// </summary>
         public void Close()
         {
-            foreach (var client in clientList.FindAll(e => e.Client != null))
+            foreach (SocketClient client in ClientOnlineList())
             {
                 ClientOffline(client);
             }
@@ -165,7 +162,7 @@ namespace ConsoleDemo.Service
             {
                 client = new SocketClient(socket);
                 // 接收消息
-                socket.BeginReceive(client.Buffer, 0, SocketClient.MAX_LENGTH, SocketFlags.None, Recevice, client);
+                socket.BeginReceive(client.Buffer, 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
                 clientList.Add(client);
                 // 客户端上线回调函数
                 clientCallback(client, true);
@@ -187,7 +184,7 @@ namespace ConsoleDemo.Service
         private void ClientOffline(SocketClient client)
         {
             // 不存在
-            if (!clientList.FindAll(e => e.Client != null).Contains(client))
+            if (!ClientOnlineList().Contains(client))
             {
                 return;
             }
@@ -214,34 +211,50 @@ namespace ConsoleDemo.Service
                     ClientOffline(client);
                     return;
                 }
-                // TODO 
                 client.Length += length;
-                // 没有剩余数据
+                // 消息全部接收完毕
                 if (client.Client.Available == 0)
                 {
                     // 响应回调函数
                     responseCallback(client);
                     client.Length = 0;
+                    // 继续接收消息
+                    client.Client.BeginReceive(client.Buffer, 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
                 }
-                // 可用容量
-                int available = SocketClient.MAX_LENGTH - length;
-                // 丢弃溢出数据
-                if (available == 0)
-                {
-                    client.Client.BeginReceive(new byte[SocketClient.MAX_LENGTH], 0, SocketClient.MAX_LENGTH, SocketFlags.None, Recevice, client);
-                }
-                // 继续接收消息
+                // 消息还未全部接收
                 else
                 {
-                    client.Client.BeginReceive(client.Buffer, client.Length, available, SocketFlags.None, Recevice, client);
+                    // 计算可用容量
+                    int available = SocketClient.MAX_BUFFER_LENGTH - length;
+                    // 丢弃溢出消息
+                    if (available == 0)
+                    {
+                        client.Client.BeginReceive(new byte[SocketClient.MAX_BUFFER_LENGTH], 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
+                    }
+                    // 继续接收消息
+                    else
+                    {
+                        client.Client.BeginReceive(client.Buffer, client.Length, available, SocketFlags.None, Recevice, client);
+                    }
                 }
             }
             // 超时后失去连接、未知错误
-            catch (Exception e)
+            catch
             {
-                log.Error(e);
                 ClientOffline(client);
                 return;
+            }
+        }
+
+        /// <summary>
+        /// 发送消息 给所有在线客户端
+        /// </summary>
+        /// <param name="data">byte[]</param>
+        public void Send(byte[] data)
+        {
+            foreach (SocketClient client in ClientOnlineList())
+            {
+                Send(client, data);
             }
         }
 
@@ -259,7 +272,8 @@ namespace ConsoleDemo.Service
                 {
                     try
                     {
-                        client.Client.EndSend(asyncResult);
+                        int length = client.Client.EndSend(asyncResult);
+                        log.Info("向客户端 " + client.Ip + " 发送 " + length + " 字节的消息");
                     }
                     // 已失去连接
                     catch

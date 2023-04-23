@@ -18,7 +18,7 @@ namespace ConsoleDemo.Test
 
         private static readonly HttpService2 httpService = new HttpService2();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
-        private static readonly int port = 8081;
+        private static readonly int port = 8082;
 
         /// <summary>
         /// 图标byte[]
