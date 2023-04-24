@@ -8,6 +8,7 @@ namespace ConsoleDemo.Model
     /// </summary>
     public class SocketServer
     {
+
         /// <summary>
         /// 服务端
         /// </summary>

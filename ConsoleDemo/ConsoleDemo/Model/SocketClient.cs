@@ -9,8 +9,9 @@ namespace ConsoleDemo.Model
     /// </summary>
     public class SocketClient
     {
+
         /// <summary>
-        /// 接收数据缓冲区长度
+        /// 接收数据缓冲区长度，超出部分将丢弃
         /// </summary>
         public static readonly int MAX_BUFFER_LENGTH = 4096;
 
@@ -37,6 +38,10 @@ namespace ConsoleDemo.Model
         /// 下线时间(`DateTime.MinValue`表示未下线)
         /// </summary>
         public DateTime Offline { set; get; }
+        /// <summary>
+        /// 数据传输中
+        /// </summary>
+        public bool Transmission { set; get; }
 
         /// <summary>
         /// 数据接收长度
@@ -58,6 +63,7 @@ namespace ConsoleDemo.Model
             Length = 0;
             Ip = client.RemoteEndPoint.ToString();
             Online = DateTime.Now;
+            Transmission = false;
         }
 
         /// <summary>

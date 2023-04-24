@@ -11,6 +11,7 @@ namespace ConsoleDemo.Util
     /// </summary>
     public class WebSocketUtils
     {
+
         /// <summary>
         /// 握手
         /// </summary>
@@ -106,23 +107,23 @@ namespace ConsoleDemo.Util
         /// 编码数据
         /// </summary>
         /// <param name="msg">数据</param>
-        /// <param name="text">是否为文本数据</param>
+        /// <param name="isText">是否为文本数据</param>
         /// <returns>byte[]</returns>
-        public static byte[] CodedData(byte[] msg, bool text)
+        public static byte[] CodedData(byte[] msg, bool isText)
         {
             byte[] data;
             int length = msg.Length;
             if (length < 126)
             {
                 data = new byte[length + 2];
-                data[0] = (byte)(text ? 0x81 : 0x82);
+                data[0] = (byte)(isText ? 0x81 : 0x82);
                 data[1] = (byte)length;
                 msg.CopyTo(data, 2);
             }
             else if (length < 0xFFFF)
             {
                 data = new byte[length + 4];
-                data[0] = (byte)(text ? 0x81 : 0x82);
+                data[0] = (byte)(isText ? 0x81 : 0x82);
                 data[1] = 126;
                 data[2] = (byte)(length >> 8 & 0xFF);
                 data[3] = (byte)(length & 0xFF);
@@ -131,7 +132,7 @@ namespace ConsoleDemo.Util
             else
             {
                 data = new byte[length + 10];
-                data[0] = (byte)(text ? 0x81 : 0x82);
+                data[0] = (byte)(isText ? 0x81 : 0x82);
                 data[1] = 127;
                 data[2] = 0;
                 data[3] = 0;

@@ -11,7 +11,7 @@ namespace ConsoleDemo.Test
     /// ZXing二维码测试
     /// </summary>
     [TestFixture]
-    public class ZXingQrCodeTest
+    public class QrCodeZXingTest
     {
 
         private static readonly string content = "ConsoleDemo";

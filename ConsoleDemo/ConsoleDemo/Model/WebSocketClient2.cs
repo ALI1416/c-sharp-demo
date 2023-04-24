@@ -5,10 +5,11 @@ namespace ConsoleDemo.Model
 {
 
     /// <summary>
-    /// socket客户端2
+    /// webSocket客户端2
     /// </summary>
-    public class SocketClient2
+    public class WebSocketClient2
     {
+
         /// <summary>
         /// 客户端
         /// </summary>
@@ -38,7 +39,7 @@ namespace ConsoleDemo.Model
         /// 创建客户端
         /// </summary>
         /// <param name="client">Socket</param>
-        public SocketClient2(Socket client)
+        public WebSocketClient2(Socket client)
         {
             Client = client;
             Buffer = new byte[1024];

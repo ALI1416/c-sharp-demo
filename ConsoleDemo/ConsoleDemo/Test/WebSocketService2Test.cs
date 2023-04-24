@@ -11,19 +11,16 @@ namespace ConsoleDemo.Test
 {
 
     /// <summary>
-    /// socket服务(图片)测试
+    /// webSocket服务(使用HttpListener,性能差,图片)测试
     /// </summary>
-    public class SocketService2Test
+    public class WebSocketService2Test
     {
 
-        private static readonly ILog log = LogManager.GetLogger(typeof(SocketService2Test));
+        private static readonly ILog log = LogManager.GetLogger(typeof(WebSocketService2Test));
 
-        private static readonly SocketService socketService = new SocketService();
+        private static readonly WebSocketService webSocketService = new WebSocketService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
-        private static readonly int port = 8083;
-
-        private readonly static byte[] responseHeader = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\nContent-Type: multipart/x-mixed-replace; boundary=--boundary\n\n");
-        private readonly static byte[] responseEnd = Encoding.ASCII.GetBytes("\n\n");
+        private static readonly int port = 8085;
 
         private static bool isStarted = false;
 
@@ -34,7 +31,7 @@ namespace ConsoleDemo.Test
         {
             if (!isStarted)
             {
-                if (socketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
+                if (webSocketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
                 {
                     isStarted = true;
                     new Thread(t =>
@@ -57,9 +54,9 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Close()
         {
-            if (socketService != null)
+            if (webSocketService != null)
             {
-                socketService.Close();
+                webSocketService.Close();
             }
         }
 
@@ -75,27 +72,21 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 客户端上下线回调函数
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">WebSocketClient</param>
         /// <param name="online">上线或下线</param>
-        private static void ClientCallback(SocketClient client, bool online)
+        private static void ClientCallback(WebSocketClient client, bool online)
         {
             log.Info("客户端 " + client.Ip + (online ? " 已上线" : " 已下线"));
-            // 上线
-            if (online)
-            {
-                // 发送响应头
-                socketService.Send(client, responseHeader);
-            }
-            log.Debug(Utils.IterateClient(socketService.ClientList()));
+            log.Debug(Utils.IterateClient(webSocketService.ClientList()));
         }
 
         /// <summary>
         /// 响应回调函数
         /// </summary>
-        /// <param name="client">SocketClient</param>
-        private static void ResponseCallback(SocketClient client)
+        /// <param name="client">WebSocketClient</param>
+        private static void ResponseCallback(WebSocketClient client)
         {
-            log.Info("收到客户端 " + client.Ip + " 消息：" + Encoding.UTF8.GetString(client.Buffer, 0, client.Length));
+            log.Info("收到客户端 " + client.Ip + " 消息：" + Encoding.UTF8.GetString(client.Buffer.Array, 0, client.Length));
         }
 
         /// <summary>
@@ -106,12 +97,7 @@ namespace ConsoleDemo.Test
             while (isStarted)
             {
                 MemoryStream stream = Utils.GetSendMemoryStream();
-                string header = "--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
-                byte[] data = new byte[header.Length + stream.Length + 2];
-                Encoding.UTF8.GetBytes(header).CopyTo(data, 0);
-                stream.ToArray().CopyTo(data, header.Length);
-                responseEnd.CopyTo(data, data.Length - 2);
-                socketService.Send(data);
+                webSocketService.Send(stream.ToArray(), false);
                 Thread.Sleep(1000);
             }
         }

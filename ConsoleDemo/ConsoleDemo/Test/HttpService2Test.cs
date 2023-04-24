@@ -1,6 +1,7 @@
 ﻿using ConsoleDemo.Properties;
 using ConsoleDemo.Service;
 using ConsoleDemo.Util;
+using log4net;
 using System;
 using System.Collections.Specialized;
 using System.Drawing.Imaging;
@@ -16,9 +17,13 @@ namespace ConsoleDemo.Test
     public class HttpService2Test
     {
 
+        private static readonly ILog log = LogManager.GetLogger(typeof(HttpService2Test));
+
         private static readonly HttpService2 httpService = new HttpService2();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
-        private static readonly int port = 8082;
+        private static readonly int port = 8081;
+
+        private static bool isStarted = false;
 
         /// <summary>
         /// 图标byte[]
@@ -30,12 +35,20 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Start()
         {
-            if (httpService.Start(ip, port, ResponseCallback))
+            if (!isStarted)
             {
-                // 初始化图标
-                MemoryStream stream = new MemoryStream();
-                Resources.favicon.Save(stream);
-                httpIconHeaderBytes = HttpService2.GetBytes(HttpService2.icoHeaderBytes, stream);
+                if (httpService.Start(ip, port, ServiceCloseCallback, ResponseCallback))
+                {
+                    isStarted = true;
+                    // 初始化图标
+                    MemoryStream stream = new MemoryStream();
+                    Resources.favicon.Save(stream);
+                    httpIconHeaderBytes = HttpService2.GetBytes(HttpService2.icoHeaderBytes, stream);
+                }
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
             }
         }
 
@@ -44,7 +57,19 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Close()
         {
-            httpService.Close();
+            if (httpService != null)
+            {
+                httpService.Close();
+            }
+        }
+
+        /// <summary>
+        /// 服务器关闭回调函数
+        /// </summary>
+        private static void ServiceCloseCallback()
+        {
+            isStarted = false;
+            log.Warn("服务器关闭回调函数");
         }
 
         /// <summary>

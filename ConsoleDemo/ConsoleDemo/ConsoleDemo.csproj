@@ -52,24 +52,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\HttpServer.cs" />
     <Compile Include="Service\HttpService2.cs" />
     <Compile Include="Service\SocketService.cs" />
     <Compile Include="Service\WebSocketService.cs" />
+    <Compile Include="Service\WebSocketService2.cs" />
     <Compile Include="Test\HttpService2Test.cs" />
-    <Compile Include="Test\HttpServiceTest.cs" />
+    <Compile Include="Test\HttpService1Test.cs" />
     <Compile Include="Service\HttpService.cs" />
     <Compile Include="Test\SocketService2Test.cs" />
-    <Compile Include="Test\SocketServiceTest.cs" />
-    <Compile Include="Test\ZXingQrCodeTest.cs" />
+    <Compile Include="Test\SocketService1Test.cs" />
+    <Compile Include="Test\WebSocketService2Test.cs" />
+    <Compile Include="Test\WebSocketService3Test.cs" />
+    <Compile Include="Test\WebSocketService1Test.cs" />
+    <Compile Include="Test\QrCodeZXingTest.cs" />
     <Compile Include="Test\QrCodeTest.cs" />
     <Compile Include="BLL\SocketWebSocketServer.cs" />
     <Compile Include="BLL\SocketWebSocketServer2.cs" />
     <Compile Include="BLL\SocketWebSocketServer3.cs" />
-    <Compile Include="BLL\WebSocketServer.cs" />
-    <Compile Include="BLL\WebSocketServer2.cs" />
     <Compile Include="Model\HttpClient.cs" />
-    <Compile Include="Model\SocketClient2.cs" />
+    <Compile Include="Model\WebSocketClient2.cs" />
     <Compile Include="Model\SocketServer.cs" />
     <Compile Include="Model\WebSocketClient.cs" />
     <Compile Include="Program.cs" />

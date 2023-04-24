@@ -26,7 +26,7 @@ namespace ConsoleDemo.BLL
         /// <summary>
         /// socket客户端
         /// </summary>
-        private static readonly List<SocketClient2> socketClientList = new List<SocketClient2>();
+        private static readonly List<WebSocketClient2> socketClientList = new List<WebSocketClient2>();
 
         private readonly static byte[] httpCloseHeader = Encoding.UTF8.GetBytes("HTTP/1.0 200 OK\nConnection: close\n\n");
 
@@ -111,10 +111,10 @@ namespace ConsoleDemo.BLL
             {
                 return;
             }
-            SocketClient2 socketClient = null;
+            WebSocketClient2 socketClient = null;
             try
             {
-                socketClient = new SocketClient2(client);
+                socketClient = new WebSocketClient2(client);
                 // 设置超时10秒
                 client.SendTimeout = 10000;
                 // 接收消息
@@ -134,7 +134,7 @@ namespace ConsoleDemo.BLL
         /// 客户端下线
         /// </summary>
         /// <param name="socketClient">SocketClient2</param>
-        private static void ClientOffline(SocketClient2 socketClient)
+        private static void ClientOffline(WebSocketClient2 socketClient)
         {
             // 不存在
             if (!socketClientList.FindAll(e => e.Client != null).Contains(socketClient))
@@ -153,7 +153,7 @@ namespace ConsoleDemo.BLL
         private static void Recevice(IAsyncResult ar)
         {
             // 获取当前客户端
-            SocketClient2 socketClient = ar.AsyncState as SocketClient2;
+            WebSocketClient2 socketClient = ar.AsyncState as WebSocketClient2;
             try
             {
                 // 获取接收数据长度
@@ -242,7 +242,7 @@ namespace ConsoleDemo.BLL
         /// </summary>
         /// <param name="socketClient">SocketClient2</param>
         /// <param name="data">byte[]</param>
-        private static void Send(SocketClient2 socketClient, byte[] data)
+        private static void Send(WebSocketClient2 socketClient, byte[] data)
         {
             SendRaw(socketClient, WebSocketUtils.CodedData(data, false));
             Console.WriteLine("向客户端 " + socketClient.Ip + " 发送 " + data.Length + " 字节的消息");
@@ -253,7 +253,7 @@ namespace ConsoleDemo.BLL
         /// </summary>
         /// <param name="socketClient">SocketClient2</param>
         /// <param name="data">byte[]</param>
-        private static void SendRaw(SocketClient2 socketClient, byte[] data)
+        private static void SendRaw(WebSocketClient2 socketClient, byte[] data)
         {
             try
             {

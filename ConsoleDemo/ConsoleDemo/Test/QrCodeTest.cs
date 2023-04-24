@@ -6,6 +6,7 @@ using ZXing;
 
 namespace ConsoleDemo.Test
 {
+
     /// <summary>
     /// 二维码测试
     /// </summary>

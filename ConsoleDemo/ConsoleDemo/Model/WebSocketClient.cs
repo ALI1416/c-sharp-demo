@@ -9,6 +9,12 @@ namespace ConsoleDemo.Model
     /// </summary>
     public class WebSocketClient
     {
+
+        /// <summary>
+        /// 接收数据缓冲区长度，超出部分将丢弃
+        /// </summary>
+        public static readonly int MAX_BUFFER_LENGTH = 4096;
+
         /// <summary>
         /// 客户端
         /// </summary>
@@ -17,6 +23,10 @@ namespace ConsoleDemo.Model
         /// 接收数据缓冲区
         /// </summary>
         public ArraySegment<byte> Buffer { set; get; }
+        /// <summary>
+        /// 数据接收长度
+        /// </summary>
+        private int length;
         /// <summary>
         /// IP地址
         /// </summary>
@@ -31,6 +41,15 @@ namespace ConsoleDemo.Model
         public DateTime Offline { set; get; }
 
         /// <summary>
+        /// 数据接收长度
+        /// </summary>
+        public int Length
+        {
+            set { length = value; }
+            get { return length > MAX_BUFFER_LENGTH ? MAX_BUFFER_LENGTH : length; }
+        }
+
+        /// <summary>
         /// 创建客户端
         /// </summary>
         /// <param name="client">WebSocket</param>
@@ -38,7 +57,8 @@ namespace ConsoleDemo.Model
         public WebSocketClient(WebSocket client, string ip)
         {
             Client = client;
-            Buffer = new ArraySegment<byte>(new byte[1024]);
+            Buffer = new ArraySegment<byte>(new byte[MAX_BUFFER_LENGTH]);
+            Length = 0;
             Ip = ip;
             Online = DateTime.Now;
         }

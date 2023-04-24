@@ -8,8 +8,9 @@ namespace ConsoleDemo.Model
     /// </summary>
     public class HttpClient
     {
+
         /// <summary>
-        /// 接收数据缓冲区长度
+        /// 接收数据缓冲区长度，超出将响应失败
         /// </summary>
         public static readonly int MAX_BUFFER_LENGTH = 4096;
 

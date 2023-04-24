@@ -25,7 +25,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 服务器
         /// </summary>
-        private HttpServer server;
+        private SocketServer server;
         /// <summary>
         /// 服务器关闭回调函数
         /// </summary>
@@ -65,18 +65,6 @@ namespace ConsoleDemo.Service
         /// </summary>
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
-        /// <param name="responseCallback">响应回调函数&lt;路径,参数,返回值></param>
-        /// <returns>是否启动成功</returns>
-        public bool Start(IPAddress ip, int port, Func<string, NameValueCollection, byte[]> responseCallback)
-        {
-            return Start(ip, port, () => { }, responseCallback);
-        }
-
-        /// <summary>
-        /// 启动
-        /// </summary>
-        /// <param name="ip">IP地址</param>
-        /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
         /// <param name="responseCallback">响应回调函数&lt;路径,参数,返回值></param>
         /// <returns>是否启动成功</returns>
@@ -85,23 +73,24 @@ namespace ConsoleDemo.Service
             try
             {
                 // 新建服务器
-                server = new HttpServer();
+                server = new SocketServer();
                 // 指定IP地址和端口号
                 server.Server.Bind(new IPEndPoint(ip, port));
                 // 设置监听数量
                 server.Server.Listen(10);
                 // 异步监听客户端请求
                 server.Server.BeginAccept(Handle, null);
-                this.serviceCloseCallback = serviceCloseCallback;
-                this.responseCallback = responseCallback;
             }
-            // 端口号冲突、未知错误
+            // 端口号冲突
             catch
             {
                 server.Close();
-                log.Error("http服务器2端口号冲突 或 未知错误");
+                server = null;
+                log.Error("http服务器2端口号冲突");
                 return false;
             }
+            this.serviceCloseCallback = serviceCloseCallback;
+            this.responseCallback = responseCallback;
             log.Info("http服务器2已启动");
             return true;
         }
@@ -111,7 +100,10 @@ namespace ConsoleDemo.Service
         /// </summary>
         public void Close()
         {
-            server.Close();
+            if (server != null)
+            {
+                server.Close();
+            }
         }
 
         /// <summary>
@@ -149,6 +141,7 @@ namespace ConsoleDemo.Service
             {
                 // 继续异步监听客户端请求
                 server.Server.BeginAccept(Handle, null);
+                ClientOnline(server.Server.EndAccept(ar));
             }
             // 主动关闭服务器
             catch
@@ -159,7 +152,6 @@ namespace ConsoleDemo.Service
                 return;
             }
             // 客户端上线
-            ClientOnline(server.Server.EndAccept(ar));
         }
 
         /// <summary>
@@ -254,7 +246,7 @@ namespace ConsoleDemo.Service
                 // 发送消息
                 client.Client.BeginSend(data, 0, data.Length, SocketFlags.None, null, null);
             }
-            // 未知错误
+            // 已失去连接、未知错误
             catch
             {
                 client.Close();

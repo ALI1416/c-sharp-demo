@@ -30,21 +30,9 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback;
         /// <summary>
-        /// 账号和密码
+        /// 账号和密码的`Authorization`形式
         /// </summary>
         private string accountAndPassword = null;
-
-        /// <summary>
-        /// 启动
-        /// </summary>
-        /// <param name="ip">IP地址</param>
-        /// <param name="port">端口号</param>
-        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
-        /// <returns>是否启动成功</returns>
-        public bool Start(IPAddress ip, int port, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
-        {
-            return Start(ip, port, null, null, () => { }, responseCallback);
-        }
 
         /// <summary>
         /// 启动
@@ -66,41 +54,31 @@ namespace ConsoleDemo.Service
         /// <param name="port">端口号</param>
         /// <param name="account">账号</param>
         /// <param name="password">密码</param>
-        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
-        /// <returns>是否启动成功</returns>
-        public bool Start(IPAddress ip, int port, string account, string password, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
-        {
-            return Start(ip, port, account, password, () => { }, responseCallback);
-        }
-
-        /// <summary>
-        /// 启动
-        /// </summary>
-        /// <param name="ip">IP地址</param>
-        /// <param name="port">端口号</param>
-        /// <param name="account">账号</param>
-        /// <param name="password">密码</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
         /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, string account, string password, Action serviceCloseCallback, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
         {
-            // 新建服务器
-            server = new HttpListener
-            {
-                // 忽视客户端写入异常
-                IgnoreWriteExceptions = true
-            };
-            // 指定IP地址和端口号
-            server.Prefixes.Add("http://" + ip + ":" + port + "/");
             try
             {
+                // 新建服务器
+                server = new HttpListener
+                {
+                    // 忽视客户端写入异常
+                    IgnoreWriteExceptions = true
+                };
+                // 指定IP地址和端口号
+                server.Prefixes.Add("http://" + ip + ":" + port + "/");
                 // 启动服务器
                 server.Start();
+                // 异步监听客户端请求
+                server.BeginGetContext(Handle, null);
             }
             // 端口号冲突
             catch
             {
+                server.Close();
+                server = null;
                 log.Error("http服务器端口号冲突");
                 return false;
             }
@@ -111,8 +89,6 @@ namespace ConsoleDemo.Service
             }
             this.serviceCloseCallback = serviceCloseCallback;
             this.responseCallback = responseCallback;
-            // 异步监听客户端请求
-            server.BeginGetContext(Handle, null);
             log.Info("http服务器已启动");
             return true;
         }
@@ -122,7 +98,10 @@ namespace ConsoleDemo.Service
         /// </summary>
         public void Close()
         {
-            server.Close();
+            if (server != null)
+            {
+                server.Close();
+            }
         }
 
         /// <summary>
@@ -135,6 +114,20 @@ namespace ConsoleDemo.Service
             {
                 // 继续异步监听客户端请求
                 server.BeginGetContext(Handle, null);
+                // 获取context对象
+                HttpListenerContext context = server.EndGetContext(ar);
+                HttpListenerRequest request = context.Request;
+                HttpListenerResponse response = context.Response;
+                // 打印request信息：请求方式，URL
+                log.Info("Method:" + request.HttpMethod + " ,URL:" + request.Url.PathAndQuery);
+                // 账号密码验证
+                if (accountAndPassword != null && !Authorization(request, response))
+                {
+                    log.Warn("密码错误");
+                    return;
+                }
+                // 请求消息处理
+                RequestHandle(request, response);
             }
             // 主动关闭服务器
             catch
@@ -144,20 +137,6 @@ namespace ConsoleDemo.Service
                 log.Info("主动关闭http服务器");
                 return;
             }
-            // 获取context对象
-            HttpListenerContext context = server.EndGetContext(ar);
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
-            // 打印request信息：请求方式，URL
-            log.Info("Method:" + request.HttpMethod + " ,URL:" + request.Url.PathAndQuery);
-            // 账号密码验证
-            if (accountAndPassword != null && !Authorization(request, response))
-            {
-                log.Warn("密码错误");
-                return;
-            }
-            // 请求消息处理
-            RequestHandle(request, response);
         }
 
         /// <summary>

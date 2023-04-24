@@ -12,10 +12,10 @@ namespace ConsoleDemo.Test
     /// <summary>
     /// socket服务(文本)测试
     /// </summary>
-    public class SocketServiceTest
+    public class SocketService1Test
     {
 
-        private static readonly ILog log = LogManager.GetLogger(typeof(SocketServiceTest));
+        private static readonly ILog log = LogManager.GetLogger(typeof(SocketService1Test));
 
         private static readonly SocketService socketService = new SocketService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
@@ -28,16 +28,23 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Start()
         {
-            if (socketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
+            if (!isStarted)
             {
-                isStarted = true;
-                new Thread(t =>
+                if (socketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
                 {
-                    IntervalSend();
-                })
-                {
-                    IsBackground = true
-                }.Start();
+                    isStarted = true;
+                    new Thread(t =>
+                    {
+                        IntervalSend();
+                    })
+                    {
+                        IsBackground = true
+                    }.Start();
+                }
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
             }
         }
 
@@ -46,7 +53,10 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Close()
         {
-            socketService.Close();
+            if (socketService != null)
+            {
+                socketService.Close();
+            }
         }
 
         /// <summary>
@@ -55,6 +65,7 @@ namespace ConsoleDemo.Test
         private static void ServiceCloseCallback()
         {
             isStarted = false;
+            log.Warn("服务器关闭回调函数");
         }
 
         /// <summary>

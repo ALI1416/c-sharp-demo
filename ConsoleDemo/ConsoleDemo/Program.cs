@@ -1,5 +1,4 @@
-﻿using ConsoleDemo.BLL;
-using ConsoleDemo.Test;
+﻿using ConsoleDemo.Test;
 using System;
 
 namespace ConsoleDemo
@@ -15,24 +14,27 @@ namespace ConsoleDemo
         public static void Main(string[] args)
         {
             //Log4NetTest.Test();
-            //Qr.Start();
-            //Qr2.Start();
-            //HttpServiceTest.Start();
+            //QrCodeZXingTest.Test();
+            //QrCodeTest.Test();
+
+            HttpService1Test.Start();
             //HttpService2Test.Start();
-            //SocketServiceTest.Start();
-            SocketService2Test.Start();
+            //SocketService1Test.Start();
+            //SocketService2Test.Start();
+            //WebSocketService1Test.Start();
+            //WebSocketService2Test.Start();
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0\n" +
-                    "http服务(使用HttpListener)\t-> 关闭:1 启动:2 认证启动:3\n" +
-                    "http服务2(使用Socket)\t-> 关闭:4 启动:5\n" +
-                    "socket服务(文本)\t-> 关闭:6 启动:7\n" +
-                    "socket2服务(图片)\t-> 关闭:8 启动:9\n" +
-                    "webSocket服务(使用HttpListener,文本)\t-> 关闭:Q 启动:W\n" +
-                    "webSocket2服务(使用HttpListener,图片)\t-> 关闭:E 启动:R\n" +
-                    "webSocket3服务器(使用Socket,文本)\t-> 关闭:T 启动:Y\n" +
-                    "webSocket4服务器(使用Socket,图片)\t-> 关闭:U 启动:I\n" +
-                    "webSocket5服务器(使用Socket,图片,确认)\t-> 关闭:O 启动:P\n");
+                    "http服务1(使用HttpListener)8080\t-> 关闭:1 启动:2 认证启动:3\n" +
+                    "http服务2(使用Socket)8081\t-> 关闭:4 启动:5\n" +
+                    "socket服务1(文本)8082\t-> 关闭:6 启动:7\n" +
+                    "socket服务2(图片)8083\t-> 关闭:8 启动:9\n" +
+                    "webSocket服务1(使用HttpListener,性能差,文本)8084\t-> 关闭:Q 启动:W\n" +
+                    "webSocket服务2(使用HttpListener,性能差,图片)8085\t-> 关闭:E 启动:R\n" +
+                    "webSocket服务3(使用Socket,文本)8086\t-> 关闭:T 启动:Y\n" +
+                    "webSocket服务4(使用Socket,图片)8087\t-> 关闭:U 启动:I\n" +
+                    "webSocket服务5(使用Socket,图片,确认)8088\t-> 关闭:O 启动:P\n");
                 switch (Console.ReadKey().Key)
                 {
                     case ConsoleKey.D0:
@@ -41,17 +43,17 @@ namespace ConsoleDemo
                         }
                     case ConsoleKey.D1:
                         {
-                            HttpServiceTest.Close();
+                            HttpService1Test.Close();
                             break;
                         }
                     case ConsoleKey.D2:
                         {
-                            HttpServiceTest.Start();
+                            HttpService1Test.Start();
                             break;
                         }
                     case ConsoleKey.D3:
                         {
-                            HttpServiceTest.Start2();
+                            HttpService1Test.Start2();
                             break;
                         }
                     case ConsoleKey.D4:
@@ -66,12 +68,12 @@ namespace ConsoleDemo
                         }
                     case ConsoleKey.D6:
                         {
-                            SocketServiceTest.Close();
+                            SocketService1Test.Close();
                             break;
                         }
                     case ConsoleKey.D7:
                         {
-                            SocketServiceTest.Start();
+                            SocketService1Test.Start();
                             break;
                         }
                     case ConsoleKey.D8:
@@ -84,70 +86,24 @@ namespace ConsoleDemo
                             SocketService2Test.Start();
                             break;
                         }
-                    case ConsoleKey.W:
+                    case ConsoleKey.Q:
                         {
+                            WebSocketService1Test.Close();
                             break;
                         }
-                    case ConsoleKey.S:
+                    case ConsoleKey.W:
                         {
+                            WebSocketService1Test.Start();
                             break;
                         }
                     case ConsoleKey.E:
                         {
+                            WebSocketService2Test.Close();
                             break;
                         }
-                    case ConsoleKey.D:
+                    case ConsoleKey.R:
                         {
-                            break;
-                        }
-                    case ConsoleKey.T:
-                        {
-                            WebSocketServer.Close();
-                            break;
-                        }
-                    case ConsoleKey.G:
-                        {
-                            WebSocketServer.Start();
-                            break;
-                        }
-                    case ConsoleKey.Y:
-                        {
-                            WebSocketServer2.Close();
-                            break;
-                        }
-                    case ConsoleKey.H:
-                        {
-                            WebSocketServer2.Start();
-                            break;
-                        }
-                    case ConsoleKey.U:
-                        {
-                            SocketWebSocketServer.Close();
-                            break;
-                        }
-                    case ConsoleKey.J:
-                        {
-                            SocketWebSocketServer.Start();
-                            break;
-                        }
-                    case ConsoleKey.I:
-                        {
-                            SocketWebSocketServer2.Close();
-                            break;
-                        }
-                    case ConsoleKey.K:
-                        {
-                            SocketWebSocketServer2.Start();
-                            break;
-                        }
-                    case ConsoleKey.O:
-                        {
-                            SocketWebSocketServer3.Close();
-                            break;
-                        }
-                    case ConsoleKey.L:
-                        {
-                            SocketWebSocketServer3.Start();
+                            WebSocketService2Test.Start();
                             break;
                         }
                 }

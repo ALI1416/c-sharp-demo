@@ -14,24 +14,32 @@ namespace ConsoleDemo.Test
     /// <summary>
     /// http服务(使用HttpListener)测试
     /// </summary>
-    public class HttpServiceTest
+    public class HttpService1Test
     {
 
-        private static readonly ILog log = LogManager.GetLogger(typeof(HttpServiceTest));
+        private static readonly ILog log = LogManager.GetLogger(typeof(HttpService1Test));
 
         private static readonly HttpService httpService = new HttpService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
         private static readonly int port = 8080;
-        private static readonly int port2 = 8081;
         private static readonly string account = "admin";
         private static readonly string password = "123456";
+
+        private static bool isStarted = false;
 
         /// <summary>
         /// 启动
         /// </summary>
         public static void Start()
         {
-            httpService.Start(ip, port, ResponseCallback);
+            if (!isStarted)
+            {
+                isStarted = httpService.Start(ip, port, ServiceCloseCallback, ResponseCallback);
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
+            }
         }
 
         /// <summary>
@@ -39,7 +47,14 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Start2()
         {
-            httpService.Start(ip, port2, account, password, ServiceCloseCallback, ResponseCallback);
+            if (!isStarted)
+            {
+                isStarted = httpService.Start(ip, port, account, password, ServiceCloseCallback, ResponseCallback);
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
+            }
         }
 
         /// <summary>
@@ -47,7 +62,10 @@ namespace ConsoleDemo.Test
         /// </summary>
         public static void Close()
         {
-            httpService.Close();
+            if (httpService != null)
+            {
+                httpService.Close();
+            }
         }
 
         /// <summary>
@@ -55,6 +73,7 @@ namespace ConsoleDemo.Test
         /// </summary>
         private static void ServiceCloseCallback()
         {
+            isStarted = false;
             log.Warn("服务器关闭回调函数");
         }
 

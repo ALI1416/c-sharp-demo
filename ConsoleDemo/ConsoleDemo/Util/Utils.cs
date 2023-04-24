@@ -13,6 +13,7 @@ namespace ConsoleDemo.Util
     /// </summary>
     public class Utils
     {
+
         private static int index = 0;
         private static readonly MemoryStream appleStream = new MemoryStream();
         private static readonly MemoryStream bananaStream = new MemoryStream();
@@ -42,8 +43,35 @@ namespace ConsoleDemo.Util
         {
             string msg = "\n\n----- 遍历 客户端 开始 -----\n";
             msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
-            var now = DateTime.Now;
-            foreach (var client in clientList)
+            DateTime now = DateTime.Now;
+            foreach (SocketClient client in clientList)
+            {
+                msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
+                // 在线
+                if (client.Offline == DateTime.MinValue)
+                {
+                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                }
+                // 离线
+                else
+                {
+                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                }
+            }
+            msg += "----- 遍历 客户端 结束 -----\n";
+            return msg;
+        }
+
+        /// <summary>
+        /// 遍历客户端
+        /// </summary>
+        /// <param name="clientList">WebSocketClient[]</param>
+        public static string IterateClient(WebSocketClient[] clientList)
+        {
+            string msg = "\n\n----- 遍历 客户端 开始 -----\n";
+            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
+            DateTime now = DateTime.Now;
+            foreach (WebSocketClient client in clientList)
             {
                 msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
                 // 在线
@@ -92,7 +120,7 @@ namespace ConsoleDemo.Util
         /// 遍历socket客户端2
         /// </summary>
         /// <param name="socketClientList">List SocketClient2</param>
-        public static void IterateSocketClient2(List<SocketClient2> socketClientList)
+        public static void IterateSocketClient2(List<WebSocketClient2> socketClientList)
         {
             string msg = "\n----- 遍历socket客户端2 开始 -----\n";
             msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
