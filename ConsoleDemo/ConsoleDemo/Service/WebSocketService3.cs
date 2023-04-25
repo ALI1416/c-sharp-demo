@@ -11,36 +11,36 @@ namespace ConsoleDemo.Service
 {
 
     /// <summary>
-    /// webSocket服务2(使用Socket)
+    /// webSocket服务3(使用Socket)
     /// </summary>
-    public class WebSocketService2
+    public class WebSocketService3
     {
 
         /// <summary>
         /// 日志实例
         /// </summary>
-        private static readonly ILog log = LogManager.GetLogger(typeof(WebSocketService2));
+        private static readonly ILog log = LogManager.GetLogger(typeof(WebSocketService3));
 
         /// <summary>
         /// 服务器
         /// </summary>
-        private SocketServer server;
+        private SocketServer2 server;
         /// <summary>
         /// 客户端列表
         /// </summary>
-        private List<SocketClient> clientList;
+        private List<SocketClient2> clientList;
         /// <summary>
         /// 服务器关闭回调函数
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;SocketClient,上线或下线>
+        /// 客户端上下线回调函数&lt;SocketClient2,上线或下线>
         /// </summary>
-        private Action<SocketClient, bool> clientCallback;
+        private Action<SocketClient2, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;SocketClient,解码后的byte[]>
+        /// 响应回调函数&lt;SocketClient2,解码后的byte[]>
         /// </summary>
-        private Action<SocketClient, byte[]> responseCallback;
+        private Action<SocketClient2, byte[]> responseCallback;
 
         /// <summary>
         /// 关闭连接头byte[]
@@ -48,10 +48,19 @@ namespace ConsoleDemo.Service
         private readonly static byte[] closeHeaderBytes = Encoding.UTF8.GetBytes("HTTP/1.0 200 OK\nConnection: close\n\n");
 
         /// <summary>
+        /// 获取服务端
+        /// </summary>
+        /// <returns>SocketServer2</returns>
+        public SocketServer2 Server
+        {
+            get { return server; }
+        }
+
+        /// <summary>
         /// 获取客户端列表
         /// </summary>
-        /// <returns>SocketClient[]</returns>
-        public SocketClient[] ClientList()
+        /// <returns>SocketClient2[]</returns>
+        public SocketClient2[] ClientList()
         {
             return clientList.ToArray();
         }
@@ -59,10 +68,19 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取在线客户端列表
         /// </summary>
-        /// <returns>List&lt;SocketClient></returns>
-        public List<SocketClient> ClientOnlineList()
+        /// <returns>List&lt;SocketClient2></returns>
+        public List<SocketClient2> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
+        }
+
+        /// <summary>
+        /// 获取`在线`并且`可发送数据`的用户列表
+        /// </summary>
+        /// <returns>List&lt;WebSocketClient2></returns>
+        public List<SocketClient2> ClientOnlineAndNotTransmission()
+        {
+            return clientList.FindAll(e => (e.Client != null && !e.Transmission));
         }
 
         /// <summary>
@@ -71,15 +89,15 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;SocketClient,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;SocketClient,解码后的byte[]></param>
+        /// <param name="clientCallback">客户端上下线回调函数&lt;SocketClient2,上线或下线></param>
+        /// <param name="responseCallback">响应回调函数&lt;SocketClient2,解码后的byte[]></param>
         /// <returns>是否启动成功</returns>
-        public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient, bool> clientCallback, Action<SocketClient, byte[]> responseCallback)
+        public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient2, bool> clientCallback, Action<SocketClient2, byte[]> responseCallback)
         {
             try
             {
                 // 新建服务器
-                server = new SocketServer();
+                server = new SocketServer2(server);
                 // 指定IP地址和端口号
                 server.Server.Bind(new IPEndPoint(ip, port));
                 // 设置监听数量
@@ -92,17 +110,17 @@ namespace ConsoleDemo.Service
             {
                 server.Close();
                 server = null;
-                log.Error("webSocket服务器2端口号冲突");
+                log.Error("webSocket服务器3端口号冲突");
                 return false;
             }
             if (clientList == null)
             {
-                clientList = new List<SocketClient>();
+                clientList = new List<SocketClient2>();
             }
             this.serviceCloseCallback = serviceCloseCallback;
             this.clientCallback = clientCallback;
             this.responseCallback = responseCallback;
-            log.Info("webSocket服务器2已启动");
+            log.Info("webSocket服务器3已启动");
             return true;
         }
 
@@ -113,7 +131,7 @@ namespace ConsoleDemo.Service
         {
             if (server != null)
             {
-                foreach (SocketClient client in ClientOnlineList())
+                foreach (SocketClient2 client in ClientOnlineList())
                 {
                     ClientOffline(client);
                 }
@@ -155,12 +173,12 @@ namespace ConsoleDemo.Service
             {
                 return;
             }
-            SocketClient client = null;
+            SocketClient2 client = null;
             try
             {
-                client = new SocketClient(socket);
+                client = new SocketClient2(socket);
                 // 接收消息
-                socket.BeginReceive(client.Buffer, 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
+                socket.BeginReceive(client.Buffer, 0, SocketClient2.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
                 clientList.Add(client);
                 // 客户端上线回调函数
                 clientCallback(client, true);
@@ -178,8 +196,8 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">SocketClient</param>
-        private void ClientOffline(SocketClient client)
+        /// <param name="client">SocketClient2</param>
+        private void ClientOffline(SocketClient2 client)
         {
             // 不存在
             if (!ClientOnlineList().Contains(client))
@@ -198,7 +216,7 @@ namespace ConsoleDemo.Service
         private void Recevice(IAsyncResult ar)
         {
             // 获取当前客户端
-            SocketClient client = ar.AsyncState as SocketClient;
+            SocketClient2 client = ar.AsyncState as SocketClient2;
             try
             {
                 // 获取接收数据长度
@@ -233,23 +251,24 @@ namespace ConsoleDemo.Service
                         }
                         else
                         {
+                            client.Transmission = false;
                             // 响应回调函数
                             responseCallback(client, data);
                         }
                     }
                     client.Length = 0;
                     // 继续接收消息
-                    client.Client.BeginReceive(client.Buffer, 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
+                    client.Client.BeginReceive(client.Buffer, 0, SocketClient2.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
                 }
                 // 消息还未全部接收
                 else
                 {
                     // 计算可用容量
-                    int available = SocketClient.MAX_BUFFER_LENGTH - length;
+                    int available = SocketClient2.MAX_BUFFER_LENGTH - length;
                     // 丢弃溢出消息
                     if (available == 0)
                     {
-                        client.Client.BeginReceive(new byte[SocketClient.MAX_BUFFER_LENGTH], 0, SocketClient.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
+                        client.Client.BeginReceive(new byte[SocketClient2.MAX_BUFFER_LENGTH], 0, SocketClient2.MAX_BUFFER_LENGTH, SocketFlags.None, Recevice, client);
                     }
                     // 继续接收消息
                     else
@@ -269,9 +288,9 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 请求握手
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">SocketClient2</param>
         /// <returns>是否已请求握手</returns>
-        private bool HandShake(SocketClient client)
+        private bool HandShake(SocketClient2 client)
         {
             // 解码消息
             string msg = Encoding.UTF8.GetString(client.Buffer, 0, client.Length);
@@ -294,57 +313,37 @@ namespace ConsoleDemo.Service
         }
 
         /// <summary>
-        /// 发送文本消息 给所有在线客户端
-        /// </summary>
-        /// <param name="data">文本消息</param>
-        public void Send(byte[] data)
-        {
-            foreach (SocketClient client in ClientOnlineList())
-            {
-                Send(client, data, true);
-            }
-        }
-
-        /// <summary>
-        /// 发送消息 给所有在线客户端
+        /// 发送消息 给所有`在线`并且`可发送数据`的用户列表
         /// </summary>
         /// <param name="data">消息</param>
-        /// <param name="isText">是否为文本消息</param>
-        public void Send(byte[] data, bool isText)
+        public void Send(byte[] data)
         {
-            foreach (SocketClient client in ClientOnlineList())
+            List<SocketClient2> list = ClientOnlineAndNotTransmission();
+            server.Record(data.Length * list.Count);
+            foreach (SocketClient2 client in list)
             {
-                Send(client, data, isText);
+                Send(client, data);
             }
-        }
-
-        /// <summary>
-        /// 发送文本消息
-        /// </summary>
-        /// <param name="client">SocketClient</param>
-        /// <param name="data">文本消息</param>
-        public void Send(SocketClient client, byte[] data)
-        {
-            SendRaw(client, WebSocketUtils.CodedData(data, true));
         }
 
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">SocketClient2</param>
         /// <param name="data">消息</param>
-        /// <param name="isText">是否为文本消息</param>
-        public void Send(SocketClient client, byte[] data, bool isText)
+        public void Send(SocketClient2 client, byte[] data)
         {
-            SendRaw(client, WebSocketUtils.CodedData(data, isText));
+            client.Transmission = true;
+            client.Record(data.Length);
+            SendRaw(client, WebSocketUtils.CodedData(data, false));
         }
 
         /// <summary>
         /// 发送原始消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">SocketClient2</param>
         /// <param name="data">byte[]</param>
-        private void SendRaw(SocketClient client, byte[] data)
+        private void SendRaw(SocketClient2 client, byte[] data)
         {
             try
             {

@@ -2,6 +2,7 @@
 using ConsoleDemo.Service;
 using ConsoleDemo.Util;
 using log4net;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -10,21 +11,25 @@ namespace ConsoleDemo.Test
 {
 
     /// <summary>
-    /// socket服务(文本)测试
+    /// socket服务测试
     /// </summary>
-    public class SocketService1Test
+    public class SocketServiceTest
     {
 
-        private static readonly ILog log = LogManager.GetLogger(typeof(SocketService1Test));
+        private static readonly ILog log = LogManager.GetLogger(typeof(SocketServiceTest));
 
         private static readonly SocketService socketService = new SocketService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
         private static readonly int port = 8082;
 
+        private readonly static byte[] responseHeader = Encoding.ASCII.GetBytes("HTTP/1.1 200 OK\nContent-Type: multipart/x-mixed-replace; boundary=--boundary\n\n");
+        private readonly static byte[] responseEnd = Encoding.ASCII.GetBytes("\n\n");
+
         private static bool isStarted = false;
+        private static bool isText = true;
 
         /// <summary>
-        /// 启动
+        /// 文本启动
         /// </summary>
         public static void Start()
         {
@@ -33,6 +38,33 @@ namespace ConsoleDemo.Test
                 if (socketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
                 {
                     isStarted = true;
+                    isText = true;
+                    new Thread(t =>
+                    {
+                        IntervalSend();
+                    })
+                    {
+                        IsBackground = true
+                    }.Start();
+                }
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
+            }
+        }
+
+        /// <summary>
+        /// 图片启动
+        /// </summary>
+        public static void Start2()
+        {
+            if (!isStarted)
+            {
+                if (socketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
+                {
+                    isStarted = true;
+                    isText = false;
                     new Thread(t =>
                     {
                         IntervalSend();
@@ -76,6 +108,12 @@ namespace ConsoleDemo.Test
         private static void ClientCallback(SocketClient client, bool online)
         {
             log.Info("客户端 " + client.Ip + (online ? " 已上线" : " 已下线"));
+            // 上线
+            if (!isText && online)
+            {
+                // 发送响应头
+                socketService.Send(client, responseHeader);
+            }
             log.Debug(Utils.IterateClient(socketService.ClientList()));
         }
 
@@ -95,7 +133,20 @@ namespace ConsoleDemo.Test
         {
             while (isStarted)
             {
-                socketService.Send(Encoding.UTF8.GetBytes(Utils.GetSendString()));
+                if (isText)
+                {
+                    socketService.Send(Encoding.UTF8.GetBytes(Utils.GetSendString()));
+                }
+                else
+                {
+                    MemoryStream stream = Utils.GetSendMemoryStream();
+                    string header = "--boundary\nContent-Type: image/png\nContent-Length: " + stream.Length + "\n\n";
+                    byte[] data = new byte[header.Length + stream.Length + 2];
+                    Encoding.UTF8.GetBytes(header).CopyTo(data, 0);
+                    stream.ToArray().CopyTo(data, header.Length);
+                    responseEnd.CopyTo(data, data.Length - 2);
+                    socketService.Send(data);
+                }
                 Thread.Sleep(1000);
             }
         }

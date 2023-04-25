@@ -11,21 +11,22 @@ namespace ConsoleDemo.Test
 {
 
     /// <summary>
-    /// webSocket服务(使用HttpListener,性能差,图片)测试
+    /// webSocket服务2(使用Socket)
     /// </summary>
     public class WebSocketService2Test
     {
 
         private static readonly ILog log = LogManager.GetLogger(typeof(WebSocketService2Test));
 
-        private static readonly WebSocketService webSocketService = new WebSocketService();
+        private static readonly WebSocketService2 webSocketService = new WebSocketService2();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
-        private static readonly int port = 8085;
+        private static readonly int port = 8084;
 
         private static bool isStarted = false;
+        private static bool isText = true;
 
         /// <summary>
-        /// 启动
+        /// 文本启动
         /// </summary>
         public static void Start()
         {
@@ -34,6 +35,33 @@ namespace ConsoleDemo.Test
                 if (webSocketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
                 {
                     isStarted = true;
+                    isText = true;
+                    new Thread(t =>
+                    {
+                        IntervalSend();
+                    })
+                    {
+                        IsBackground = true
+                    }.Start();
+                }
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
+            }
+        }
+
+        /// <summary>
+        /// 图片启动
+        /// </summary>
+        public static void Start2()
+        {
+            if (!isStarted)
+            {
+                if (webSocketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
+                {
+                    isStarted = true;
+                    isText = false;
                     new Thread(t =>
                     {
                         IntervalSend();
@@ -72,9 +100,9 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 客户端上下线回调函数
         /// </summary>
-        /// <param name="client">WebSocketClient</param>
+        /// <param name="client">SocketClient</param>
         /// <param name="online">上线或下线</param>
-        private static void ClientCallback(WebSocketClient client, bool online)
+        private static void ClientCallback(SocketClient client, bool online)
         {
             log.Info("客户端 " + client.Ip + (online ? " 已上线" : " 已下线"));
             log.Debug(Utils.IterateClient(webSocketService.ClientList()));
@@ -83,10 +111,10 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 响应回调函数
         /// </summary>
-        /// <param name="client">WebSocketClient</param>
-        private static void ResponseCallback(WebSocketClient client)
+        /// <param name="client">SocketClient</param>
+        private static void ResponseCallback(SocketClient client, byte[] data)
         {
-            log.Info("收到客户端 " + client.Ip + " 消息：" + Encoding.UTF8.GetString(client.Buffer.Array, 0, client.Length));
+            log.Info("收到客户端 " + client.Ip + " 消息：" + Encoding.UTF8.GetString(data));
         }
 
         /// <summary>
@@ -96,8 +124,15 @@ namespace ConsoleDemo.Test
         {
             while (isStarted)
             {
-                MemoryStream stream = Utils.GetSendMemoryStream();
-                webSocketService.Send(stream.ToArray(), false);
+                if (isText)
+                {
+                    webSocketService.Send(Encoding.UTF8.GetBytes(Utils.GetSendString()));
+                }
+                else
+                {
+                    MemoryStream stream = Utils.GetSendMemoryStream();
+                    webSocketService.Send(stream.ToArray(), false);
+                }
                 Thread.Sleep(1000);
             }
         }

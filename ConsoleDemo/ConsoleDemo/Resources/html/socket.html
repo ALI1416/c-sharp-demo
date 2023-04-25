@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>socket图片推流演示</title>
 </head>
+
 <body>
   <h1>socket图片推流演示</h1>
   <div>
     <input type="text" id="address" value="127.0.0.1:8082">
     <button id="connect">连接</button>
+    <span>8082</span>
   </div>
   <img id="img" />
   <script>
@@ -19,20 +22,28 @@
     const img = document.getElementById('img')
 
     let status = false;
+    
     connectBtn.addEventListener('click', function () {
       if (!status) {
-        img.src = "http://" + address.value;
-        connect(true);
+        onStart();
       } else {
-        img.src = "";
-        connect(false);
+        onEnd();
       }
     })
 
-    function connect(connect) {
-      status = connect;
-      connectBtn.innerText = connect ? "断开" : "连接";
+    function onStart() {
+      img.src = "http://" + addressText.value;
+      status = true;
+      connectBtn.innerText = "断开";
     }
+
+    function onEnd() {
+      img.src = "";
+      status = false;
+      connectBtn.innerText = "连接";
+    }
+
   </script>
 </body>
+
 </html>

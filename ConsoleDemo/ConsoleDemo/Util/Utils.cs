@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
 using System.IO;
 using ConsoleDemo.Properties;
 using System.Drawing.Imaging;
 using ConsoleDemo.Model;
+using ConsoleDemo.Service;
+using System.Collections.Generic;
 
 namespace ConsoleDemo.Util
 {
@@ -42,7 +43,7 @@ namespace ConsoleDemo.Util
         public static string IterateClient(SocketClient[] clientList)
         {
             string msg = "\n\n----- 遍历 客户端 开始 -----\n";
-            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
+            msg += "ip\t\t | 上线时间\t | 下线时间\t | 连接时长(分钟)\n";
             DateTime now = DateTime.Now;
             foreach (SocketClient client in clientList)
             {
@@ -69,7 +70,7 @@ namespace ConsoleDemo.Util
         public static string IterateClient(WebSocketClient[] clientList)
         {
             string msg = "\n\n----- 遍历 客户端 开始 -----\n";
-            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
+            msg += "ip\t\t | 上线时间\t | 下线时间\t | 连接时长(分钟)\n";
             DateTime now = DateTime.Now;
             foreach (WebSocketClient client in clientList)
             {
@@ -90,84 +91,55 @@ namespace ConsoleDemo.Util
         }
 
         /// <summary>
-        /// 遍历socket客户端
+        /// 遍历
         /// </summary>
-        /// <param name="socketClientList">List SocketClient</param>
-        public static void IterateSocketClient(List<SocketClient> socketClientList)
+        /// <param name="webSocketService">WebSocketService3</param>
+        public static string Iterate(WebSocketService3 webSocketService)
         {
-            string msg = "\n----- 遍历socket客户端 开始 -----\n";
-            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
-            var now = DateTime.Now;
-            foreach (var client in socketClientList.ToArray())
+            SocketClient2[] clientList = webSocketService.ClientList();
+            string msg = "\n\n----- 遍历 客户端 开始 -----\n";
+            msg += " 状态\t | ip\t\t\t | 上线时间\t | 下线时间\t | 连接时长(分钟)\t | 每秒帧数(帧/秒)\t | 传输速度(Kb/秒)\t | 数据总量(Mb)\n";
+            DateTime now = DateTime.Now;
+            foreach (SocketClient2 client in clientList)
             {
-                msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
                 // 在线
                 if (client.Offline == DateTime.MinValue)
                 {
-                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                    // 状态
+                    msg += " 在线\t | ";
+                    // IP地址、上线时间
+                    msg += client.Ip + "\t | "
+                        + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
+                    // 下线时间、连接时长
+                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00");
+                    // 每秒帧数、传输速度
+                    msg += "\t\t\t | " + (client.FrameAvg / 100f).ToString("0.00") + "\t\t\t | " + (client.ByteAvg / 1024f).ToString("0.00") + "\t\t\t | ";
+                    // 数据总量
+                    msg += (client.ByteCount / 1048576f).ToString("0.00") + "\n";
                 }
                 // 离线
                 else
                 {
-                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
+                    // 状态
+                    msg += " -\t | ";
+                    // IP地址、上线时间
+                    msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
+                    // 下线时间、连接时长
+                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00");
+                    // 每秒帧数、传输速度
+                    msg += "\t\t\t | -\t\t\t | -\t\t\t | ";
+                    // 数据总量
+                    msg += (client.ByteCount / 1048576f).ToString("0.00") + "\n";
                 }
             }
-            msg += "----- 遍历socket客户端 结束 -----\n";
-            Console.WriteLine(msg);
-        }
-
-        /// <summary>
-        /// 遍历socket客户端2
-        /// </summary>
-        /// <param name="socketClientList">List SocketClient2</param>
-        public static void IterateSocketClient2(List<WebSocketClient2> socketClientList)
-        {
-            string msg = "\n----- 遍历socket客户端2 开始 -----\n";
-            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
-            var now = DateTime.Now;
-            foreach (var client in socketClientList.ToArray())
-            {
-                msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
-                // 在线
-                if (client.Offline == DateTime.MinValue)
-                {
-                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
-                }
-                // 离线
-                else
-                {
-                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
-                }
-            }
-            msg += "----- 遍历socket客户端2 结束 -----\n";
-            Console.WriteLine(msg);
-        }
-
-        /// <summary>
-        /// 遍历webSocket客户端
-        /// </summary>
-        /// <param name="socketClientList">List WebSocketClient</param>
-        public static void IterateWebSocketClient(List<WebSocketClient> webSocketClientList)
-        {
-            string msg = "\n----- 遍历webSocket客户端 开始 -----\n";
-            msg += "ip\t\t | 开始时间\t | 结束时间\t | 连接时长(分钟)\n";
-            var now = DateTime.Now;
-            foreach (var client in webSocketClientList.ToArray())
-            {
-                msg += client.Ip + "\t | " + client.Online.ToString("HH:mm:ss.fff") + "\t | ";
-                // 在线
-                if (client.Offline == DateTime.MinValue)
-                {
-                    msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
-                }
-                // 离线
-                else
-                {
-                    msg += client.Offline.ToString("HH:mm:ss.fff") + "\t | " + Convert.ToDouble(client.Offline.Subtract(client.Online).TotalMinutes).ToString("0.00") + "\n";
-                }
-            }
-            msg += "----- 遍历webSocket客户端 结束 -----\n";
-            Console.WriteLine(msg);
+            List<SocketClient2> clientOnlineList = webSocketService.ClientOnlineList();
+            msg += " 当前在线用户数量： " + clientOnlineList.Count
+                + "\t|\t累计访问用户数量： " + clientList.Length
+                + "\t|\t当前帧率(帧/秒)： " + (clientOnlineList.Count > 0 ? (webSocketService.Server.FrameAvg / 100f).ToString("0.00") : "0.00")
+                + "\t|\t传输数据总量(Mb)： " + (webSocketService.Server.ByteCount / 1048576f).ToString("0.00")
+                + "\n";
+            msg += "----- 遍历 客户端 结束 -----\n";
+            return msg;
         }
 
         /// <summary>

@@ -11,8 +11,7 @@ namespace ConsoleDemo.Util
     public class ImageUtils
     {
 
-
-        private static Brush brush = new SolidBrush(Color.Black);
+        private static readonly Brush brush = new SolidBrush(Color.Black);
 
         /// <summary>
         /// 二维码Bytes转Bitmap
@@ -54,5 +53,4 @@ namespace ConsoleDemo.Util
         }
 
     }
-
 }

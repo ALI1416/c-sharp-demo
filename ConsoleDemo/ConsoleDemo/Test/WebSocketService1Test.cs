@@ -2,6 +2,7 @@
 using ConsoleDemo.Service;
 using ConsoleDemo.Util;
 using log4net;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -10,7 +11,7 @@ namespace ConsoleDemo.Test
 {
 
     /// <summary>
-    /// webSocket服务(使用HttpListener,性能差,文本)测试
+    /// webSocket服务1(使用HttpListener,性能差)测试
     /// </summary>
     public class WebSocketService1Test
     {
@@ -19,12 +20,13 @@ namespace ConsoleDemo.Test
 
         private static readonly WebSocketService webSocketService = new WebSocketService();
         private static readonly IPAddress ip = IPAddress.Parse("127.0.0.1");
-        private static readonly int port = 8084;
+        private static readonly int port = 8083;
 
         private static bool isStarted = false;
+        private static bool isText = true;
 
         /// <summary>
-        /// 启动
+        /// 文本启动
         /// </summary>
         public static void Start()
         {
@@ -33,6 +35,33 @@ namespace ConsoleDemo.Test
                 if (webSocketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
                 {
                     isStarted = true;
+                    isText = true;
+                    new Thread(t =>
+                    {
+                        IntervalSend();
+                    })
+                    {
+                        IsBackground = true
+                    }.Start();
+                }
+            }
+            else
+            {
+                log.Warn("请先关闭服务");
+            }
+        }
+
+        /// <summary>
+        /// 图片启动
+        /// </summary>
+        public static void Start2()
+        {
+            if (!isStarted)
+            {
+                if (webSocketService.Start(ip, port, ServiceCloseCallback, ClientCallback, ResponseCallback))
+                {
+                    isStarted = true;
+                    isText = false;
                     new Thread(t =>
                     {
                         IntervalSend();
@@ -95,7 +124,15 @@ namespace ConsoleDemo.Test
         {
             while (isStarted)
             {
-                webSocketService.Send(Encoding.UTF8.GetBytes(Utils.GetSendString()));
+                if (isText)
+                {
+                    webSocketService.Send(Encoding.UTF8.GetBytes(Utils.GetSendString()));
+                }
+                else
+                {
+                    MemoryStream stream = Utils.GetSendMemoryStream();
+                    webSocketService.Send(stream.ToArray(), false);
+                }
                 Thread.Sleep(1000);
             }
         }

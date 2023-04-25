@@ -1,53 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webSocket图片推流演示2</title>
 </head>
+
 <body>
   <h1>webSocket图片推流演示2</h1>
   <div>
-    <input type="text" id="address" value="127.0.0.1:8086">
+    <input type="text" id="address" value="127.0.0.1:8085">
     <button id="connect">连接</button>
+    <span>8085</span>
   </div>
   <img id="img" />
+  <span id="fps" style="position:absolute;top:10px;right:10px;color:red">0.00 FPS</span>
   <script>
     const addressText = document.getElementById('address')
     const connectBtn = document.getElementById('connect')
     const img = document.getElementById('img')
+    const fps = document.getElementById("fps");
+
+    let lastTime;
+    let frameCount;
+    let frameAvg;
+    let fpsInterval;
 
     let status = false;
     let ws;
+
     connectBtn.addEventListener('click', function () {
       if (!status) {
         ws = new WebSocket("ws://" + address.value + "/")
         ws.onopen = function () {
-          connect(true);
+          onStart();
         }
         ws.onmessage = function (e) {
           ws.send("\0");
           URL.revokeObjectURL(img.src);
           img.src = URL.createObjectURL(new Blob([e.data], { type: 'image/png' }));
+          if ((++frameCount) % 5 == 0) {
+            let now = new Date();
+            frameAvg = (5000.0 / (now.getTime() - lastTime.getTime())).toFixed(2) + " FPS";
+            lastTime = now;
+          }
         }
         ws.onclose = function () {
-          connect(false);
+          onEnd();
         }
         ws.onerror = function () {
-          connect(false);
+          onEnd();
         }
       } else {
         ws.close();
-        connect(false);
+        onEnd();
       }
     })
 
-    function connect(connect) {
-      status = connect;
-      addressText.disabled = connect;
-      connectBtn.innerText = connect ? "断开" : "连接";
+    function onStart() {
+      status = true;
+      addressText.disabled = true;
+      connectBtn.innerText = "断开";
+      lastTime = new Date();
+      frameCount = 0;
+      fpsInterval = setInterval(() => {
+        fps.innerText = frameAvg
+      }, 5000);
     }
+
+    function onEnd() {
+      img.src = "";
+      status = false;
+      addressText.disabled = false;
+      connectBtn.innerText = "连接";
+      clearInterval(fpsInterval);
+      fps.innerText = "0.00 FPS"
+    }
+
   </script>
 </body>
+
 </html>

@@ -229,7 +229,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送文本消息 给所有在线客户端
         /// </summary>
-        /// <param name="data">byte[]</param>
+        /// <param name="data">文本消息</param>
         public void Send(byte[] data)
         {
             foreach (WebSocketClient client in ClientOnlineList())
@@ -242,7 +242,7 @@ namespace ConsoleDemo.Service
         /// 发送文本消息
         /// </summary>
         /// <param name="client">WebSocketClient</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="data">文本消息</param>
         public void Send(WebSocketClient client, byte[] data)
         {
             Send(client, data, true);
@@ -251,7 +251,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息 给所有在线客户端
         /// </summary>
-        /// <param name="data">byte[]</param>
+        /// <param name="data">消息</param>
         /// <param name="isText">是否为文本数据</param>
         public void Send(byte[] data, bool isText)
         {

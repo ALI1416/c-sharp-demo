@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webSocket图片推流演示</title>
 </head>
+
 <body>
   <h1>webSocket图片推流演示</h1>
   <div>
-    <input type="text" id="address" value="127.0.0.1:8085">
+    <input type="text" id="address" value="127.0.0.1:8083">
     <button id="connect">连接</button>
+    <span>8083 8084</span>
   </div>
   <img id="img" />
   <script>
@@ -20,33 +23,43 @@
 
     let status = false;
     let ws;
+
     connectBtn.addEventListener('click', function () {
       if (!status) {
-        ws = new WebSocket("ws://" + address.value + "/")
+        ws = new WebSocket("ws://" + addressText.value + "/")
         ws.onopen = function () {
-          connect(true);
+          onStart();
         }
         ws.onmessage = function (e) {
           URL.revokeObjectURL(img.src);
           img.src = URL.createObjectURL(new Blob([e.data], { type: 'image/png' }));
         }
         ws.onclose = function () {
-          connect(false);
+          onEnd();
         }
         ws.onerror = function () {
-          connect(false);
+          onEnd();
         }
       } else {
         ws.close();
-        connect(false);
+        onEnd();
       }
     })
 
-    function connect(connect) {
-      status = connect;
-      addressText.disabled = connect;
-      connectBtn.innerText = connect ? "断开" : "连接";
+    function onStart() {
+      status = true;
+      addressText.disabled = true;
+      connectBtn.innerText = "断开";
     }
+
+    function onEnd() {
+      img.src = "";
+      status = false;
+      addressText.disabled = false;
+      connectBtn.innerText = "连接";
+    }
+
   </script>
 </body>
+
 </html>

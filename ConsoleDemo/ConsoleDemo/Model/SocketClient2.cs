@@ -5,9 +5,9 @@ namespace ConsoleDemo.Model
 {
 
     /// <summary>
-    /// socket客户端
+    /// socket客户端2
     /// </summary>
-    public class SocketClient
+    public class SocketClient2
     {
 
         /// <summary>
@@ -38,6 +38,34 @@ namespace ConsoleDemo.Model
         /// 下线时间(`DateTime.MinValue`表示未下线)
         /// </summary>
         public DateTime Offline { set; get; }
+        /// <summary>
+        /// 数据传输中
+        /// </summary>
+        public bool Transmission { set; get; }
+        /// <summary>
+        /// 上一次记录时间
+        /// </summary>
+        public DateTime LastRecordTime { set; get; }
+        /// <summary>
+        /// 上一次记录字节数
+        /// </summary>
+        public int LastRecordByte { set; get; }
+        /// <summary>
+        /// 帧总数
+        /// </summary>
+        public int FrameCount { set; get; }
+        /// <summary>
+        /// 字节总数
+        /// </summary>
+        public int ByteCount { set; get; }
+        /// <summary>
+        /// 平均每秒帧数x100
+        /// </summary>
+        public int FrameAvg { set; get; }
+        /// <summary>
+        /// 平均每秒字节数
+        /// </summary>
+        public int ByteAvg { set; get; }
 
         /// <summary>
         /// 数据接收长度
@@ -52,7 +80,7 @@ namespace ConsoleDemo.Model
         /// 创建客户端
         /// </summary>
         /// <param name="client">Socket</param>
-        public SocketClient(Socket client)
+        public SocketClient2(Socket client)
         {
             Client = client;
             Buffer = new byte[MAX_BUFFER_LENGTH];
@@ -72,6 +100,26 @@ namespace ConsoleDemo.Model
                 Client = null;
                 Buffer = null;
                 Offline = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <param name="length">字节长度</param>
+        public void Record(int length)
+        {
+            ByteCount += length;
+            LastRecordByte += length;
+            // 每5帧采样一次
+            if ((++FrameCount) % 5 == 0)
+            {
+                var now = DateTime.Now;
+                var second = now.Subtract(LastRecordTime).TotalSeconds;
+                FrameAvg = (int)(500 / second);
+                ByteAvg = (int)(LastRecordByte / second);
+                LastRecordTime = now;
+                LastRecordByte = 0;
             }
         }
 

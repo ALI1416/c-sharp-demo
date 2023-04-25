@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>webSocket演示</title>
 </head>
+
 <body>
   <h1>webSocket演示</h1>
   <div>
-    <input type="text" id="address" value="127.0.0.1:8084">
+    <input type="text" id="address" value="127.0.0.1:8083">
     <button id="connect">连接</button>
+    <span>8083 8084</span>
   </div>
   <div>
     <input type="text" id="msg" disabled>
@@ -26,27 +29,28 @@
 
     let status = false;
     let ws;
+
     connectBtn.addEventListener('click', function () {
       if (!status) {
-        ws = new WebSocket("ws://" + address.value + "/")
+        ws = new WebSocket("ws://" + addressText.value + "/")
         ws.onopen = function () {
-          connect(true);
+          onStart();
           log("连接成功！")
         }
         ws.onmessage = function (e) {
           log("收到消息：" + e.data);
         }
         ws.onclose = function () {
-          connect(false);
+          onEnd();
           log("连接已断开！");
         }
         ws.onerror = function () {
-          connect(false);
+          onEnd();
           log("发生错误！");
         }
       } else {
         ws.close();
-        connect(false);
+        onEnd();
       }
     })
 
@@ -55,17 +59,27 @@
       log("发送消息：" + msg.value)
     })
 
-    function connect(connect) {
-      status = connect;
-      addressText.disabled = connect;
-      connectBtn.innerText = connect ? "断开" : "连接";
-      msgText.disabled = !connect;
-      sendBtn.disabled = !connect;
+    function onStart() {
+      status = true;
+      addressText.disabled = true;
+      connectBtn.innerText = "断开";
+      msgText.disabled = false;
+      sendBtn.disabled = false;
+    }
+
+    function onEnd() {
+      status = false;
+      addressText.disabled = false;
+      connectBtn.innerText = "连接";
+      msgText.disabled = true;
+      sendBtn.disabled = true;
     }
 
     function log(msg) {
       logText.value = (msg + '\n' + logText.value);
     }
+
   </script>
 </body>
+
 </html>

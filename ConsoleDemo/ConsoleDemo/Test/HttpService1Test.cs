@@ -43,7 +43,7 @@ namespace ConsoleDemo.Test
         }
 
         /// <summary>
-        /// 启动2
+        /// 授权启动
         /// </summary>
         public static void Start2()
         {
