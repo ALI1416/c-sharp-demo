@@ -52,11 +52,11 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 创建客户端
         /// </summary>
-        /// <param name="client">WebSocket</param>
+        /// <param name="webSocket">WebSocket</param>
         /// <param name="ip">IP地址</param>
-        public WebSocketClient(WebSocket client, string ip)
+        public WebSocketClient(WebSocket webSocket, string ip)
         {
-            Client = client;
+            Client = webSocket;
             Buffer = new ArraySegment<byte>(new byte[MAX_BUFFER_LENGTH]);
             Length = 0;
             Ip = ip;

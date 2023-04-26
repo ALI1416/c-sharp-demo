@@ -34,11 +34,11 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;SocketClient2,上线或下线>
+        /// 客户端上下线回调函数&lt;客户端,上线或下线>
         /// </summary>
         private Action<SocketClient2, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;SocketClient2,解码后的byte[]>
+        /// 响应回调函数&lt;客户端,解码后的byte[]>
         /// </summary>
         private Action<SocketClient2, byte[]> responseCallback;
 
@@ -59,7 +59,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取客户端列表
         /// </summary>
-        /// <returns>SocketClient2[]</returns>
+        /// <returns>客户端列表</returns>
         public SocketClient2[] ClientList()
         {
             return clientList.ToArray();
@@ -68,16 +68,16 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取在线客户端列表
         /// </summary>
-        /// <returns>List&lt;SocketClient2></returns>
+        /// <returns>在线客户端列表</returns>
         public List<SocketClient2> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
         }
 
         /// <summary>
-        /// 获取`在线`并且`可发送数据`的用户列表
+        /// 获取`在线`并且`可发送数据`的客户端列表
         /// </summary>
-        /// <returns>List&lt;WebSocketClient2></returns>
+        /// <returns>`在线`并且`可发送数据`的客户端列表</returns>
         public List<SocketClient2> ClientOnlineAndNotTransmission()
         {
             return clientList.FindAll(e => (e.Client != null && !e.Transmission));
@@ -89,8 +89,8 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;SocketClient2,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;SocketClient2,解码后的byte[]></param>
+        /// <param name="clientCallback">客户端上下线回调函数&lt;客户端,上线或下线></param>
+        /// <param name="responseCallback">响应回调函数&lt;客户端,解码后的byte[]></param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient2, bool> clientCallback, Action<SocketClient2, byte[]> responseCallback)
         {
@@ -165,7 +165,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端上线
         /// </summary>
-        /// <param name="socket">客户端</param>
+        /// <param name="socket">Socket</param>
         private void ClientOnline(Socket socket)
         {
             // 已存在
@@ -196,7 +196,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">SocketClient2</param>
+        /// <param name="client">客户端</param>
         private void ClientOffline(SocketClient2 client)
         {
             // 不存在
@@ -288,7 +288,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 请求握手
         /// </summary>
-        /// <param name="client">SocketClient2</param>
+        /// <param name="client">客户端</param>
         /// <returns>是否已请求握手</returns>
         private bool HandShake(SocketClient2 client)
         {
@@ -313,36 +313,37 @@ namespace ConsoleDemo.Service
         }
 
         /// <summary>
-        /// 发送消息 给所有`在线`并且`可发送数据`的用户列表
+        /// 发送二进制消息 给所有`在线`并且`可发送数据`的用户列表
         /// </summary>
-        /// <param name="data">消息</param>
+        /// <param name="data">二进制消息</param>
         public void Send(byte[] data)
         {
             List<SocketClient2> list = ClientOnlineAndNotTransmission();
-            server.Record(data.Length * list.Count);
+            server.RecordAccess(data.Length * list.Count);
+            byte[] msg = WebSocketUtils.CodedData(data, false);
             foreach (SocketClient2 client in list)
             {
-                Send(client, data);
+                SendRaw(client, msg);
             }
         }
 
         /// <summary>
-        /// 发送消息
+        /// 发送二进制消息
         /// </summary>
-        /// <param name="client">SocketClient2</param>
-        /// <param name="data">消息</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">二进制消息</param>
         public void Send(SocketClient2 client, byte[] data)
         {
             client.Transmission = true;
-            client.Record(data.Length);
+            client.RecordAccess(data.Length);
             SendRaw(client, WebSocketUtils.CodedData(data, false));
         }
 
         /// <summary>
         /// 发送原始消息
         /// </summary>
-        /// <param name="client">SocketClient2</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">原始消息</param>
         private void SendRaw(SocketClient2 client, byte[] data)
         {
             try

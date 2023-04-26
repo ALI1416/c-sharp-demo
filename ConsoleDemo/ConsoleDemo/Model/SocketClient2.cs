@@ -79,13 +79,13 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 创建客户端
         /// </summary>
-        /// <param name="client">Socket</param>
-        public SocketClient2(Socket client)
+        /// <param name="socket">Socket</param>
+        public SocketClient2(Socket socket)
         {
-            Client = client;
+            Client = socket;
             Buffer = new byte[MAX_BUFFER_LENGTH];
             Length = 0;
-            Ip = client.RemoteEndPoint.ToString();
+            Ip = socket.RemoteEndPoint.ToString();
             Online = DateTime.Now;
         }
 
@@ -104,10 +104,10 @@ namespace ConsoleDemo.Model
         }
 
         /// <summary>
-        /// 记录日志
+        /// 记录访问
         /// </summary>
         /// <param name="length">字节长度</param>
-        public void Record(int length)
+        public void RecordAccess(int length)
         {
             ByteCount += length;
             LastRecordByte += length;

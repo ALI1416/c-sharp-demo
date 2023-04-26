@@ -26,11 +26,11 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 创建客户端
         /// </summary>
-        /// <param name="client">Socket</param>
+        /// <param name="socket">Socket</param>
         /// 
-        public HttpClient(Socket client)
+        public HttpClient(Socket socket)
         {
-            Client = client;
+            Client = socket;
             Buffer = new byte[MAX_BUFFER_LENGTH];
         }
 

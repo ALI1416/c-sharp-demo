@@ -34,11 +34,11 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;SocketClient,上线或下线>
+        /// 客户端上下线回调函数&lt;客户端,上线或下线>
         /// </summary>
         private Action<SocketClient, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;SocketClient,解码后的byte[]>
+        /// 响应回调函数&lt;客户端,解码后的byte[]>
         /// </summary>
         private Action<SocketClient, byte[]> responseCallback;
 
@@ -50,7 +50,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取客户端列表
         /// </summary>
-        /// <returns>SocketClient[]</returns>
+        /// <returns>客户端列表</returns>
         public SocketClient[] ClientList()
         {
             return clientList.ToArray();
@@ -59,7 +59,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取在线客户端列表
         /// </summary>
-        /// <returns>List&lt;SocketClient></returns>
+        /// <returns>在线客户端列表</returns>
         public List<SocketClient> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
@@ -71,8 +71,8 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;SocketClient,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;SocketClient,解码后的byte[]></param>
+        /// <param name="clientCallback">客户端上下线回调函数&lt;客户端,上线或下线></param>
+        /// <param name="responseCallback">响应回调函数&lt;客户端,解码后的byte[]></param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient, bool> clientCallback, Action<SocketClient, byte[]> responseCallback)
         {
@@ -147,7 +147,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端上线
         /// </summary>
-        /// <param name="socket">客户端</param>
+        /// <param name="socket">Socket</param>
         private void ClientOnline(Socket socket)
         {
             // 已存在
@@ -178,7 +178,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         private void ClientOffline(SocketClient client)
         {
             // 不存在
@@ -269,7 +269,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 请求握手
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         /// <returns>是否已请求握手</returns>
         private bool HandShake(SocketClient client)
         {
@@ -299,9 +299,10 @@ namespace ConsoleDemo.Service
         /// <param name="data">文本消息</param>
         public void Send(byte[] data)
         {
+            byte[] msg = WebSocketUtils.CodedData(data, true);
             foreach (SocketClient client in ClientOnlineList())
             {
-                Send(client, data, true);
+                SendRaw(client, msg);
             }
         }
 
@@ -312,16 +313,17 @@ namespace ConsoleDemo.Service
         /// <param name="isText">是否为文本消息</param>
         public void Send(byte[] data, bool isText)
         {
+            byte[] msg = WebSocketUtils.CodedData(data, isText);
             foreach (SocketClient client in ClientOnlineList())
             {
-                Send(client, data, isText);
+                SendRaw(client, msg);
             }
         }
 
         /// <summary>
         /// 发送文本消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         /// <param name="data">文本消息</param>
         public void Send(SocketClient client, byte[] data)
         {
@@ -331,7 +333,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         /// <param name="data">消息</param>
         /// <param name="isText">是否为文本消息</param>
         public void Send(SocketClient client, byte[] data, bool isText)
@@ -342,8 +344,8 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送原始消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">原始消息</param>
         private void SendRaw(SocketClient client, byte[] data)
         {
             try

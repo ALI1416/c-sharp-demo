@@ -115,9 +115,9 @@ namespace ConsoleDemo.Service
                 // 继续异步监听客户端请求
                 server.BeginGetContext(Handle, null);
                 // 获取context对象
-                HttpListenerContext context = server.EndGetContext(ar);
-                HttpListenerRequest request = context.Request;
-                HttpListenerResponse response = context.Response;
+                var context = server.EndGetContext(ar);
+                var request = context.Request;
+                var response = context.Response;
                 // 打印request信息：请求方式，URL
                 log.Info("Method:" + request.HttpMethod + " ,URL:" + request.Url.PathAndQuery);
                 // 账号密码验证
@@ -180,16 +180,16 @@ namespace ConsoleDemo.Service
         }
 
         /// <summary>
-        /// 响应回复
+        /// 响应消息
         /// </summary>
         /// <param name="response">HttpListenerResponse</param>
-        /// <param name="buffer">buffer</param>
-        private void Response(HttpListenerResponse response, byte[] buffer)
+        /// <param name="data">消息</param>
+        private void Response(HttpListenerResponse response, byte[] data)
         {
             try
             {
                 // 返回给客户端
-                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.OutputStream.Write(data, 0, data.Length);
             }
             // 用户主动关闭连接
             catch

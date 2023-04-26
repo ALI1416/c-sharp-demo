@@ -47,16 +47,16 @@ namespace ConsoleDemo.Model
         /// 创建服务端
         /// 保留传入对象的`字节总数`
         /// </summary>
-        /// <param name="socketServer2">SocketServer2</param>
-        public SocketServer2(SocketServer2 socketServer2)
+        /// <param name="server">上一个服务端</param>
+        public SocketServer2(SocketServer2 server)
         {
             Server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             LastRecordTime = DateTime.Now;
             FrameCount = 0;
             FrameAvg = 0;
-            if (socketServer2 != null)
+            if (server != null)
             {
-                ByteCount = socketServer2.ByteCount;
+                ByteCount = server.ByteCount;
             }
         }
 
@@ -73,10 +73,10 @@ namespace ConsoleDemo.Model
         }
 
         /// <summary>
-        /// 记录日志
+        /// 记录访问
         /// </summary>
         /// <param name="length">字节长度</param>
-        public void Record(int length)
+        public void RecordAccess(int length)
         {
             ByteCount += length;
             // 每5帧采样一次

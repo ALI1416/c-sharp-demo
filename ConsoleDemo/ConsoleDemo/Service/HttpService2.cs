@@ -157,7 +157,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端上线
         /// </summary>
-        /// <param name="socket">客户端</param>
+        /// <param name="socket">Socket</param>
         private void ClientOnline(Socket socket)
         {
             HttpClient client = null;
@@ -211,7 +211,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 请求消息处理
         /// </summary>
-        /// <param name="client">HttpClient</param>
+        /// <param name="client">客户端</param>
         /// <param name="length">消息长度</param>
         private void RequestHandle(HttpClient client, int length)
         {
@@ -237,8 +237,8 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">HttpClient</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">消息</param>
         private void Send(HttpClient client, byte[] data)
         {
             try

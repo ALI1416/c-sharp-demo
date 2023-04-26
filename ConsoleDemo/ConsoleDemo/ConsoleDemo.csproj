@@ -61,6 +61,7 @@
     <Compile Include="Test\HttpService2Test.cs" />
     <Compile Include="Test\HttpService1Test.cs" />
     <Compile Include="Service\HttpService.cs" />
+    <Compile Include="Test\QrCodeTest2.cs" />
     <Compile Include="Test\SocketServiceTest.cs" />
     <Compile Include="Test\WebSocketService3Test.cs" />
     <Compile Include="Test\WebSocketService2Test.cs" />

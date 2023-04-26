@@ -51,13 +51,13 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 创建客户端
         /// </summary>
-        /// <param name="client">Socket</param>
-        public SocketClient(Socket client)
+        /// <param name="socket">Socket</param>
+        public SocketClient(Socket socket)
         {
-            Client = client;
+            Client = socket;
             Buffer = new byte[MAX_BUFFER_LENGTH];
             Length = 0;
-            Ip = client.RemoteEndPoint.ToString();
+            Ip = socket.RemoteEndPoint.ToString();
             Online = DateTime.Now;
         }
 

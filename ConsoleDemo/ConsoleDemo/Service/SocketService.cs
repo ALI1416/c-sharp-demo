@@ -32,18 +32,18 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;SocketClient,上线或下线>
+        /// 客户端上下线回调函数&lt;客户端,上线或下线>
         /// </summary>
         private Action<SocketClient, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;SocketClient>
+        /// 响应回调函数&lt;客户端>
         /// </summary>
         private Action<SocketClient> responseCallback;
 
         /// <summary>
         /// 获取客户端列表
         /// </summary>
-        /// <returns>SocketClient[]</returns>
+        /// <returns>客户端列表</returns>
         public SocketClient[] ClientList()
         {
             return clientList.ToArray();
@@ -52,7 +52,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取在线客户端列表
         /// </summary>
-        /// <returns>List&lt;SocketClient></returns>
+        /// <returns>在线客户端列表</returns>
         public List<SocketClient> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
@@ -64,8 +64,8 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;SocketClient,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;SocketClient></param>
+        /// <param name="clientCallback">客户端上下线回调函数&lt;客户端,上线或下线></param>
+        /// <param name="responseCallback">响应回调函数&lt;客户端></param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient, bool> clientCallback, Action<SocketClient> responseCallback)
         {
@@ -140,7 +140,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端上线
         /// </summary>
-        /// <param name="socket">客户端</param>
+        /// <param name="socket">Socket</param>
         private void ClientOnline(Socket socket)
         {
             // 已存在
@@ -171,7 +171,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         private void ClientOffline(SocketClient client)
         {
             // 不存在
@@ -240,7 +240,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息 给所有在线客户端
         /// </summary>
-        /// <param name="data">byte[]</param>
+        /// <param name="data">消息</param>
         public void Send(byte[] data)
         {
             foreach (SocketClient client in ClientOnlineList())
@@ -252,8 +252,8 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">SocketClient</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">消息</param>
         public void Send(SocketClient client, byte[] data)
         {
             try

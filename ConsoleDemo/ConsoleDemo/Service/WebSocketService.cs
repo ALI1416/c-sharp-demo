@@ -34,18 +34,18 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;WebSocketClient,上线或下线>
+        /// 客户端上下线回调函数&lt;客户端,上线或下线>
         /// </summary>
         private Action<WebSocketClient, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;WebSocketClient>
+        /// 响应回调函数&lt;客户端>
         /// </summary>
         private Action<WebSocketClient> responseCallback;
 
         /// <summary>
         /// 获取客户端列表
         /// </summary>
-        /// <returns>WebSocketClient[]</returns>
+        /// <returns>客户端列表</returns>
         public WebSocketClient[] ClientList()
         {
             return clientList.ToArray();
@@ -54,7 +54,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 获取在线客户端列表
         /// </summary>
-        /// <returns>List&lt;WebSocketClient></returns>
+        /// <returns>在线客户端列表</returns>
         public List<WebSocketClient> ClientOnlineList()
         {
             return clientList.FindAll(e => e.Client != null);
@@ -66,8 +66,8 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;WebSocketClient,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;WebSocketClient></param>
+        /// <param name="clientCallback">客户端上下线回调函数&lt;客户端,上线或下线></param>
+        /// <param name="responseCallback">响应回调函数&lt;客户端></param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<WebSocketClient, bool> clientCallback, Action<WebSocketClient> responseCallback)
         {
@@ -165,24 +165,24 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端上线
         /// </summary>
-        /// <param name="ws">客户端</param>
+        /// <param name="webSocket">WebSocket</param>
         /// <param name="ip">IP地址</param>
-        private async void ClientOnline(WebSocket ws, string ip)
+        private async void ClientOnline(WebSocket webSocket, string ip)
         {
             // 已存在
-            if (clientList.Exists(e => e.Client == ws))
+            if (clientList.Exists(e => e.Client == webSocket))
             {
                 return;
             }
             WebSocketClient client = null;
             try
             {
-                client = new WebSocketClient(ws, ip);
+                client = new WebSocketClient(webSocket, ip);
                 clientList.Add(client);
                 // 客户端上线回调函数
                 clientCallback(client, true);
                 // 首次接收消息
-                WebSocketReceiveResult result = await ws.ReceiveAsync(client.Buffer, CancellationToken.None);
+                WebSocketReceiveResult result = await webSocket.ReceiveAsync(client.Buffer, CancellationToken.None);
                 client.Length += result.Count;
                 while (true)
                 {
@@ -192,13 +192,13 @@ namespace ConsoleDemo.Service
                         // 响应回调函数
                         responseCallback(client);
                         // 继续接收消息
-                        result = await ws.ReceiveAsync(client.Buffer, CancellationToken.None);
+                        result = await webSocket.ReceiveAsync(client.Buffer, CancellationToken.None);
                     }
                     // 消息还未全部接收
                     else
                     {
                         // 丢弃溢出消息
-                        result = await ws.ReceiveAsync(new ArraySegment<byte>(new byte[WebSocketClient.MAX_BUFFER_LENGTH]), CancellationToken.None);
+                        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(new byte[WebSocketClient.MAX_BUFFER_LENGTH]), CancellationToken.None);
                     }
                     client.Length += result.Count;
                 }
@@ -213,7 +213,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 客户端下线
         /// </summary>
-        /// <param name="client">WebSocketClient</param>
+        /// <param name="client">客户端</param>
         private void ClientOffline(WebSocketClient client)
         {
             // 不存在
@@ -241,7 +241,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送文本消息
         /// </summary>
-        /// <param name="client">WebSocketClient</param>
+        /// <param name="client">客户端</param>
         /// <param name="data">文本消息</param>
         public void Send(WebSocketClient client, byte[] data)
         {
@@ -264,8 +264,8 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="client">WebSocketClient</param>
-        /// <param name="data">byte[]</param>
+        /// <param name="client">客户端</param>
+        /// <param name="data">消息</param>
         /// <param name="isText">是否为文本数据</param>
         public void Send(WebSocketClient client, byte[] data, bool isText)
         {

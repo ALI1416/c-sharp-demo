@@ -103,7 +103,7 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 客户端上下线回调函数
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         /// <param name="online">上线或下线</param>
         private static void ClientCallback(SocketClient client, bool online)
         {
@@ -120,7 +120,7 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 响应回调函数
         /// </summary>
-        /// <param name="client">SocketClient</param>
+        /// <param name="client">客户端</param>
         private static void ResponseCallback(SocketClient client)
         {
             log.Info("收到客户端 " + client.Ip + " 消息：" + Encoding.UTF8.GetString(client.Buffer, 0, client.Length));

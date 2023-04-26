@@ -16,9 +16,12 @@ namespace ConsoleDemo
         /// <param name="args">参数</param>
         public static void Main(string[] args)
         {
+
+
             //Log4NetTest.Test();
             //QrCodeZXingTest.Test();
-            //QrCodeTest.Test();
+            QrCodeTest.Test();
+            QrCodeTest2.Test();
             //HttpService1Test.Start();
             //HttpService1Test.Start2();
             //HttpService2Test.Start();
