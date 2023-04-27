@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Tool;
+﻿using ConsoleDemo.Model;
 using NUnit.Framework;
 using System;
 

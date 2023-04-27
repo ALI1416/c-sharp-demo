@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\SocketServer2.cs" />
+    <Compile Include="Model\Version.cs" />
     <Compile Include="Service\HttpService2.cs" />
     <Compile Include="Service\SocketService.cs" />
     <Compile Include="Service\WebSocketService.cs" />
@@ -82,7 +83,7 @@
     <Compile Include="Model\SocketClient.cs" />
     <Compile Include="Test\Log4NetTest.cs" />
     <Compile Include="Test\NUnitTest.cs" />
-    <Compile Include="Tool\QrCode.cs" />
+    <Compile Include="Model\QrCode.cs" />
     <Compile Include="Util\Qr\BitArray.cs" />
     <Compile Include="Util\Qr\BitMatrix.cs" />
     <Compile Include="Util\Qr\BlockPair.cs" />
