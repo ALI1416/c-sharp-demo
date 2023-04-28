@@ -14,42 +14,6 @@ namespace ConsoleDemo.Model
     {
 
         /// <summary>
-        /// 内容
-        /// </summary>
-        private string content;
-        /// <summary>
-        /// 内容
-        /// </summary>
-        public string Content { get { return content; } }
-        /// <summary>
-        /// 编码后的内容bool[]
-        /// <para>true 1</para>
-        /// <para>false 0</para>
-        /// </summary>
-        private bool[] contentBits;
-        /// <summary>
-        /// 编码后的内容bool[]
-        /// <para>true 1</para>
-        /// <para>false 0</para>
-        /// </summary>
-        public bool[] ContentBits { get { return contentBits; } }
-        /// <summary>
-        /// 错误纠正级别
-        /// <para>0 L 7%</para>
-        /// <para>1 M 15%</para>
-        /// <para>2 Q 25%</para>
-        /// <para>3 H 30%</para>
-        /// </summary>
-        private int level;
-        /// <summary>
-        /// 错误纠正级别
-        /// <para>0 L 7%</para>
-        /// <para>1 M 15%</para>
-        /// <para>2 Q 25%</para>
-        /// <para>3 H 30%</para>
-        /// </summary>
-        public int Level { get { return level; } }
-        /// <summary>
         /// 版本
         /// </summary>
         private Version version;
@@ -72,14 +36,14 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 构造二维码
-        /// <para>编码模式 byte</para>
+        /// <para>编码模式 BYTE</para>
         /// <para>编码格式 UTF8</para>
         /// </summary>
         /// <param name="content">
         /// 内容
         /// </param>
         /// <param name="level">
-        /// 错误纠正级别
+        /// 纠错等级
         /// <para>0 L 7%</para>
         /// <para>1 M 15%</para>
         /// <para>2 Q 25%</para>
@@ -87,30 +51,56 @@ namespace ConsoleDemo.Model
         /// </param>
         public QrCode(string content, int level)
         {
-            this.content = content;
-            this.level = level;
-            this.contentBits = GetContentBits();
+            int contentLength = content.Length;
+            version = new Version(contentLength, level);
+            bool[] contentBits = new bool[version.DataBits];
+            // 编码模式 BYTE 0b0100=4
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
+            AddBits(contentBits, 0, 4, 4);
+            // 储存`内容字节数`所占的bit数 1-9版本8bit 10-40版本16bit
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
+            int contentBitsLength = version.VersionNumber < 10 ? 8 : 16;
+            AddBits(contentBits, 4, contentLength, contentBitsLength);
+            // 内容 8bit*长度
+            byte[] bits = Encoding.UTF8.GetBytes(content);
+            for (int i = 0; i < bits.Length; i++)
+            {
+                AddBits(contentBits, 4 + contentBitsLength + 8 * i, bits[i], 8);
+            }
+            // 结束符 4bit 0b0000
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
+            AddBits(contentBits, 4 + contentBitsLength + bits.Length * 8, 0, 4);
+            // 补齐符 交替11101100=236和00010001=17至填满
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
+            int paddingPos = 8 + contentBitsLength + bits.Length * 8;
+            int paddingCount = version.ContentBytes - contentLength;
+            for (int i = 0; i < paddingCount; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    AddBits(contentBits, paddingPos + i * 8, 236, 8);
+                }
+                else
+                {
+                    AddBits(contentBits, paddingPos + i * 8, 17, 8);
+                }
+            }
         }
 
         /// <summary>
-        /// 编码后的内容bool[]
+        /// 添加bit(高位在前)
         /// </summary>
-        /// <returns>内容bool[]</returns>
-        private bool[] GetContentBits()
+        /// <param name="bits">目的数据</param>
+        /// <param name="pos">位置</param>
+        /// <param name="value">值</param>
+        /// <param name="numberBits">添加bit个数</param>
+        private void AddBits(bool[] bits, int pos, int value, int numberBits)
         {
-            // 编码模式byte(编码模式 byte) 4位
-            byte modeByte = 4;
-            // 内容byte[](编码格式 UTF8) 8*Length位
-            byte[] contentBytes = Encoding.UTF8.GetBytes(content);
-            // 内容字节数 1-9版本8位 10-40版本16位
-            int contentLength = contentBytes.Length;
-
-            /* 组装内容bool[] */
-            bool[] bits = new bool[0];
-            return bits;
+            for (int i = 0; i < numberBits; i++)
+            {
+                bits[pos + i] = (value & (1 << (numberBits - i - 1))) != 0;
+            }
         }
-
-
 
     }
 }
