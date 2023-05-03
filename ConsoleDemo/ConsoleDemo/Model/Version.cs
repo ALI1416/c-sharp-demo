@@ -11,62 +11,49 @@
         /// 版本号
         /// <para>[1,40]</para>
         /// </summary>
-        private int versionNumber;
-        /// <summary>
-        /// 版本号
-        /// <para>[1,40]</para>
-        /// </summary>
-        public int VersionNumber { get { return versionNumber; } }
+        public readonly int VersionNumber;
         /// <summary>
         /// 尺寸
         /// <para>尺寸 = (版本号 - 1) * 4 + 21</para>
         /// <para>[21,177]</para>
         /// </summary>
-        private int dimension;
+        public readonly int Dimension;
         /// <summary>
-        /// 尺寸
-        /// <para>尺寸 = (版本号 - 1) * 4 + 21</para>
-        /// <para>[21,177]</para>
+        /// 所有bit数
         /// </summary>
-        public int Dimension { get { return dimension; } }
+        public readonly int AllBits;
         /// <summary>
-        /// 数据位数
+        /// 数据bit数
         /// </summary>
-        private int dataBits;
+        public readonly int DataBits;
         /// <summary>
-        /// 数据位数
+        /// 纠错字节数
         /// </summary>
-        public int DataBits { get { return dataBits; } }
+        public readonly int EcBytes;
+        /// <summary>
+        /// `内容字节数`所占的bit数
+        /// <para>8或16</para>
+        /// </summary>
+        public readonly int ContentBytesBits;
         /// <summary>
         /// 内容字节数
         /// </summary>
-        private int contentBytes;
-        /// <summary>
-        /// 内容字节数
-        /// </summary>
-        public int ContentBytes { get { return contentBytes; } }
-        /// <summary>
-        /// 数据字节数
-        /// </summary>
-        private int dataBytes;
-        /// <summary>
-        /// 数据字节数
-        /// </summary>
-        public int DataBytes { get { return dataBytes; } }
+        public readonly int ContentBytes;
         /// <summary>
         /// 纠错[纠错块,(块数量,纠错码)]
         /// </summary>
-        private int[,] ec;
+        public readonly int[,] Ec;
         /// <summary>
-        /// 纠错
+        /// 纠错块数
         /// </summary>
-        public int[,] Ec { get { return ec; } }
+        public readonly int EcBlocks;
 
         /// <summary>
         /// 获取版本
+        /// <para>`内容字节数`过长`VersionNumber`值为`0`</para>
         /// </summary>
         /// <param name="length">
-        /// 内容长度(字节)
+        /// 内容字节数
         /// </param>
         /// <param name="level">
         /// 纠错等级
@@ -79,25 +66,34 @@
         {
             for (int i = 1; i < 41; i++)
             {
-                if (length <= CONTENT_BYTES[1, level])
+                if (length <= CONTENT_BYTES[i, level])
                 {
-                    contentBytes = CONTENT_BYTES[1, level];
-                    versionNumber = i;
+                    ContentBytes = CONTENT_BYTES[i, level];
+                    VersionNumber = i;
                     break;
                 }
             }
-            dimension = (versionNumber - 1) * 4 + 21;
-            dataBits = DATA_BITS[versionNumber];
-            dataBytes = dataBits / 8;
-            ec = EC[versionNumber, level];
+            Dimension = (VersionNumber - 1) * 4 + 21;
+            // `内容字节数`所占的bit数 1-9版本8bit 10-40版本16bit
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
+            ContentBytesBits = VersionNumber < 10 ? 8 : 16;
+            AllBits = ALL_BITS[VersionNumber];
+            // 模式4bit+`内容字节数`所占的bit数6+内容bit数+结束4bit
+            DataBits = 4 + ContentBytesBits + ContentBytes * 8 + 4;
+            EcBytes = (AllBits - DataBits) / 8;
+            Ec = EC[VersionNumber, level];
+            for (int i = 0; i < Ec.GetLength(0); i++)
+            {
+                EcBlocks += Ec[i, 0];
+            }
         }
 
         /// <summary>
-        /// 数据位数
+        /// 数据+纠错+填充bit数
         /// <para>索引[版本号]:41</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.1 -> Table 1 -> Data modules except(C)列</para>
         /// </summary>
-        private static readonly int[] DATA_BITS =
+        private static readonly int[] ALL_BITS =
         {
                 0, // 0
               208,   359,   567,   807,  1079, // 1-5
@@ -109,12 +105,9 @@
             18587, 19723, 20891, 22091, 23008, // 31-35
             24272, 25568, 26896, 28256, 29648, // 36-40
         };
-        // 数据字节数 = 数据位数 / 8
-        // v5 1079/8=134...7
-        // H 模式+长度2 内容44 纠错134-2-44=88
 
         /// <summary>
-        /// 最大内容字节数(Byte模式)
+        /// 内容字节数(Byte模式)
         /// <para>索引[版本号,纠错等级]:41x4</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Data capacity列 -> Byte列</para>
         /// </summary>
@@ -426,7 +419,6 @@
                 new int[,] { { 20,  15 }, { 61,  16 } },
             },
        };
-
 
     }
 }

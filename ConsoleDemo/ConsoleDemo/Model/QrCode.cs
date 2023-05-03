@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace ConsoleDemo.Model
 {
@@ -51,38 +52,70 @@ namespace ConsoleDemo.Model
         /// </param>
         public QrCode(string content, int level)
         {
-            int contentLength = content.Length;
-            version = new Version(contentLength, level);
-            bool[] contentBits = new bool[version.DataBits];
-            // 编码模式 BYTE 0b0100=4
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
-            AddBits(contentBits, 0, 4, 4);
-            // 储存`内容字节数`所占的bit数 1-9版本8bit 10-40版本16bit
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
-            int contentBitsLength = version.VersionNumber < 10 ? 8 : 16;
-            AddBits(contentBits, 4, contentLength, contentBitsLength);
-            // 内容 8bit*长度
+            // 内容bits
             byte[] bits = Encoding.UTF8.GetBytes(content);
-            for (int i = 0; i < bits.Length; i++)
+            // 内容字节数
+            int contentBytes = bits.Length;
+            // 内容bit数
+            int contentBits = contentBytes * 8;
+            // 获取版本
+            version = new Version(contentBytes, level);
+            // 数据bit数
+            bool[] dataBits = new bool[version.DataBits];
+            // 编码模式(4bit) Byte 0b0100=4
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
+            AddBits(dataBits, 0, 4, 4);
+            // `内容字节数`所占的bit数
+            int contentBytesBits = version.ContentBytesBits;
+            AddBits(dataBits, 4, contentBytes, contentBytesBits);
+            // 内容
+            for (int i = 0; i < contentBytes; i++)
             {
-                AddBits(contentBits, 4 + contentBitsLength + 8 * i, bits[i], 8);
+                AddBits(dataBits, 4 + contentBytesBits + 8 * i, bits[i], 8);
             }
-            // 结束符 4bit 0b0000
+            // 结束符(4bit) 0b0000=0
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
-            AddBits(contentBits, 4 + contentBitsLength + bits.Length * 8, 0, 4);
-            // 补齐符 交替11101100=236和00010001=17至填满
+            AddBits(dataBits, 4 + contentBytesBits + contentBits, 0, 4);
+            // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
-            int paddingPos = 8 + contentBitsLength + bits.Length * 8;
-            int paddingCount = version.ContentBytes - contentLength;
+            int paddingPos = 8 + contentBytesBits + contentBits;
+            int paddingCount = version.ContentBytes - contentBytes;
             for (int i = 0; i < paddingCount; i++)
             {
                 if (i % 2 == 0)
                 {
-                    AddBits(contentBits, paddingPos + i * 8, 236, 8);
+                    AddBits(dataBits, paddingPos + i * 8, 0xEC, 8);
                 }
                 else
                 {
-                    AddBits(contentBits, paddingPos + i * 8, 17, 8);
+                    AddBits(dataBits, paddingPos + i * 8, 0x11, 8);
+                }
+            }
+
+            // 纠错
+            int[,] ec = version.Ec;
+            // 纠错块数
+            int blocks = version.EcBlocks;
+            // 每块纠错块字节数
+            int ecBlockBytes = version.EcBytes / blocks;
+            List<byte[]> dataBlocks = new List<byte[]>(blocks);
+            List<byte[]> ecBlocks = new List<byte[]>(blocks);
+            int dataPtr = 0;
+            for (int i = 0; i < ec.GetLength(0); i++)
+            {
+                int count = ec[i, 0];
+                int dataCodewords = ec[i, 1];
+                for (int j = 0; j < count; j++)
+                {
+                    // 数据块
+                    byte[] dataBlock = new byte[dataCodewords];
+                    Copy(dataBits, dataPtr, dataBlock);
+                    dataBlocks.Add(dataBlock);
+                    // 纠错块
+                    byte[] ecBlock = new byte[ecBlockBytes];
+                    CalculateEc(dataBlock, ecBlock);
+                    ecBlocks.Add(ecBlock);
+                    dataPtr += dataCodewords * 8;
                 }
             }
         }
@@ -94,12 +127,46 @@ namespace ConsoleDemo.Model
         /// <param name="pos">位置</param>
         /// <param name="value">值</param>
         /// <param name="numberBits">添加bit个数</param>
-        private void AddBits(bool[] bits, int pos, int value, int numberBits)
+        private static void AddBits(bool[] bits, int pos, int value, int numberBits)
         {
             for (int i = 0; i < numberBits; i++)
             {
                 bits[pos + i] = (value & (1 << (numberBits - i - 1))) != 0;
             }
+        }
+
+        /// <summary>
+        /// 拷贝数据
+        /// </summary>
+        /// <param name="source">源数据</param>
+        /// <param name="offset">源数据起始位置</param>
+        /// <param name="destination">目的数据</param>
+        private static void Copy(bool[] source, int offset, byte[] destination)
+        {
+            for (int i = 0; i < destination.Length; i++)
+            {
+                int ptr = offset + i * 8;
+                destination[i] = (byte)(
+                      (source[ptr    ] ? 0x80 : 0)
+                    | (source[ptr + 1] ? 0x40 : 0)
+                    | (source[ptr + 2] ? 0x20 : 0)
+                    | (source[ptr + 3] ? 0x10 : 0)
+                    | (source[ptr + 4] ? 0x08 : 0)
+                    | (source[ptr + 5] ? 0x04 : 0)
+                    | (source[ptr + 6] ? 0x02 : 0)
+                    | (source[ptr + 7] ? 0x01 : 0)
+                   );
+            }
+        }
+
+        /// <summary>
+        /// 计算纠错码
+        /// </summary>
+        /// <param name="dataBlock">数据块</param>
+        /// <param name="ecBlock">纠错块</param>
+        private static void CalculateEc(byte[] dataBlock, byte[] ecBlock)
+        {
+            ReedSolomon.Encoder(dataBlock, ecBlock);
         }
 
     }

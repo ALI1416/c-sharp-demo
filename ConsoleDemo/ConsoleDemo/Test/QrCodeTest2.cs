@@ -12,9 +12,8 @@ namespace ConsoleDemo.Test
     public class QrCodeTest2
     {
 
-        private static readonly string content = "ConsoleDemo";
-        private static readonly int level = 1;
-        private static readonly string path = "E:/qr2.png";
+        private static readonly string content = "爱上对方过后就哭了1234567890";
+        private static readonly int level = 3;
 
         /// <summary>
         /// 测试

@@ -52,6 +52,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\GenericGFPoly.cs" />
+    <Compile Include="Model\ReedSolomon.cs" />
     <Compile Include="Model\SocketServer2.cs" />
     <Compile Include="Model\Version.cs" />
     <Compile Include="Service\HttpService2.cs" />
