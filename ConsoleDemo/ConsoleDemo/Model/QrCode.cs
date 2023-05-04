@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Text;
 
 namespace ConsoleDemo.Model
@@ -15,29 +15,19 @@ namespace ConsoleDemo.Model
     {
 
         /// <summary>
-        /// 版本
+        /// 版本(编码模式:Byte)
         /// </summary>
-        private Version version;
-        /// <summary>
-        /// 版本
-        /// </summary>
-        public Version Version { get { return version; } }
+        public readonly Version Version;
         /// <summary>
         /// 数据矩阵
         /// <para>true 黑</para>
         /// <para>false 白</para>
         /// </summary>
-        private bool[][] dataMatrix;
-        /// <summary>
-        /// 数据矩阵
-        /// <para>true 黑</para>
-        /// <para>false 白</para>
-        /// </summary>
-        public bool[][] DataMatrix { get { return dataMatrix; } }
+        public readonly bool[][] DataMatrix;
 
         /// <summary>
         /// 构造二维码
-        /// <para>编码模式 BYTE</para>
+        /// <para>编码模式 Byte</para>
         /// <para>编码格式 UTF8</para>
         /// </summary>
         /// <param name="content">
@@ -52,6 +42,7 @@ namespace ConsoleDemo.Model
         /// </param>
         public QrCode(string content, int level)
         {
+            /* 数据 */
             // 内容bits
             byte[] bits = Encoding.UTF8.GetBytes(content);
             // 内容字节数
@@ -59,14 +50,14 @@ namespace ConsoleDemo.Model
             // 内容bit数
             int contentBits = contentBytes * 8;
             // 获取版本
-            version = new Version(contentBytes, level);
+            Version = new Version(contentBytes, level);
             // 数据bit数
-            bool[] dataBits = new bool[version.DataBits];
+            bool[] dataBits = new bool[Version.DataBits];
             // 编码模式(4bit) Byte 0b0100=4
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
             AddBits(dataBits, 0, 4, 4);
-            // `内容字节数`所占的bit数
-            int contentBytesBits = version.ContentBytesBits;
+            // `内容字节数`bit数
+            int contentBytesBits = Version.ContentBytesBits;
             AddBits(dataBits, 4, contentBytes, contentBytesBits);
             // 内容
             for (int i = 0; i < contentBytes; i++)
@@ -79,7 +70,7 @@ namespace ConsoleDemo.Model
             // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
             int paddingPos = 8 + contentBytesBits + contentBits;
-            int paddingCount = version.ContentBytes - contentBytes;
+            int paddingCount = Version.ContentBytes - contentBytes;
             for (int i = 0; i < paddingCount; i++)
             {
                 if (i % 2 == 0)
@@ -92,36 +83,58 @@ namespace ConsoleDemo.Model
                 }
             }
 
-            // 纠错
-            int[,] ec = version.Ec;
-            // 纠错块数
-            int blocks = version.EcBlocks;
-            // 每块纠错块字节数
-            int ecBlockBytes = version.EcBytes / blocks;
-            List<byte[]> dataBlocks = new List<byte[]>(blocks);
-            List<byte[]> ecBlocks = new List<byte[]>(blocks);
-            int dataPtr = 0;
+            /* 纠错 */
+            int[,] ec = Version.Ec;
+            // 数据块数 或 纠错块数
+            int blocks = Version.EcBlocks;
+            // 纠错块字节数
+            int ecBlockBytes = Version.EcBytes / blocks;
+            int[][] dataBlocks = new int[blocks][];
+            int[][] ecBlocks = new int[blocks][];
+            int blockNum = 0;
             for (int i = 0; i < ec.GetLength(0); i++)
             {
                 int count = ec[i, 0];
-                int dataCodewords = ec[i, 1];
+                int dataBytes = ec[i, 1];
                 for (int j = 0; j < count; j++)
                 {
                     // 数据块
-                    byte[] dataBlock = new byte[dataCodewords];
-                    Copy(dataBits, dataPtr, dataBlock);
-                    dataBlocks.Add(dataBlock);
+                    int[] dataBlock = GetBytes(dataBits, blockNum * 8, dataBytes);
+                    dataBlocks[blockNum] = dataBlock;
                     // 纠错块
-                    byte[] ecBlock = new byte[ecBlockBytes];
-                    CalculateEc(dataBlock, ecBlock);
-                    ecBlocks.Add(ecBlock);
-                    dataPtr += dataCodewords * 8;
+                    int[] ecBlock = CalculateEc(dataBlock, ecBlockBytes);
+                    ecBlocks[blockNum] = ecBlock;
+                    blockNum++;
+                }
+            }
+
+            /* 交叉数据和纠错 */
+            bool[] dataAndEcBits = new bool[Version.DataAndEcBits];
+            int dataBlockMaxBytes = dataBlocks[blocks - 1].Length;
+            int dataAndEcBitPtr = 0;
+            for (int i = 0; i < dataBlockMaxBytes; i++)
+            {
+                for (int j = 0; j < blocks; j++)
+                {
+                    if (dataBlocks[j].Length > i)
+                    {
+                        AddBits(dataAndEcBits, dataAndEcBitPtr, dataBlocks[j][i], 8);
+                        dataAndEcBitPtr += 8;
+                    }
+                }
+            }
+            for (int i = 0; i < ecBlockBytes; i++)
+            {
+                for (int j = 0; j < blocks; j++)
+                {
+                    AddBits(dataAndEcBits, dataAndEcBitPtr, ecBlocks[j][i], 8);
+                    dataAndEcBitPtr += 8;
                 }
             }
         }
 
         /// <summary>
-        /// 添加bit(高位在前)
+        /// 添加bit
         /// </summary>
         /// <param name="bits">目的数据</param>
         /// <param name="pos">位置</param>
@@ -136,37 +149,54 @@ namespace ConsoleDemo.Model
         }
 
         /// <summary>
-        /// 拷贝数据
+        /// 获取字节数组
         /// </summary>
-        /// <param name="source">源数据</param>
-        /// <param name="offset">源数据起始位置</param>
-        /// <param name="destination">目的数据</param>
-        private static void Copy(bool[] source, int offset, byte[] destination)
+        /// <param name="data">数据</param>
+        /// <param name="offset">起始位置</param>
+        /// <param name="bytes">字节长度</param>
+        /// <returns>字节数组</returns>
+        private static int[] GetBytes(bool[] data, int offset, int bytes)
         {
-            for (int i = 0; i < destination.Length; i++)
+            int[] result = new int[bytes];
+            for (int i = 0; i < bytes; i++)
             {
                 int ptr = offset + i * 8;
-                destination[i] = (byte)(
-                      (source[ptr    ] ? 0x80 : 0)
-                    | (source[ptr + 1] ? 0x40 : 0)
-                    | (source[ptr + 2] ? 0x20 : 0)
-                    | (source[ptr + 3] ? 0x10 : 0)
-                    | (source[ptr + 4] ? 0x08 : 0)
-                    | (source[ptr + 5] ? 0x04 : 0)
-                    | (source[ptr + 6] ? 0x02 : 0)
-                    | (source[ptr + 7] ? 0x01 : 0)
+                result[i] = (
+                      (data[ptr] ? 0x80 : 0)
+                    | (data[ptr + 1] ? 0x40 : 0)
+                    | (data[ptr + 2] ? 0x20 : 0)
+                    | (data[ptr + 3] ? 0x10 : 0)
+                    | (data[ptr + 4] ? 0x08 : 0)
+                    | (data[ptr + 5] ? 0x04 : 0)
+                    | (data[ptr + 6] ? 0x02 : 0)
+                    | (data[ptr + 7] ? 0x01 : 0)
                    );
             }
+            return result;
         }
 
         /// <summary>
         /// 计算纠错码
         /// </summary>
         /// <param name="dataBlock">数据块</param>
-        /// <param name="ecBlock">纠错块</param>
-        private static void CalculateEc(byte[] dataBlock, byte[] ecBlock)
+        /// <param name="ecBlockLength">纠错块长度</param>
+        /// <returns>纠错块</returns>
+        private static int[] CalculateEc(int[] dataBlock, int ecBlockLength)
         {
-            ReedSolomon.Encoder(dataBlock, ecBlock);
+            // 纠错码
+            int[] result = ReedSolomon.Encoder(dataBlock, ecBlockLength);
+            // 长度不够前面补0
+            int padding = ecBlockLength - result.Length;
+            if (padding == 0)
+            {
+                return result;
+            }
+            else
+            {
+                int[] ecBlock = new int[ecBlockLength];
+                Array.Copy(result, 0, ecBlock, padding, result.Length);
+                return ecBlock;
+            }
         }
 
     }

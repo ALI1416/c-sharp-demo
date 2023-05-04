@@ -9,43 +9,33 @@ namespace ConsoleDemo.Model
     public class ReedSolomon
     {
 
-        private static readonly List<GenericGFPoly> cachedGenerators = new List<GenericGFPoly>();
+        /// <summary>
+        /// GenericGFPoly列表
+        /// </summary>
+        private static readonly List<GenericGFPoly> GenericGFPolyList = new List<GenericGFPoly>();
 
         static ReedSolomon()
         {
-            cachedGenerators.Add(new GenericGFPoly(new int[] { 1 }));
+            // 初始化GenericGFPoly
+            GenericGFPolyList.Add(new GenericGFPoly(new int[] { 1 }));
             for (int i = 1; i < 124; i++)
             {
-                cachedGenerators.Add(cachedGenerators[i - 1].Multiply(new GenericGFPoly(new int[] { 1, GenericGFPoly.Exp(i - 1) })));
+                GenericGFPolyList.Add(GenericGFPolyList[i - 1].Multiply(new GenericGFPoly(new int[] { 1, GenericGF.Exp(i - 1) })));
             }
         }
 
         /// <summary>
         /// 编码
         /// </summary>
-        /// <param name="data">数据</param>
-        /// <param name="ec">纠错</param>
-        public static void Encoder(byte[] data, byte[] ec)
+        /// <param name="coefficients">多项式常数</param>
+        /// <param name="degree">多项式次数</param>
+        /// <returns>结果</returns>
+        public static int[] Encoder(int[] coefficients, int degree)
         {
-            int dataBytes = data.Length;
-            int ecBytes = ec.Length;
-            int[] d = new int[dataBytes];
-            for (int i = 0; i < dataBytes; i++)
-            {
-                d[i] = data[i];
-            }
-
-            var info = new GenericGFPoly(d);
-            info = info.MultiplyByMonomial(ecBytes, 1);
-
-            var remainder = info.Divide(cachedGenerators[ecBytes])[1];
-            int[] coefficients = remainder.Coefficients;
-            var numZeroCoefficients = ecBytes - coefficients.Length;
-            //for (var i = 0; i < numZeroCoefficients; i++)
-            //{
-            //    ec[dataBytes + i] = 0;
-            //}
-
+            GenericGFPoly info = new GenericGFPoly(coefficients);
+            info = info.MultiplyByMonomial(degree, 1);
+            GenericGFPoly remainder = info.Divide(GenericGFPolyList[degree])[1];
+            return remainder.Coefficients;
         }
 
     }

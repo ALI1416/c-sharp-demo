@@ -2,7 +2,7 @@
 {
 
     /// <summary>
-    /// 版本
+    /// 版本(编码模式:Byte)
     /// </summary>
     public class Version
     {
@@ -19,11 +19,27 @@
         /// </summary>
         public readonly int Dimension;
         /// <summary>
-        /// 所有bit数
+        /// 编码区bit数
+        /// <para></para>
         /// </summary>
-        public readonly int AllBits;
+        public readonly int EncodingAreaBits;
+        /// <summary>
+        /// 内容字节数
+        /// </summary>
+        public readonly int ContentBytes;
+        /// <summary>
+        /// 数据和纠错bit数
+        /// <para>数据bit数+纠错bit数</para>
+        /// </summary>
+        public readonly int DataAndEcBits;
+        /// <summary>
+        /// `内容字节数`bit数
+        /// <para>8或16</para>
+        /// </summary>
+        public readonly int ContentBytesBits;
         /// <summary>
         /// 数据bit数
+        /// <para>编码模式(4bit)+`内容字节数`bit数+内容bit数+结束符(4bit)</para>
         /// </summary>
         public readonly int DataBits;
         /// <summary>
@@ -31,16 +47,8 @@
         /// </summary>
         public readonly int EcBytes;
         /// <summary>
-        /// `内容字节数`所占的bit数
-        /// <para>8或16</para>
-        /// </summary>
-        public readonly int ContentBytesBits;
-        /// <summary>
-        /// 内容字节数
-        /// </summary>
-        public readonly int ContentBytes;
-        /// <summary>
-        /// 纠错[纠错块,(块数量,纠错码)]
+        /// 纠错
+        /// <para>[纠错块,(块数量,纠错码)]</para>
         /// </summary>
         public readonly int[,] Ec;
         /// <summary>
@@ -49,7 +57,7 @@
         public readonly int EcBlocks;
 
         /// <summary>
-        /// 获取版本
+        /// 构造版本
         /// <para>`内容字节数`过长`VersionNumber`值为`0`</para>
         /// </summary>
         /// <param name="length">
@@ -74,13 +82,13 @@
                 }
             }
             Dimension = (VersionNumber - 1) * 4 + 21;
-            // `内容字节数`所占的bit数 1-9版本8bit 10-40版本16bit
+            // `内容字节数`bit数 1-9版本8bit 10-40版本16bit
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
             ContentBytesBits = VersionNumber < 10 ? 8 : 16;
-            AllBits = ALL_BITS[VersionNumber];
-            // 模式4bit+`内容字节数`所占的bit数6+内容bit数+结束4bit
+            DataAndEcBits = DATA_AND_EC_BITS[VersionNumber];
+            // 编码模式(4bit)+`内容字节数`bit数+内容bit数+结束符(4bit)
             DataBits = 4 + ContentBytesBits + ContentBytes * 8 + 4;
-            EcBytes = (AllBits - DataBits) / 8;
+            EcBytes = (DataAndEcBits - DataBits) / 8;
             Ec = EC[VersionNumber, level];
             for (int i = 0; i < Ec.GetLength(0); i++)
             {
@@ -89,11 +97,11 @@
         }
 
         /// <summary>
-        /// 数据+纠错+填充bit数
+        /// 数据bit数+纠错bit数
         /// <para>索引[版本号]:41</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.1 -> Table 1 -> Data modules except(C)列</para>
         /// </summary>
-        private static readonly int[] ALL_BITS =
+        private static readonly int[] DATA_AND_EC_BITS =
         {
                 0, // 0
               208,   359,   567,   807,  1079, // 1-5
@@ -107,7 +115,7 @@
         };
 
         /// <summary>
-        /// 内容字节数(Byte模式)
+        /// 内容字节数
         /// <para>索引[版本号,纠错等级]:41x4</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Data capacity列 -> Byte列</para>
         /// </summary>

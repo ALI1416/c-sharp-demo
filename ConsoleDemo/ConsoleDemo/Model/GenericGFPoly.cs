@@ -10,68 +10,23 @@ namespace ConsoleDemo.Model
     public class GenericGFPoly
     {
 
-        /* GenericGF */
-        private static readonly int primitive = 0x011D;
-        private static readonly int size = 256;
-        private static readonly int[] expTable;
-        private static readonly int[] logTable;
+        /// <summary>
+        /// 多项式常数
+        /// </summary>
+        public readonly int[] Coefficients;
+        /// <summary>
+        /// 多项式次数
+        /// </summary>
+        private readonly int Degree;
+        /// <summary>
+        /// 是否为0
+        /// </summary>
+        private readonly bool IsZero;
 
-        /* GenericGFPoly */
-        private readonly int[] coefficients;
-
-        static GenericGFPoly()
-        {
-            /* GenericGF */
-            expTable = new int[size];
-            logTable = new int[size];
-            int x = 1;
-            for (int i = 0; i < size; i++)
-            {
-                expTable[i] = x;
-                x <<= 1;
-                if (x >= size)
-                {
-                    x ^= primitive;
-                    x &= size - 1;
-                }
-            }
-            for (int i = 0; i < size - 1; i++)
-            {
-                logTable[expTable[i]] = i;
-            }
-        }
-
-        /* GenericGF */
-        public static int AddOrSubtract(int a, int b)
-        {
-            return a ^ b;
-        }
-
-        public static int Exp(int a)
-        {
-            return expTable[a];
-        }
-
-        public int Log(int a)
-        {
-            return logTable[a];
-        }
-
-        public static int Inverse(int a)
-        {
-            return expTable[size - logTable[a] - 1];
-        }
-
-        public static int Multiply(int a, int b)
-        {
-            if (a == 0 || b == 0)
-            {
-                return 0;
-            }
-            return expTable[(logTable[a] + logTable[b]) % (size - 1)];
-        }
-
-        /* GenericGFPoly */
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="coefficients">多项式常数</param>
         public GenericGFPoly(int[] coefficients)
         {
             int coefficientsLength = coefficients.Length;
@@ -84,44 +39,35 @@ namespace ConsoleDemo.Model
                 }
                 if (firstNonZero == coefficientsLength)
                 {
-                    this.coefficients = new int[] { 0 };
+                    Coefficients = new int[] { 0 };
                 }
                 else
                 {
-                    this.coefficients = new int[coefficientsLength - firstNonZero];
-                    Array.Copy(coefficients, firstNonZero, this.coefficients, 0, this.coefficients.Length);
+                    Coefficients = new int[coefficientsLength - firstNonZero];
+                    Array.Copy(coefficients, firstNonZero, Coefficients, 0, Coefficients.Length);
                 }
             }
             else
             {
-                this.coefficients = coefficients;
+                Coefficients = coefficients;
             }
+            Degree = Coefficients.Length - 1;
+            IsZero = Coefficients[0] == 0;
         }
 
-        public int[] Coefficients
-        {
-            get { return coefficients; }
-        }
-
-        public int Degree
-        {
-            get
-            {
-                return coefficients.Length - 1;
-            }
-        }
-
-        public bool IsZero
-        {
-            get { return coefficients[0] == 0; }
-        }
-
+        /// <summary>
+        /// 获取多项式中`指定次方`的系数
+        /// </summary>
+        /// <param name="degree">指定次方</param>
         public int GetCoefficient(int degree)
         {
-            return coefficients[coefficients.Length - 1 - degree];
+            return Coefficients[Coefficients.Length - 1 - degree];
         }
 
-        public GenericGFPoly AddOrSubtract(GenericGFPoly other)
+        /// <summary>
+        /// 加法
+        /// </summary>
+        public GenericGFPoly Addition(GenericGFPoly other)
         {
             if (IsZero)
             {
@@ -131,8 +77,8 @@ namespace ConsoleDemo.Model
             {
                 return this;
             }
-            int[] smallerCoefficients = this.coefficients;
-            int[] largerCoefficients = other.coefficients;
+            int[] smallerCoefficients = Coefficients;
+            int[] largerCoefficients = other.Coefficients;
             if (smallerCoefficients.Length > largerCoefficients.Length)
             {
                 int[] temp = smallerCoefficients;
@@ -144,16 +90,23 @@ namespace ConsoleDemo.Model
             Array.Copy(largerCoefficients, 0, sumDiff, 0, lengthDiff);
             for (int i = lengthDiff; i < largerCoefficients.Length; i++)
             {
-                sumDiff[i] = AddOrSubtract(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
+                sumDiff[i] = GenericGF.Addition(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
             }
             return new GenericGFPoly(sumDiff);
         }
 
+        /// <summary>
+        /// 乘法
+        /// </summary>
         public GenericGFPoly Multiply(GenericGFPoly other)
         {
-            int[] aCoefficients = this.coefficients;
+            if (IsZero || other.IsZero)
+            {
+                return GenericGF.Zero;
+            }
+            int[] aCoefficients = Coefficients;
             int aLength = aCoefficients.Length;
-            int[] bCoefficients = other.coefficients;
+            int[] bCoefficients = other.Coefficients;
             int bLength = bCoefficients.Length;
             int[] product = new int[aLength + bLength - 1];
             for (int i = 0; i < aLength; i++)
@@ -161,39 +114,47 @@ namespace ConsoleDemo.Model
                 int aCoeff = aCoefficients[i];
                 for (int j = 0; j < bLength; j++)
                 {
-                    product[i + j] = AddOrSubtract(product[i + j], Multiply(aCoeff, bCoefficients[j]));
+                    product[i + j] = GenericGF.Addition(product[i + j], GenericGF.Multiply(aCoeff, bCoefficients[j]));
                 }
             }
             return new GenericGFPoly(product);
         }
 
+        /// <summary>
+        /// 单项式乘法
+        /// </summary>
         public GenericGFPoly MultiplyByMonomial(int degree, int coefficient)
         {
-            int size = coefficients.Length;
+            if (coefficient == 0)
+            {
+                return GenericGF.Zero;
+            }
+            int size = Coefficients.Length;
             int[] product = new int[size + degree];
             for (int i = 0; i < size; i++)
             {
-                product[i] = Multiply(coefficients[i], coefficient);
+                product[i] = GenericGF.Multiply(Coefficients[i], coefficient);
             }
             return new GenericGFPoly(product);
         }
 
+        /// <summary>
+        /// 除法
+        /// </summary>
         public GenericGFPoly[] Divide(GenericGFPoly other)
         {
-            GenericGFPoly quotient = new GenericGFPoly(new int[] { 0 });
+            GenericGFPoly quotient = GenericGF.Zero;
             GenericGFPoly remainder = this;
             int denominatorLeadingTerm = other.GetCoefficient(other.Degree);
-            int inverseDenominatorLeadingTerm = Inverse(denominatorLeadingTerm);
+            int inverseDenominatorLeadingTerm = GenericGF.Inverse(denominatorLeadingTerm);
             while (remainder.Degree >= other.Degree && !remainder.IsZero)
             {
                 int degreeDifference = remainder.Degree - other.Degree;
-                int scale = Multiply(remainder.GetCoefficient(remainder.Degree), inverseDenominatorLeadingTerm);
+                int scale = GenericGF.Multiply(remainder.GetCoefficient(remainder.Degree), inverseDenominatorLeadingTerm);
                 GenericGFPoly term = other.MultiplyByMonomial(degreeDifference, scale);
-                int[] coefficients = new int[degreeDifference + 1];
-                coefficients[0] = scale;
-                GenericGFPoly iterationQuotient = new GenericGFPoly(coefficients);
-                quotient = quotient.AddOrSubtract(iterationQuotient);
-                remainder = remainder.AddOrSubtract(term);
+                GenericGFPoly iterationQuotient = GenericGF.BuildMonomial(degreeDifference, scale);
+                quotient = quotient.Addition(iterationQuotient);
+                remainder = remainder.Addition(term);
             }
             return new GenericGFPoly[] { quotient, remainder };
         }
@@ -231,7 +192,7 @@ namespace ConsoleDemo.Model
                     }
                     if (degree == 0 || coefficient != 1)
                     {
-                        int alphaPower = Log(coefficient);
+                        int alphaPower = GenericGF.Log(coefficient);
                         if (alphaPower == 0)
                         {
                             result.Append('1');
