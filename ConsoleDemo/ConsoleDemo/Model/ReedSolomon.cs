@@ -18,7 +18,9 @@ namespace ConsoleDemo.Model
         {
             // 初始化GenericGFPoly
             GenericGFPolyList.Add(new GenericGFPoly(new int[] { 1 }));
-            for (int i = 1; i < 124; i++)
+            // 最大值68
+            // 数据来源 ISO/IEC 18004-2015 -> Annex A -> Table A.1 -> Number of error correction codewords列最大值
+            for (int i = 1; i < 69; i++)
             {
                 GenericGFPolyList.Add(GenericGFPolyList[i - 1].Multiply(new GenericGFPoly(new int[] { 1, GenericGF.Exp(i - 1) })));
             }

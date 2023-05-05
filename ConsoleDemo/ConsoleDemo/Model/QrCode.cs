@@ -140,7 +140,7 @@ namespace ConsoleDemo.Model
         /// <param name="pos">位置</param>
         /// <param name="value">值</param>
         /// <param name="numberBits">添加bit个数</param>
-        private static void AddBits(bool[] bits, int pos, int value, int numberBits)
+        public static void AddBits(bool[] bits, int pos, int value, int numberBits)
         {
             for (int i = 0; i < numberBits; i++)
             {
