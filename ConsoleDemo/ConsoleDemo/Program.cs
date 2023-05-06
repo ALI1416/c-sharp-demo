@@ -17,9 +17,8 @@ namespace ConsoleDemo
         public static void Main(string[] args)
         {
 
-
             //Log4NetTest.Test();
-            //QrCodeZXingTest.Test();
+            QrCodeZXingTest.Test();
             QrCodeTest.Test();
             QrCodeTest2.Test();
             //HttpService1Test.Start();
@@ -32,7 +31,7 @@ namespace ConsoleDemo
             //WebSocketService2Test.Start();
             //WebSocketService2Test.Start2();
             //WebSocketService3Test.Start();
-            while (true)
+            while (false)
             {
                 Console.WriteLine("\n关闭程序:0 重放:9\n" +
                     "http服务1(使用HttpListener)8080\t-> 关闭:1 启动:2 授权启动:3\n" +

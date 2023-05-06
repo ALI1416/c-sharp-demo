@@ -19,11 +19,15 @@ namespace ConsoleDemo.Model
         /// </summary>
         public readonly Version Version;
         /// <summary>
-        /// 数据矩阵
+        /// 掩模模板
+        /// </summary>
+        public readonly MaskPattern MaskPattern;
+        /// <summary>
+        /// 矩阵
         /// <para>true 黑</para>
         /// <para>false 白</para>
         /// </summary>
-        public readonly bool[][] DataMatrix;
+        public readonly int[,] Matrix;
 
         /// <summary>
         /// 构造二维码
@@ -92,6 +96,7 @@ namespace ConsoleDemo.Model
             int[][] dataBlocks = new int[blocks][];
             int[][] ecBlocks = new int[blocks][];
             int blockNum = 0;
+            int dataByteNum = 0;
             for (int i = 0; i < ec.GetLength(0); i++)
             {
                 int count = ec[i, 0];
@@ -99,12 +104,13 @@ namespace ConsoleDemo.Model
                 for (int j = 0; j < count; j++)
                 {
                     // 数据块
-                    int[] dataBlock = GetBytes(dataBits, blockNum * 8, dataBytes);
+                    int[] dataBlock = GetBytes(dataBits, dataByteNum * 8, dataBytes);
                     dataBlocks[blockNum] = dataBlock;
                     // 纠错块
                     int[] ecBlock = CalculateEc(dataBlock, ecBlockBytes);
                     ecBlocks[blockNum] = ecBlock;
                     blockNum++;
+                    dataByteNum += dataBytes;
                 }
             }
 
@@ -131,6 +137,10 @@ namespace ConsoleDemo.Model
                     dataAndEcBitPtr += 8;
                 }
             }
+
+            /* 构造掩模模板 */
+            MaskPattern = new MaskPattern(dataAndEcBits, Version, level);
+            Matrix = MaskPattern.BestPattern;
         }
 
         /// <summary>

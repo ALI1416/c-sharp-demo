@@ -19,11 +19,6 @@
         /// </summary>
         public readonly int Dimension;
         /// <summary>
-        /// 编码区bit数
-        /// <para></para>
-        /// </summary>
-        public readonly int EncodingAreaBits;
-        /// <summary>
         /// 内容字节数
         /// </summary>
         public readonly int ContentBytes;

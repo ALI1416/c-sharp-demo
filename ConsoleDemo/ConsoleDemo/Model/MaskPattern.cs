@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Drawing2D;
-using System.Web.UI.WebControls;
 
 namespace ConsoleDemo.Model
 {
@@ -15,36 +12,19 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 模板列表
         /// </summary>
-        public readonly bool[][,] Patterns = new bool[8][,];
+        public readonly int[][,] Patterns = new int[8][,];
         /// <summary>
         /// 惩戒分列表
         /// </summary>
-        public readonly int[] Penalty;
+        public readonly int[] Penalties = new int[8];
         /// <summary>
         /// 最好的模板下标
         /// </summary>
         public readonly int Best;
-
         /// <summary>
-        /// 数据
+        /// 最好的模板
         /// </summary>
-        private readonly bool[] Data;
-        /// <summary>
-        /// 版本
-        /// </summary>
-        private readonly Version Version;
-        /// <summary>
-        /// 纠错等级
-        /// <para>0 L 7%</para>
-        /// <para>1 M 15%</para>
-        /// <para>2 Q 25%</para>
-        /// <para>3 H 30%</para>
-        /// </summary>
-        private readonly int Level;
-        /// <summary>
-        /// 尺寸
-        /// </summary>
-        private readonly int Dimension;
+        public readonly int[,] BestPattern;
 
         /// <summary>
         /// 构建模板
@@ -64,30 +44,45 @@ namespace ConsoleDemo.Model
         /// </param>
         public MaskPattern(bool[] data, Version version, int level)
         {
-            Data = data;
-            Version = version;
-            Dimension = version.Dimension;
-            Level = level;
+            int dimension = version.Dimension;
+            int versionNumber = version.VersionNumber;
             for (int i = 0; i < 8; i++)
             {
-                int[,] pattern = new int[Dimension, Dimension];
-                FillEmptyPattern(pattern);
-                EmbedBasicPattern(pattern);
-                EmbedFormatInfo(pattern, i);
-                EmbedVersionInfo(pattern);
-                EmbedData(pattern, i);
+                int[,] pattern = new int[dimension, dimension];
+                // 画模板
+                FillEmptyPattern(pattern, dimension);
+                EmbedBasicPattern(pattern, dimension, versionNumber);
+                EmbedFormatInfo(pattern, dimension, level, i);
+                EmbedVersionInfo(pattern, dimension, versionNumber);
+                EmbedData(pattern, dimension, i, data);
+                Patterns[i] = pattern;
+                // 计算惩戒分
+                Penalties[i] = MaskPenaltyRule(pattern, dimension);
             }
+            // 找到最好的模板
+            int minPenalty = int.MaxValue;
+            Best = -1;
+            for (int i = 0; i < 8; i++)
+            {
+                if (Penalties[i] < minPenalty)
+                {
+                    minPenalty = Penalties[i];
+                    Best = i;
+                }
+            }
+            BestPattern = Patterns[Best];
         }
 
         /// <summary>
         /// 填充为空模板
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void FillEmptyPattern(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        private static void FillEmptyPattern(int[,] pattern, int dimension)
         {
-            for (int i = 0; i < Dimension; i++)
+            for (int i = 0; i < dimension; i++)
             {
-                for (int j = 0; j < Dimension; j++)
+                for (int j = 0; j < dimension; j++)
                 {
                     pattern[i, j] = 2;
                 }
@@ -113,46 +108,49 @@ namespace ConsoleDemo.Model
         /// <para>定位图形</para>
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void EmbedBasicPattern(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        /// <param name="versionNumber">版本号</param>
+        private static void EmbedBasicPattern(int[,] pattern, int dimension, int versionNumber)
         {
-            EmbedPositionFinderPatternAndSeparator(pattern);
-            EmbedDarkDotAtLeftBottomCorner(pattern);
-            EmbedPositionAlignmentPattern(pattern);
-            EmbedTimingPattern(pattern);
+            EmbedPositionFinderPatternAndSeparator(pattern, dimension);
+            EmbedDarkDotAtLeftBottomCorner(pattern, dimension);
+            EmbedPositionAlignmentPattern(pattern, versionNumber);
+            EmbedTimingPattern(pattern, dimension);
         }
 
         /// <summary>
         /// 嵌入位置探测和分隔符图形
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void EmbedPositionFinderPatternAndSeparator(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        private static void EmbedPositionFinderPatternAndSeparator(int[,] pattern, int dimension)
         {
             /* 嵌入位置探测图形 */
             int finderDimension = 7;
             // 左上角
             EmbedPositionFinderPattern(pattern, 0, 0);
             // 右上角
-            EmbedPositionFinderPattern(pattern, Dimension - finderDimension, 0);
+            EmbedPositionFinderPattern(pattern, dimension - finderDimension, 0);
             // 左下角
-            EmbedPositionFinderPattern(pattern, 0, Dimension - finderDimension);
+            EmbedPositionFinderPattern(pattern, 0, dimension - finderDimension);
 
             /* 嵌入水平分隔符图形 */
             int horizontalWidth = 8;
             // 左上角
             EmbedHorizontalSeparationPattern(pattern, 0, horizontalWidth - 1);
             // 右上角
-            EmbedHorizontalSeparationPattern(pattern, Dimension - horizontalWidth, horizontalWidth - 1);
+            EmbedHorizontalSeparationPattern(pattern, dimension - horizontalWidth, horizontalWidth - 1);
             // 左下角
-            EmbedHorizontalSeparationPattern(pattern, Dimension - horizontalWidth, horizontalWidth);
+            EmbedHorizontalSeparationPattern(pattern, 0, dimension - horizontalWidth);
 
             /* 嵌入垂直分隔符图形 */
             int verticalHeight = 7;
             // 左上角
             EmbedVerticalSeparationPattern(pattern, verticalHeight, 0);
             // 右上角
-            EmbedVerticalSeparationPattern(pattern, Dimension - verticalHeight - 1, 0);
+            EmbedVerticalSeparationPattern(pattern, dimension - verticalHeight - 1, 0);
             // 左下角
-            EmbedVerticalSeparationPattern(pattern, verticalHeight, Dimension - verticalHeight);
+            EmbedVerticalSeparationPattern(pattern, verticalHeight, dimension - verticalHeight);
         }
 
         /// <summary>
@@ -204,30 +202,29 @@ namespace ConsoleDemo.Model
         /// 嵌入左下角黑点
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void EmbedDarkDotAtLeftBottomCorner(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        private static void EmbedDarkDotAtLeftBottomCorner(int[,] pattern, int dimension)
         {
-            pattern[8, Dimension - 8] = 1;
+            pattern[8, dimension - 8] = 1;
         }
 
         /// <summary>
         /// 嵌入位置校正图形(版本2+)
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void EmbedPositionAlignmentPattern(int[,] pattern)
+        /// <param name="versionNumber">版本号</param>
+        private static void EmbedPositionAlignmentPattern(int[,] pattern, int versionNumber)
         {
-            if (Version.VersionNumber < 2)
+            if (versionNumber < 2)
             {
                 return;
             }
-            int[] coordinates = POSITION_ALIGNMENT_PATTERN_COORDINATE[Version.VersionNumber];
-            for (int x = 0; x < coordinates.Length; x++)
+            int[] coordinates = POSITION_ALIGNMENT_PATTERN_COORDINATE[versionNumber];
+            foreach (int x in coordinates)
             {
-                for (int y = 0; y < coordinates.Length; y++)
+                foreach (int y in coordinates)
                 {
-                    if (IsEmpty(pattern[x, y]))
-                    {
-                        EmbedPositionAlignmentPattern(pattern, x - 2, y - 2);
-                    }
+                    EmbedPositionAlignmentPattern(pattern, x - 2, y - 2);
                 }
             }
         }
@@ -244,7 +241,7 @@ namespace ConsoleDemo.Model
             {
                 for (int x = 0; x < 5; x++)
                 {
-                    pattern[xStart + x, yStart + y] = POSITION_ALIGNMENT_PATTERN[x, y];
+                    pattern[xStart + x, yStart + y] = POSITION_ALIGNMENT_PATTERN[y, x];
                 }
             }
         }
@@ -253,21 +250,16 @@ namespace ConsoleDemo.Model
         /// 嵌入定位图形
         /// </summary>
         /// <param name="pattern">模板</param>
-        private void EmbedTimingPattern(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        private static void EmbedTimingPattern(int[,] pattern, int dimension)
         {
-            for (int i = 8; i < Dimension - 8; i++)
+            for (int i = 8; i < dimension - 8; i++)
             {
                 int isBlack = ((i + 1) % 2);
                 // 水平
-                if (IsEmpty(pattern[i, 6]))
-                {
-                    pattern[i, 6] = isBlack;
-                }
+                pattern[i, 6] = isBlack;
                 // 垂直
-                if (IsEmpty(pattern[6, i]))
-                {
-                    pattern[6, i] = isBlack;
-                }
+                pattern[6, i] = isBlack;
             }
         }
 
@@ -275,10 +267,12 @@ namespace ConsoleDemo.Model
         /// 嵌入格式信息
         /// </summary>
         /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <param name="level">纠错等级</param>
         /// <param name="id">模板序号</param>
-        private void EmbedFormatInfo(int[,] pattern, int id)
+        private static void EmbedFormatInfo(int[,] pattern, int dimension, int level, int id)
         {
-            bool[] formatInfo = CalculateFormatInfo(id);
+            bool[] formatInfo = CalculateFormatInfo(level, id);
             for (int i = 0; i < 15; i++)
             {
                 int isBlack = formatInfo[14 - i] ? 1 : 0;
@@ -288,14 +282,14 @@ namespace ConsoleDemo.Model
                 // 右上角
                 if (i < 8)
                 {
-                    x = Dimension - i - 1;
+                    x = dimension - i - 1;
                     y = 8;
                 }
                 // 左下角
                 else
                 {
                     x = 8;
-                    y = Dimension + i - 15;
+                    y = dimension + i - 15;
                 }
                 pattern[x, y] = isBlack;
             }
@@ -305,13 +299,14 @@ namespace ConsoleDemo.Model
         /// 计算格式信息
         /// </summary>
         /// <param name="id">模板序号</param>
+        /// <param name="level">纠错等级</param>
         /// <returns>格式信息</returns>
-        private bool[] CalculateFormatInfo(int id)
+        private static bool[] CalculateFormatInfo(int level, int id)
         {
             // 数据信息5bit(纠错等级2bit+模板序号3bit)
             int dataInfo = 0;
             // 纠错等级2bit
-            switch (Level)
+            switch (level)
             {
                 // 0 L 0b01=1
                 case 0:
@@ -387,23 +382,25 @@ namespace ConsoleDemo.Model
         /// 嵌入版本信息(版本7+)
         /// </summary>
         /// <param name="pattern"></param>
-        private void EmbedVersionInfo(int[,] pattern)
+        /// <param name="dimension">尺寸</param>
+        /// <param name="versionNumber">版本号</param>
+        private static void EmbedVersionInfo(int[,] pattern, int dimension, int versionNumber)
         {
-            if (Version.VersionNumber < 7)
+            if (versionNumber < 7)
             {
                 return;
             }
-            bool[] versionInfo = CalculateVersionInfo();
+            bool[] versionInfo = CalculateVersionInfo(versionNumber);
             int index = 17;
             for (int i = 0; i < 6; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    int isBlack = versionInfo[index] ? 1 : 0;
+                    int isBlack = versionInfo[index--] ? 1 : 0;
                     // 左下角
-                    pattern[i, Dimension - 11 + j] = isBlack;
+                    pattern[i, dimension - 11 + j] = isBlack;
                     // 右上角
-                    pattern[Dimension - 11 + i, j] = isBlack;
+                    pattern[dimension - 11 + j, i] = isBlack;
                 }
             }
         }
@@ -411,11 +408,12 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 计算版本信息
         /// </summary>
+        /// <param name="versionNumber">版本号</param>
         /// <returns>版本信息</returns>
-        private bool[] CalculateVersionInfo()
+        private static bool[] CalculateVersionInfo(int versionNumber)
         {
             // 数据信息6bit(版本号6bit)
-            int dataInfo = Version.VersionNumber;
+            int dataInfo = versionNumber;
             // BCH(18,6)纠错码12bit
             int bchCode = CalculateBchCode(dataInfo, VERSION_INFO_POLY);
             int value = (dataInfo << 12) | bchCode;
@@ -429,13 +427,16 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="id">模板序号</param>
-        private void EmbedData(int[,] pattern, int id)
+        /// <param name="dimension">尺寸</param>
+        /// <param name="data">数据</param>
+        private static void EmbedData(int[,] pattern, int dimension, int id, bool[] data)
         {
+            int length = data.Length;
             int index = 0;
             int direction = -1;
             // 从右下角开始
-            int x = Dimension - 1;
-            int y = Dimension - 1;
+            int x = dimension - 1;
+            int y = dimension - 1;
             while (x > 0)
             {
                 // 跳过垂直分隔符图形
@@ -443,9 +444,9 @@ namespace ConsoleDemo.Model
                 {
                     x -= 1;
                 }
-                while (y >= 0 && y < Dimension)
+                while (y >= 0 && y < dimension)
                 {
-                    for (int i = 0; i < 2; ++i)
+                    for (int i = 0; i < 2; i++)
                     {
                         int xx = x - i;
                         // 跳过不为空
@@ -454,10 +455,10 @@ namespace ConsoleDemo.Model
                             continue;
                         }
                         int isBlack;
-                        if (index < Data.Length)
+                        if (index < length)
                         {
-                            isBlack = Data[index] ? 1 : 0;
-                            ++index;
+                            isBlack = data[index] ? 1 : 0;
+                            index++;
                         }
                         else
                         {
@@ -491,45 +492,45 @@ namespace ConsoleDemo.Model
             {
                 case 0:
                     {
-                        value = (y + x) & 0x1;
+                        value = (x + y) & 0x1;
                         break;
                     }
                 case 1:
                     {
-                        value = y & 0x1;
+                        value = x & 0x1;
                         break;
                     }
                 case 2:
                     {
-                        value = x % 3;
+                        value = y % 3;
                         break;
                     }
                 case 3:
                     {
-                        value = (y + x) % 3;
+                        value = (x + y) % 3;
                         break;
                     }
                 case 4:
                     {
-                        value = (((int)((uint)y >> 1)) + (x / 3)) & 0x1;
+                        value = (((int)((uint)x >> 1)) + (y / 3)) & 0x1;
                         break;
                     }
                 case 5:
                     {
-                        temp = y * x;
+                        temp = x * y;
                         value = (temp & 0x1) + (temp % 3);
                         break;
                     }
                 case 6:
                     {
-                        temp = y * x;
-                        value = (((temp & 0x1) + (temp % 3)) & 0x1);
+                        temp = x * y;
+                        value = ((temp & 0x1) + (temp % 3)) & 0x1;
                         break;
                     }
                 case 7:
                     {
-                        temp = y * x;
-                        value = (((temp % 3) + ((y + x) & 0x1)) & 0x1);
+                        temp = x * y;
+                        value = ((temp % 3) + ((x + y) & 0x1)) & 0x1;
                         break;
                     }
             }
@@ -537,14 +538,35 @@ namespace ConsoleDemo.Model
         }
 
         /// <summary>
+        /// 掩模惩戒规则
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>惩戒分</returns>
+        private static int MaskPenaltyRule(int[,] pattern, int dimension)
+        {
+            return MaskPenaltyRule1(pattern, dimension) + MaskPenaltyRule2(pattern, dimension) + MaskPenaltyRule3(pattern, dimension) + MaskPenaltyRule4(pattern, dimension);
+        }
+
+        /// <summary>
+        /// 掩模惩戒规则1
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>规则1惩戒分</returns>
+        private static int MaskPenaltyRule1(int[,] pattern, int dimension)
+        {
+            return MaskPenaltyRule1(pattern, dimension, true) + MaskPenaltyRule1(pattern, dimension, false);
+        }
+        /// <summary>
         /// 掩模惩戒规则1
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="isHorizontal">水平</param>
-        /// <returns></returns>
-        private static int MaskPenaltyRule1(int[,] pattern, bool isHorizontal)
+        /// <param name="dimension">尺寸</param>
+        /// <returns>规则1惩戒分</returns>
+        private static int MaskPenaltyRule1(int[,] pattern, int dimension, bool isHorizontal)
         {
-            int dimension = pattern.GetLength(0);
             int penalty = 0;
             for (int i = 0; i < dimension; i++)
             {
@@ -573,6 +595,150 @@ namespace ConsoleDemo.Model
                 }
             }
             return penalty;
+        }
+
+        /// <summary>
+        /// 掩模惩戒规则2
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>规则2惩戒分</returns>
+        private static int MaskPenaltyRule2(int[,] pattern, int dimension)
+        {
+            int penalty = 0;
+            for (int y = 0; y < dimension - 1; y++)
+            {
+                for (int x = 0; x < dimension - 1; x++)
+                {
+                    int value = pattern[y, x];
+                    if (value == pattern[y, x + 1] && value == pattern[y + 1, x] && value == pattern[y + 1, x + 1])
+                    {
+                        penalty++;
+                    }
+                }
+            }
+            return PENALTY2 * penalty;
+        }
+
+        /// <summary>
+        /// 掩模惩戒规则3
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>规则3惩戒分</returns>
+        private static int MaskPenaltyRule3(int[,] pattern, int dimension)
+        {
+            int penalty = 0;
+            for (int y = 0; y < dimension; y++)
+            {
+                for (int x = 0; x < dimension; x++)
+                {
+                    if (x + 6 < dimension &&
+                        pattern[y, x] == 1 &&
+                        pattern[y, x + 1] == 0 &&
+                        pattern[y, x + 2] == 1 &&
+                        pattern[y, x + 3] == 1 &&
+                        pattern[y, x + 4] == 1 &&
+                        pattern[y, x + 5] == 0 &&
+                        pattern[y, x + 6] == 1 &&
+                        (IsWhiteHorizontal(pattern, dimension, y, x - 4, x) || IsWhiteHorizontal(pattern, dimension, y, x + 7, x + 11)))
+                    {
+                        penalty++;
+                    }
+                    if (y + 6 < dimension &&
+                        pattern[y, x] == 1 &&
+                        pattern[y + 1, x] == 0 &&
+                        pattern[y + 2, x] == 1 &&
+                        pattern[y + 3, x] == 1 &&
+                        pattern[y + 4, x] == 1 &&
+                        pattern[y + 5, x] == 0 &&
+                        pattern[y + 6, x] == 1 &&
+                        (IsWhiteVertical(pattern, dimension, x, y - 4, y) || IsWhiteVertical(pattern, dimension, x, y + 7, y + 11)))
+                    {
+                        penalty++;
+                    }
+                }
+            }
+            return penalty * PENALTY3;
+        }
+
+        /// <summary>
+        /// 水平全是白色
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <param name="row">行数</param>
+        /// <param name="from">从</param>
+        /// <param name="to">到</param>
+        /// <returns>是否水平全是白色</returns>
+        private static bool IsWhiteHorizontal(int[,] pattern, int dimension, int row, int from, int to)
+        {
+            if (from < 0 || dimension < to)
+            {
+                return false;
+            }
+            from = Math.Max(from, 0);
+            to = Math.Min(to, dimension);
+            for (int i = from; i < to; i++)
+            {
+                if (pattern[row, i] == 1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 垂直全是白色
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <param name="col">列数</param>
+        /// <param name="from">从</param>
+        /// <param name="to">到</param>
+        /// <returns>是否垂直全是白色</returns>
+        private static bool IsWhiteVertical(int[,] pattern, int dimension, int col, int from, int to)
+        {
+            if (from < 0 || dimension < to)
+            {
+                return false;
+            }
+            from = Math.Max(from, 0);
+            to = Math.Min(to, dimension);
+            for (int i = from; i < to; i++)
+            {
+                if (pattern[i, col] == 1)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 掩模惩戒规则4
+        /// </summary>
+        /// <param name="pattern">模板</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>规则4惩戒分</returns>
+        private static int MaskPenaltyRule4(int[,] pattern, int dimension)
+        {
+            int numDarkCells = 0;
+            for (int y = 0; y < dimension; y++)
+            {
+                for (int x = 0; x < dimension; x++)
+                {
+                    if (pattern[y, x] == 1)
+                    {
+                        numDarkCells++;
+                    }
+                }
+            }
+            var numTotalCells = dimension * dimension;
+            var darkRatio = (double)numDarkCells / numTotalCells;
+            var fivePercentVariances = (int)(Math.Abs(darkRatio - 0.5) * 20.0);
+            return fivePercentVariances * PENALTY4;
         }
 
         /// <summary>
