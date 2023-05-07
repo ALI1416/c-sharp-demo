@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleDemo.Util;
+using System;
 
 namespace ConsoleDemo.Model
 {
@@ -366,7 +367,7 @@ namespace ConsoleDemo.Model
             // 进行`异或`运算
             value ^= FORMAT_INFO_MASK_PATTERN;
             bool[] formatInfo = new bool[15];
-            QrCode.AddBits(formatInfo, 0, value, 15);
+            QrCodeUtils.AddBits(formatInfo, 0, value, 15);
             return formatInfo;
         }
 
@@ -443,7 +444,7 @@ namespace ConsoleDemo.Model
             int bchCode = CalculateBchCode(dataInfo, VERSION_INFO_POLY);
             int value = (dataInfo << 12) | bchCode;
             bool[] versionInfo = new bool[18];
-            QrCode.AddBits(versionInfo, 0, value, 18);
+            QrCodeUtils.AddBits(versionInfo, 0, value, 18);
             return versionInfo;
         }
 

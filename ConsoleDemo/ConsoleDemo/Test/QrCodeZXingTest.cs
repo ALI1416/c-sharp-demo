@@ -1,5 +1,6 @@
 ﻿using ConsoleDemo.Util;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using ZXing;
@@ -34,12 +35,12 @@ namespace ConsoleDemo.Test
             Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);
             ImageUtils.SaveBitmap(bitmap, path);
             // 识别二维码
-            //BarcodeReader reader = new BarcodeReader();
-            //Bitmap bitmapResult = new Bitmap(path);
-            //Result result = reader.Decode(bitmapResult);
-            //string contentResult = result.ToString();
-            //Console.WriteLine(contentResult);
-            //Assert.AreEqual(content, contentResult);
+            BarcodeReader reader = new BarcodeReader();
+            Bitmap bitmapResult = new Bitmap(path);
+            Result result = reader.Decode(bitmapResult);
+            string contentResult = result.ToString();
+            Console.WriteLine(contentResult);
+            Assert.AreEqual(content, contentResult);
         }
 
     }

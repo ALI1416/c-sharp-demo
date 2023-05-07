@@ -66,13 +66,12 @@
     <Compile Include="Test\HttpService2Test.cs" />
     <Compile Include="Test\HttpService1Test.cs" />
     <Compile Include="Service\HttpService.cs" />
-    <Compile Include="Test\QrCodeTest2.cs" />
+    <Compile Include="Test\QrCodeTest.cs" />
     <Compile Include="Test\SocketServiceTest.cs" />
     <Compile Include="Test\WebSocketService3Test.cs" />
     <Compile Include="Test\WebSocketService2Test.cs" />
     <Compile Include="Test\WebSocketService1Test.cs" />
     <Compile Include="Test\QrCodeZXingTest.cs" />
-    <Compile Include="Test\QrCodeTest.cs" />
     <Compile Include="Model\HttpClient.cs" />
     <Compile Include="Model\SocketClient2.cs" />
     <Compile Include="Model\SocketServer.cs" />
@@ -88,21 +87,9 @@
     <Compile Include="Test\Log4NetTest.cs" />
     <Compile Include="Test\NUnitTest.cs" />
     <Compile Include="Model\QrCode.cs" />
-    <Compile Include="Util\Qr\BitArray.cs" />
-    <Compile Include="Util\Qr\BitMatrix.cs" />
-    <Compile Include="Util\Qr\BlockPair.cs" />
-    <Compile Include="Util\Qr\ByteMatrix.cs" />
-    <Compile Include="Util\Qr\ErrorCorrectionLevel.cs" />
-    <Compile Include="Util\Qr\GenericGF.cs" />
-    <Compile Include="Util\Qr\GenericGFPoly.cs" />
     <Compile Include="Util\ImageUtils.cs" />
-    <Compile Include="Util\Qr\MaskUtil.cs" />
-    <Compile Include="Util\Qr\MatrixUtil.cs" />
-    <Compile Include="Util\Qr\QrCode.cs" />
-    <Compile Include="Util\QrUtils.cs" />
-    <Compile Include="Util\Qr\ReedSolomonEncoder.cs" />
+    <Compile Include="Util\QrCodeUtils.cs" />
     <Compile Include="Util\Utils.cs" />
-    <Compile Include="Util\Qr\Version.cs" />
     <Compile Include="Util\WebSocketUtils.cs" />
   </ItemGroup>
   <ItemGroup>

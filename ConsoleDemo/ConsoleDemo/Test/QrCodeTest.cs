@@ -1,4 +1,5 @@
-﻿using ConsoleDemo.Util;
+﻿using ConsoleDemo.Model;
+using ConsoleDemo.Util;
 using NUnit.Framework;
 using System.Drawing;
 
@@ -13,7 +14,7 @@ namespace ConsoleDemo.Test
     {
 
         private static readonly string content = "爱上对方过后就哭了啊123456789012345678901234567890";
-        private static readonly ErrorCorrectionLevel level = ErrorCorrectionLevel.H;
+        private static readonly int level = 3;
         private static readonly string path = "E:/qr2.png";
 
         /// <summary>
@@ -23,16 +24,9 @@ namespace ConsoleDemo.Test
         public static void Test()
         {
             // 生成二维码
-            QRCode qr = QrUtils.encode(content, level);
-            Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);
+            QrCode qrCode = new QrCode(content, level);
+            Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qrCode.Matrix, 10);
             ImageUtils.SaveBitmap(bitmap, path);
-            // 识别二维码
-            //BarcodeReader reader = new BarcodeReader();
-            //Bitmap bitmapResult = new Bitmap(path);
-            //Result result = reader.Decode(bitmapResult);
-            //string contentResult = result.ToString();
-            //Console.WriteLine(contentResult);
-            //Assert.AreEqual(content, contentResult);
         }
 
     }

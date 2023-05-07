@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleDemo.Util;
+using System;
 using System.Text;
 
 namespace ConsoleDemo.Model
@@ -55,18 +56,18 @@ namespace ConsoleDemo.Model
             bool[] dataBits = new bool[Version.DataBits];
             // 编码模式(4bit) Byte 0b0100=4
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
-            AddBits(dataBits, 0, 4, 4);
+            QrCodeUtils.AddBits(dataBits, 0, 4, 4);
             // `内容字节数`bit数
             int contentBytesBits = Version.ContentBytesBits;
-            AddBits(dataBits, 4, contentBytes, contentBytesBits);
+            QrCodeUtils.AddBits(dataBits, 4, contentBytes, contentBytesBits);
             // 内容
             for (int i = 0; i < contentBytes; i++)
             {
-                AddBits(dataBits, 4 + contentBytesBits + 8 * i, bits[i], 8);
+                QrCodeUtils.AddBits(dataBits, 4 + contentBytesBits + 8 * i, bits[i], 8);
             }
             // 结束符(4bit) 0b0000=0
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
-            AddBits(dataBits, 4 + contentBytesBits + contentBits, 0, 4);
+            QrCodeUtils.AddBits(dataBits, 4 + contentBytesBits + contentBits, 0, 4);
             // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
             int paddingPos = 8 + contentBytesBits + contentBits;
@@ -75,11 +76,11 @@ namespace ConsoleDemo.Model
             {
                 if (i % 2 == 0)
                 {
-                    AddBits(dataBits, paddingPos + i * 8, 0xEC, 8);
+                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, 0xEC, 8);
                 }
                 else
                 {
-                    AddBits(dataBits, paddingPos + i * 8, 0x11, 8);
+                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, 0x11, 8);
                 }
             }
 
@@ -100,7 +101,7 @@ namespace ConsoleDemo.Model
                 for (int j = 0; j < count; j++)
                 {
                     // 数据块
-                    int[] dataBlock = GetBytes(dataBits, dataByteNum * 8, dataBytes);
+                    int[] dataBlock = QrCodeUtils.GetBytes(dataBits, dataByteNum * 8, dataBytes);
                     dataBlocks[blockNum] = dataBlock;
                     // 纠错块
                     int[] ecBlock = CalculateEc(dataBlock, ecBlockBytes);
@@ -120,7 +121,7 @@ namespace ConsoleDemo.Model
                 {
                     if (dataBlocks[j].Length > i)
                     {
-                        AddBits(dataAndEcBits, dataAndEcBitPtr, dataBlocks[j][i], 8);
+                        QrCodeUtils.AddBits(dataAndEcBits, dataAndEcBitPtr, dataBlocks[j][i], 8);
                         dataAndEcBitPtr += 8;
                     }
                 }
@@ -129,7 +130,7 @@ namespace ConsoleDemo.Model
             {
                 for (int j = 0; j < blocks; j++)
                 {
-                    AddBits(dataAndEcBits, dataAndEcBitPtr, ecBlocks[j][i], 8);
+                    QrCodeUtils.AddBits(dataAndEcBits, dataAndEcBitPtr, ecBlocks[j][i], 8);
                     dataAndEcBitPtr += 8;
                 }
             }
@@ -137,48 +138,6 @@ namespace ConsoleDemo.Model
             /* 构造掩模模板 */
             MaskPattern = new MaskPattern(dataAndEcBits, Version, level);
             Matrix = MaskPattern.BestPattern;
-        }
-
-        /// <summary>
-        /// 添加bit
-        /// </summary>
-        /// <param name="bits">目的数据</param>
-        /// <param name="pos">位置</param>
-        /// <param name="value">值</param>
-        /// <param name="numberBits">添加bit个数</param>
-        public static void AddBits(bool[] bits, int pos, int value, int numberBits)
-        {
-            for (int i = 0; i < numberBits; i++)
-            {
-                bits[pos + i] = (value & (1 << (numberBits - i - 1))) != 0;
-            }
-        }
-
-        /// <summary>
-        /// 获取字节数组
-        /// </summary>
-        /// <param name="data">数据</param>
-        /// <param name="offset">起始位置</param>
-        /// <param name="bytes">字节长度</param>
-        /// <returns>字节数组</returns>
-        private static int[] GetBytes(bool[] data, int offset, int bytes)
-        {
-            int[] result = new int[bytes];
-            for (int i = 0; i < bytes; i++)
-            {
-                int ptr = offset + i * 8;
-                result[i] = (
-                      (data[ptr] ? 0x80 : 0)
-                    | (data[ptr + 1] ? 0x40 : 0)
-                    | (data[ptr + 2] ? 0x20 : 0)
-                    | (data[ptr + 3] ? 0x10 : 0)
-                    | (data[ptr + 4] ? 0x08 : 0)
-                    | (data[ptr + 5] ? 0x04 : 0)
-                    | (data[ptr + 6] ? 0x02 : 0)
-                    | (data[ptr + 7] ? 0x01 : 0)
-                   );
-            }
-            return result;
         }
 
         /// <summary>
