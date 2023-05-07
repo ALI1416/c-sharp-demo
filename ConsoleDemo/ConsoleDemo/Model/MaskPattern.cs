@@ -112,10 +112,14 @@ namespace ConsoleDemo.Model
         /// <param name="versionNumber">版本号</param>
         private static void EmbedBasicPattern(int[,] pattern, int dimension, int versionNumber)
         {
+            // 嵌入位置探测和分隔符图形
             EmbedPositionFinderPatternAndSeparator(pattern, dimension);
-            EmbedDarkDotAtLeftBottomCorner(pattern, dimension);
+            // 嵌入位置校正图形(版本2+)
             EmbedPositionAlignmentPattern(pattern, versionNumber);
+            // 嵌入定位图形
             EmbedTimingPattern(pattern, dimension);
+            // 嵌入左下角黑点
+            EmbedDarkDotAtLeftBottomCorner(pattern, dimension);
         }
 
         /// <summary>
@@ -220,11 +224,17 @@ namespace ConsoleDemo.Model
                 return;
             }
             int[] coordinates = POSITION_ALIGNMENT_PATTERN_COORDINATE[versionNumber];
-            foreach (int x in coordinates)
+            int length = coordinates.Length;
+            for (int x = 0; x < length; x++)
             {
-                foreach (int y in coordinates)
+                for (int y = 0; y < length; y++)
                 {
-                    EmbedPositionAlignmentPattern(pattern, x - 2, y - 2);
+                    // 跳过位置探测图形
+                    if ((x == 0 && y == 0) || (x == 0 && y == length - 1) || (y == 0 && x == length - 1))
+                    {
+                        continue;
+                    }
+                    EmbedPositionAlignmentPattern(pattern, coordinates[x] - 2, coordinates[y] - 2);
                 }
             }
         }
@@ -255,10 +265,9 @@ namespace ConsoleDemo.Model
         {
             for (int i = 8; i < dimension - 8; i++)
             {
-                int isBlack = ((i + 1) % 2);
-                // 水平
+                int isBlack = (i + 1) % 2;
+                // 不必跳过校正图形
                 pattern[i, 6] = isBlack;
-                // 垂直
                 pattern[6, i] = isBlack;
             }
         }
@@ -304,10 +313,11 @@ namespace ConsoleDemo.Model
         private static bool[] CalculateFormatInfo(int level, int id)
         {
             // 数据信息5bit(纠错等级2bit+模板序号3bit)
-            int dataInfo = 0;
+            int dataInfo;
             // 纠错等级2bit
             switch (level)
             {
+                default:
                 // 0 L 0b01=1
                 case 0:
                     {
@@ -487,54 +497,44 @@ namespace ConsoleDemo.Model
         /// <returns></returns>
         public static bool GetMaskBit(int id, int x, int y)
         {
-            int value = 0, temp;
             switch (id)
             {
+                default:
                 case 0:
                     {
-                        value = (x + y) & 0x1;
-                        break;
+                        return ((x + y) % 2) == 0;
                     }
                 case 1:
                     {
-                        value = x & 0x1;
-                        break;
+                        return (y % 2) == 0;
                     }
                 case 2:
                     {
-                        value = y % 3;
-                        break;
+                        return (x % 3) == 0;
                     }
                 case 3:
                     {
-                        value = (x + y) % 3;
-                        break;
+                        return ((x + y) % 3) == 0;
                     }
                 case 4:
                     {
-                        value = (((int)((uint)x >> 1)) + (y / 3)) & 0x1;
-                        break;
+                        return (((y / 2) + (x / 3)) % 2) == 0;
                     }
                 case 5:
                     {
-                        temp = x * y;
-                        value = (temp & 0x1) + (temp % 3);
-                        break;
+                        int temp = x * y;
+                        return ((temp % 2) + (temp % 3)) == 0;
                     }
                 case 6:
                     {
-                        temp = x * y;
-                        value = ((temp & 0x1) + (temp % 3)) & 0x1;
-                        break;
+                        int temp = x * y;
+                        return (((temp % 2) + (temp % 3)) % 2) == 0;
                     }
                 case 7:
                     {
-                        temp = x * y;
-                        value = ((temp % 3) + ((x + y) & 0x1)) & 0x1;
-                        break;
+                        return ((((x * y) % 3) + ((x + y) % 2)) % 2) == 0;
                     }
             }
-            return value == 0;
         }
 
         /// <summary>
