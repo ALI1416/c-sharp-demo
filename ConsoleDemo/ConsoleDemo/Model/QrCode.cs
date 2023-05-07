@@ -72,15 +72,17 @@ namespace ConsoleDemo.Model
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
             int paddingPos = 8 + contentBytesBits + contentBits;
             int paddingCount = Version.ContentBytes - contentBytes;
+            bool[] number0xecBits= QrCodeUtils.GetBits(0xEC, 10);
+            bool[] number0x11Bits= QrCodeUtils.GetBits(0x11, 8);
             for (int i = 0; i < paddingCount; i++)
             {
                 if (i % 2 == 0)
                 {
-                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, 0xEC, 8);
+                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, number0xecBits, 8);
                 }
                 else
                 {
-                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, 0x11, 8);
+                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, number0x11Bits, 8);
                 }
             }
 

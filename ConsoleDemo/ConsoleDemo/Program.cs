@@ -18,7 +18,8 @@ namespace ConsoleDemo
         {
 
             //Log4NetTest.Test();
-            QrCodeZXingTest.Test();
+            //QrCodeDataGenerationTest.Test();
+            //QrCodeZXingTest.Test();
             QrCodeTest.Test();
             //HttpService1Test.Start();
             //HttpService1Test.Start2();

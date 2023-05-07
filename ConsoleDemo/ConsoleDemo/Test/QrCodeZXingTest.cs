@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using ZXing;
+using ZXing.QrCode.Internal;
 
 namespace ConsoleDemo.Test
 {
@@ -16,7 +17,7 @@ namespace ConsoleDemo.Test
     {
 
         private static readonly string content = "爱上对方过后就哭了啊123456789012345678901234567890";
-        private static readonly ZXing.QrCode.Internal.ErrorCorrectionLevel level = ZXing.QrCode.Internal.ErrorCorrectionLevel.H;
+        private static readonly ErrorCorrectionLevel level = ErrorCorrectionLevel.H;
         private static readonly string path = "E:/qr1.png";
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace ConsoleDemo.Test
                 { EncodeHintType.CHARACTER_SET, "UTF-8" },
                 { EncodeHintType.DISABLE_ECI, true },
             };
-            ZXing.QrCode.Internal.QRCode qr = ZXing.QrCode.Internal.Encoder.encode(content, level, hints);
+            QRCode qr = Encoder.encode(content, level, hints);
             Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);
             ImageUtils.SaveBitmap(bitmap, path);
             // 识别二维码

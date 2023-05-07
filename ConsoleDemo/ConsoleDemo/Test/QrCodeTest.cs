@@ -1,6 +1,5 @@
 ﻿using ConsoleDemo.Model;
 using ConsoleDemo.Util;
-using NUnit.Framework;
 using System.Drawing;
 
 namespace ConsoleDemo.Test
@@ -9,7 +8,6 @@ namespace ConsoleDemo.Test
     /// <summary>
     /// 二维码测试
     /// </summary>
-    [TestFixture]
     public class QrCodeTest
     {
 
@@ -20,7 +18,6 @@ namespace ConsoleDemo.Test
         /// <summary>
         /// 测试
         /// </summary>
-        [Test]
         public static void Test()
         {
             // 生成二维码
