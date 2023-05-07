@@ -2,7 +2,7 @@
 {
 
     /// <summary>
-    /// 版本(编码模式:Byte)
+    /// 版本(编码模式 BYTE)
     /// </summary>
     public class Version
     {

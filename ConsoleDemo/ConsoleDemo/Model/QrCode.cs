@@ -4,10 +4,6 @@ using System.Text;
 namespace ConsoleDemo.Model
 {
 
-    // https://blog.csdn.net/hk_5788/article/details/50839790
-    // https://blog.csdn.net/ajianyingxiaoqinghan/article/details/78837864
-    // https://juejin.cn/post/7071499529995943950
-
     /// <summary>
     /// 二维码
     /// </summary>
@@ -15,7 +11,7 @@ namespace ConsoleDemo.Model
     {
 
         /// <summary>
-        /// 版本(编码模式:Byte)
+        /// 版本(编码模式 BYTE)
         /// </summary>
         public readonly Version Version;
         /// <summary>
@@ -24,15 +20,15 @@ namespace ConsoleDemo.Model
         public readonly MaskPattern MaskPattern;
         /// <summary>
         /// 矩阵
-        /// <para>true 黑</para>
-        /// <para>false 白</para>
+        /// <para>false白 true黑</para>
         /// </summary>
-        public readonly int[,] Matrix;
+        public readonly bool[,] Matrix;
 
         /// <summary>
         /// 构造二维码
-        /// <para>编码模式 Byte</para>
-        /// <para>编码格式 UTF8</para>
+        /// <para>编码模式 BYTE</para>
+        /// <para>编码格式 UTF-8</para>
+        /// <para>停用ECI true</para>
         /// </summary>
         /// <param name="content">
         /// 内容

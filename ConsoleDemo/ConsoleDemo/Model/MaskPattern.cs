@@ -11,8 +11,9 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 模板列表
+        /// <para>0白 1黑</para>
         /// </summary>
-        public readonly int[][,] Patterns = new int[8][,];
+        public readonly byte[][,] Patterns = new byte[8][,];
         /// <summary>
         /// 惩戒分列表
         /// </summary>
@@ -23,8 +24,9 @@ namespace ConsoleDemo.Model
         public readonly int Best;
         /// <summary>
         /// 最好的模板
+        /// <para>false白 true黑</para>
         /// </summary>
-        public readonly int[,] BestPattern;
+        public readonly bool[,] BestPattern;
 
         /// <summary>
         /// 构建模板
@@ -48,8 +50,9 @@ namespace ConsoleDemo.Model
             int versionNumber = version.VersionNumber;
             for (int i = 0; i < 8; i++)
             {
-                int[,] pattern = new int[dimension, dimension];
-                // 画模板
+                // 新建模板 0白 1黑 2空
+                byte[,] pattern = new byte[dimension, dimension];
+                // 填充模板
                 FillEmptyPattern(pattern, dimension);
                 EmbedBasicPattern(pattern, dimension, versionNumber);
                 EmbedFormatInfo(pattern, dimension, level, i);
@@ -70,7 +73,29 @@ namespace ConsoleDemo.Model
                     Best = i;
                 }
             }
-            BestPattern = Patterns[Best];
+            BestPattern = Convert(Patterns[Best], dimension);
+        }
+
+        /// <summary>
+        /// 转换
+        /// </summary>
+        /// <param name="bytes">byte</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>bool</returns>
+        private static bool[,] Convert(byte[,] bytes, int dimension)
+        {
+            bool[,] data = new bool[dimension, dimension];
+            for (int i = 0; i < dimension; i++)
+            {
+                for (int j = 0; j < dimension; j++)
+                {
+                    if (bytes[i, j] == 1)
+                    {
+                        data[i, j] = true;
+                    }
+                }
+            }
+            return data;
         }
 
         /// <summary>
@@ -78,7 +103,7 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        private static void FillEmptyPattern(int[,] pattern, int dimension)
+        private static void FillEmptyPattern(byte[,] pattern, int dimension)
         {
             for (int i = 0; i < dimension; i++)
             {
@@ -87,16 +112,6 @@ namespace ConsoleDemo.Model
                     pattern[i, j] = 2;
                 }
             }
-        }
-
-        /// <summary>
-        /// 判断值是否为空
-        /// </summary>
-        /// <param name="value">值</param>
-        /// <returns></returns>
-        private static bool IsEmpty(int value)
-        {
-            return value == 2;
         }
 
         /// <summary>
@@ -110,7 +125,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <param name="versionNumber">版本号</param>
-        private static void EmbedBasicPattern(int[,] pattern, int dimension, int versionNumber)
+        private static void EmbedBasicPattern(byte[,] pattern, int dimension, int versionNumber)
         {
             // 嵌入位置探测和分隔符图形
             EmbedPositionFinderPatternAndSeparator(pattern, dimension);
@@ -127,7 +142,7 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        private static void EmbedPositionFinderPatternAndSeparator(int[,] pattern, int dimension)
+        private static void EmbedPositionFinderPatternAndSeparator(byte[,] pattern, int dimension)
         {
             /* 嵌入位置探测图形 */
             int finderDimension = 7;
@@ -163,7 +178,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="xStart">x起始坐标</param>
         /// <param name="yStart">y起始坐标</param>
-        private static void EmbedPositionFinderPattern(int[,] pattern, int xStart, int yStart)
+        private static void EmbedPositionFinderPattern(byte[,] pattern, int xStart, int yStart)
         {
             for (int x = 0; x < 7; x++)
             {
@@ -180,7 +195,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="xStart">x起始坐标</param>
         /// <param name="yStart">y起始坐标</param>
-        private static void EmbedHorizontalSeparationPattern(int[,] pattern, int xStart, int yStart)
+        private static void EmbedHorizontalSeparationPattern(byte[,] pattern, int xStart, int yStart)
         {
             for (int x = 0; x < 8; x++)
             {
@@ -194,7 +209,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="xStart">x起始坐标</param>
         /// <param name="yStart">y起始坐标</param>
-        private static void EmbedVerticalSeparationPattern(int[,] pattern, int xStart, int yStart)
+        private static void EmbedVerticalSeparationPattern(byte[,] pattern, int xStart, int yStart)
         {
             for (int y = 0; y < 7; y++)
             {
@@ -207,7 +222,7 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        private static void EmbedDarkDotAtLeftBottomCorner(int[,] pattern, int dimension)
+        private static void EmbedDarkDotAtLeftBottomCorner(byte[,] pattern, int dimension)
         {
             pattern[8, dimension - 8] = 1;
         }
@@ -217,7 +232,7 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="versionNumber">版本号</param>
-        private static void EmbedPositionAlignmentPattern(int[,] pattern, int versionNumber)
+        private static void EmbedPositionAlignmentPattern(byte[,] pattern, int versionNumber)
         {
             if (versionNumber < 2)
             {
@@ -245,7 +260,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="xStart">x起始坐标</param>
         /// <param name="yStart">y起始坐标</param>
-        private static void EmbedPositionAlignmentPattern(int[,] pattern, int xStart, int yStart)
+        private static void EmbedPositionAlignmentPattern(byte[,] pattern, int xStart, int yStart)
         {
             for (int y = 0; y < 5; y++)
             {
@@ -261,11 +276,11 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        private static void EmbedTimingPattern(int[,] pattern, int dimension)
+        private static void EmbedTimingPattern(byte[,] pattern, int dimension)
         {
             for (int i = 8; i < dimension - 8; i++)
             {
-                int isBlack = (i + 1) % 2;
+                byte isBlack = (byte)((i + 1) % 2);
                 // 不必跳过校正图形
                 pattern[i, 6] = isBlack;
                 pattern[6, i] = isBlack;
@@ -279,12 +294,12 @@ namespace ConsoleDemo.Model
         /// <param name="dimension">尺寸</param>
         /// <param name="level">纠错等级</param>
         /// <param name="id">模板序号</param>
-        private static void EmbedFormatInfo(int[,] pattern, int dimension, int level, int id)
+        private static void EmbedFormatInfo(byte[,] pattern, int dimension, int level, int id)
         {
             bool[] formatInfo = CalculateFormatInfo(level, id);
             for (int i = 0; i < 15; i++)
             {
-                int isBlack = formatInfo[14 - i] ? 1 : 0;
+                byte isBlack = (byte)(formatInfo[14 - i] ? 1 : 0);
                 // 左上角
                 pattern[FORMAT_INFO_COORDINATES[i, 0], FORMAT_INFO_COORDINATES[i, 1]] = isBlack;
                 int x, y;
@@ -394,7 +409,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern"></param>
         /// <param name="dimension">尺寸</param>
         /// <param name="versionNumber">版本号</param>
-        private static void EmbedVersionInfo(int[,] pattern, int dimension, int versionNumber)
+        private static void EmbedVersionInfo(byte[,] pattern, int dimension, int versionNumber)
         {
             if (versionNumber < 7)
             {
@@ -406,7 +421,7 @@ namespace ConsoleDemo.Model
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    int isBlack = versionInfo[index--] ? 1 : 0;
+                    byte isBlack = (byte)(versionInfo[index--] ? 1 : 0);
                     // 左下角
                     pattern[i, dimension - 11 + j] = isBlack;
                     // 右上角
@@ -436,10 +451,10 @@ namespace ConsoleDemo.Model
         /// 嵌入数据
         /// </summary>
         /// <param name="pattern">模板</param>
-        /// <param name="id">模板序号</param>
         /// <param name="dimension">尺寸</param>
+        /// <param name="id">模板序号</param>
         /// <param name="data">数据</param>
-        private static void EmbedData(int[,] pattern, int dimension, int id, bool[] data)
+        private static void EmbedData(byte[,] pattern, int dimension, int id, bool[] data)
         {
             int length = data.Length;
             int index = 0;
@@ -460,7 +475,7 @@ namespace ConsoleDemo.Model
                     {
                         int xx = x - i;
                         // 跳过不为空
-                        if (!IsEmpty(pattern[xx, y]))
+                        if (pattern[xx, y] != 2)
                         {
                             continue;
                         }
@@ -474,11 +489,12 @@ namespace ConsoleDemo.Model
                         {
                             isBlack = 0;
                         }
+                        // 需要掩模
                         if (GetMaskBit(id, xx, y))
                         {
-                            isBlack ^= 0x1;
+                            isBlack ^= 1;
                         }
-                        pattern[xx, y] = isBlack;
+                        pattern[xx, y] = (byte)isBlack;
                     }
                     y += direction;
                 }
@@ -489,12 +505,12 @@ namespace ConsoleDemo.Model
         }
 
         /// <summary>
-        /// 获取指定坐标的掩模值
+        /// 获取指定坐标是否需要掩模
         /// </summary>
         /// <param name="id">模板序号</param>
         /// <param name="x">坐标x</param>
         /// <param name="y">坐标y</param>
-        /// <returns></returns>
+        /// <returns>是否需要掩模</returns>
         public static bool GetMaskBit(int id, int x, int y)
         {
             switch (id)
@@ -543,9 +559,12 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <returns>惩戒分</returns>
-        private static int MaskPenaltyRule(int[,] pattern, int dimension)
+        private static int MaskPenaltyRule(byte[,] pattern, int dimension)
         {
-            return MaskPenaltyRule1(pattern, dimension) + MaskPenaltyRule2(pattern, dimension) + MaskPenaltyRule3(pattern, dimension) + MaskPenaltyRule4(pattern, dimension);
+            return MaskPenaltyRule1(pattern, dimension, true) + MaskPenaltyRule1(pattern, dimension, false)
+                + MaskPenaltyRule2(pattern, dimension)
+                + MaskPenaltyRule3(pattern, dimension)
+                + MaskPenaltyRule4(pattern, dimension);
         }
 
         /// <summary>
@@ -553,19 +572,9 @@ namespace ConsoleDemo.Model
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        /// <returns>规则1惩戒分</returns>
-        private static int MaskPenaltyRule1(int[,] pattern, int dimension)
-        {
-            return MaskPenaltyRule1(pattern, dimension, true) + MaskPenaltyRule1(pattern, dimension, false);
-        }
-        /// <summary>
-        /// 掩模惩戒规则1
-        /// </summary>
-        /// <param name="pattern">模板</param>
         /// <param name="isHorizontal">水平</param>
-        /// <param name="dimension">尺寸</param>
         /// <returns>规则1惩戒分</returns>
-        private static int MaskPenaltyRule1(int[,] pattern, int dimension, bool isHorizontal)
+        private static int MaskPenaltyRule1(byte[,] pattern, int dimension, bool isHorizontal)
         {
             int penalty = 0;
             for (int i = 0; i < dimension; i++)
@@ -603,7 +612,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <returns>规则2惩戒分</returns>
-        private static int MaskPenaltyRule2(int[,] pattern, int dimension)
+        private static int MaskPenaltyRule2(byte[,] pattern, int dimension)
         {
             int penalty = 0;
             for (int y = 0; y < dimension - 1; y++)
@@ -626,7 +635,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <returns>规则3惩戒分</returns>
-        private static int MaskPenaltyRule3(int[,] pattern, int dimension)
+        private static int MaskPenaltyRule3(byte[,] pattern, int dimension)
         {
             int penalty = 0;
             for (int y = 0; y < dimension; y++)
@@ -671,7 +680,7 @@ namespace ConsoleDemo.Model
         /// <param name="from">从</param>
         /// <param name="to">到</param>
         /// <returns>是否水平全是白色</returns>
-        private static bool IsWhiteHorizontal(int[,] pattern, int dimension, int row, int from, int to)
+        private static bool IsWhiteHorizontal(byte[,] pattern, int dimension, int row, int from, int to)
         {
             if (from < 0 || dimension < to)
             {
@@ -698,7 +707,7 @@ namespace ConsoleDemo.Model
         /// <param name="from">从</param>
         /// <param name="to">到</param>
         /// <returns>是否垂直全是白色</returns>
-        private static bool IsWhiteVertical(int[,] pattern, int dimension, int col, int from, int to)
+        private static bool IsWhiteVertical(byte[,] pattern, int dimension, int col, int from, int to)
         {
             if (from < 0 || dimension < to)
             {
@@ -722,7 +731,7 @@ namespace ConsoleDemo.Model
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <returns>规则4惩戒分</returns>
-        private static int MaskPenaltyRule4(int[,] pattern, int dimension)
+        private static int MaskPenaltyRule4(byte[,] pattern, int dimension)
         {
             int numDarkCells = 0;
             for (int y = 0; y < dimension; y++)
@@ -747,7 +756,7 @@ namespace ConsoleDemo.Model
         /// <para>数量:3个(左上角、右上角、左下角)</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 6.3.3.1</para>
         /// </summary>
-        private static readonly int[,] POSITION_FINDER_PATTERN =
+        private static readonly byte[,] POSITION_FINDER_PATTERN =
         {
             {1, 1, 1, 1, 1, 1, 1},
             {1, 0, 0, 0, 0, 0, 1},
@@ -764,7 +773,7 @@ namespace ConsoleDemo.Model
         /// <para>数量:根据版本号而定</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 6.3.6</para>
         /// </summary>
-        private static readonly int[,] POSITION_ALIGNMENT_PATTERN =
+        private static readonly byte[,] POSITION_ALIGNMENT_PATTERN =
         {
             {1, 1, 1, 1, 1},
             {1, 0, 0, 0, 1},

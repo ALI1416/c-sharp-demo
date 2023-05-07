@@ -28,6 +28,7 @@ namespace ConsoleDemo.Test
             Dictionary<EncodeHintType, object> hints = new Dictionary<EncodeHintType, object>(1)
             {
                 { EncodeHintType.CHARACTER_SET, "UTF-8" },
+                { EncodeHintType.DISABLE_ECI, true },
             };
             ZXing.QrCode.Internal.QRCode qr = ZXing.QrCode.Internal.Encoder.encode(content, level, hints);
             Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);

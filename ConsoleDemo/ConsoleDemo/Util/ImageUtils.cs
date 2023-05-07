@@ -14,12 +14,12 @@ namespace ConsoleDemo.Util
         private static readonly Brush brush = new SolidBrush(Color.Black);
 
         /// <summary>
-        /// 二维码Bytes转Bitmap
+        /// 二维码bool[,]转Bitmap
         /// </summary>
-        /// <param name="bytes">byte[][](1黑0白)</param>
+        /// <param name="bytes">bool[,](false白 true黑)</param>
         /// <param name="pixelSize">像素尺寸</param>
         /// <returns>Bitmap</returns>
-        public static Bitmap QrBytes2Bitmap(int[,] bytes, int pixelSize)
+        public static Bitmap QrBytes2Bitmap(bool[,] bytes, int pixelSize)
         {
             int length = bytes.GetLength(0);
             List<Rectangle> rects = new List<Rectangle>();
@@ -27,8 +27,7 @@ namespace ConsoleDemo.Util
             {
                 for (int y = 0; y < length; y++)
                 {
-                    int value = bytes[x, y];
-                    if (value == 1)
+                    if (bytes[x, y])
                     {
                         rects.Add(new Rectangle((x + 1) * pixelSize, (y + 1) * pixelSize, pixelSize, pixelSize));
                     }
@@ -44,9 +43,9 @@ namespace ConsoleDemo.Util
         }
 
         /// <summary>
-        /// 二维码Bytes转Bitmap
+        /// 二维码byte[][]转Bitmap
         /// </summary>
-        /// <param name="bytes">byte[][](1黑0白)</param>
+        /// <param name="bytes">byte[][](0白 1黑)</param>
         /// <param name="pixelSize">像素尺寸</param>
         /// <returns>Bitmap</returns>
         public static Bitmap QrBytes2Bitmap(byte[][] bytes, int pixelSize)
