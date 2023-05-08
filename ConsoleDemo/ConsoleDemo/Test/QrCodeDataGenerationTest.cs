@@ -26,7 +26,7 @@ namespace ConsoleDemo.Test
         public static void GenerationFormatInfo()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("        private static readonly bool[,][] FORMAT_INFO = new bool[4, 8][]\n        {\n");
+            sb.Append("        private static readonly bool[,][] FORMAT_INFO = new bool[,][]\n        {\n");
             for (int i = 0; i < 4; i++)
             {
                 sb.Append("            {");
@@ -43,13 +43,13 @@ namespace ConsoleDemo.Test
         }
 
         /// <summary>
-        /// 生成版本信息
+        /// 生成版本信息(版本7+)
         /// </summary>
         public static void GenerationVersionInfo()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("        private static readonly bool[][] VERSION_INFO = new bool[41][]\n        {");
-            for (int i = 0; i < 41; i++)
+            sb.Append("        private static readonly bool[][] VERSION_INFO = new bool[][]\n        {");
+            for (int i = 7; i < 41; i++)
             {
                 sb.Append("\n            new bool[] {");
                 PrintBoolArray(sb, CalculateVersionInfo(i));

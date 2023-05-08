@@ -69,9 +69,9 @@
         {
             for (int i = 1; i < 41; i++)
             {
-                if (length <= CONTENT_BYTES[i, level])
+                if (length <= CONTENT_BYTES[i - 1, level])
                 {
-                    ContentBytes = CONTENT_BYTES[i, level];
+                    ContentBytes = CONTENT_BYTES[i - 1, level];
                     VersionNumber = i;
                     break;
                 }
@@ -80,11 +80,11 @@
             // `内容字节数`bit数 1-9版本8bit 10-40版本16bit
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
             ContentBytesBits = VersionNumber < 10 ? 8 : 16;
-            DataAndEcBits = DATA_AND_EC_BITS[VersionNumber];
+            DataAndEcBits = DATA_AND_EC_BITS[VersionNumber - 1];
             // 编码模式(4bit)+`内容字节数`bit数+内容bit数+结束符(4bit)
             DataBits = 4 + ContentBytesBits + ContentBytes * 8 + 4;
             EcBytes = (DataAndEcBits - DataBits) / 8;
-            Ec = EC[VersionNumber, level];
+            Ec = EC[VersionNumber - 1, level];
             for (int i = 0; i < Ec.GetLength(0); i++)
             {
                 EcBlocks += Ec[i, 0];
@@ -93,12 +93,11 @@
 
         /// <summary>
         /// 数据bit数+纠错bit数
-        /// <para>索引[版本号]:41</para>
+        /// <para>索引[版本号]:40</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.1 -> Table 1 -> Data modules except(C)列</para>
         /// </summary>
         private static readonly int[] DATA_AND_EC_BITS =
         {
-                0, // 0
               208,   359,   567,   807,  1079, // 1-5
              1383,  1568,  1936,  2336,  2768, // 6-10
              3232,  3728,  4256,  4651,  5243, // 11-15
@@ -111,12 +110,11 @@
 
         /// <summary>
         /// 内容字节数
-        /// <para>索引[版本号,纠错等级]:41x4</para>
+        /// <para>索引[版本号,纠错等级]:40x4</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Data capacity列 -> Byte列</para>
         /// </summary>
         private static readonly int[,] CONTENT_BYTES =
         {
-            {    0,    0,    0,    0 }, // 0
             {   17,   14,   11,    7 }, {   32,   26,   20,   14 }, {   53,   42,   32,   24 }, {   78,   62,   46,   34 }, {  106,   84,   60,   44 }, // 1-5
             {  134,  106,   74,   58 }, {  154,  122,   86,   64 }, {  192,  152,  108,   84 }, {  230,  180,  130,   98 }, {  271,  213,  151,  119 }, // 6-10
             {  321,  251,  177,  137 }, {  367,  287,  203,  155 }, {  425,  331,  241,  177 }, {  458,  362,  258,  194 }, {  520,  412,  292,  220 }, // 11-15
@@ -129,18 +127,11 @@
 
         /// <summary>
         /// 纠错
-        /// <para>索引[版本号,纠错等级,纠错块,(块数量,纠错码)]:41x4x?x2</para>
+        /// <para>索引[版本号,纠错等级][纠错块,(块数量,纠错码)]:40x4x?x2</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.5.1 -> Table 9 -> Number of error correction blocks列 和 Error correction code per block列的k</para>
         /// </summary>
         private static readonly int[,][,] EC =
         {
-            // 0
-            {
-                new int[,] { {  0,   0 } },
-                new int[,] { {  0,   0 } },
-                new int[,] { {  0,   0 } },
-                new int[,] { {  0,   0 } },
-            },
             // 1
             {
                 new int[,] { {  1,  19 } },

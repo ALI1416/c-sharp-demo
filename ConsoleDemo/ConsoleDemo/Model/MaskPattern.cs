@@ -24,9 +24,9 @@ namespace ConsoleDemo.Model
         public readonly int Best;
         /// <summary>
         /// 最好的模板
-        /// <para>false白 true黑</para>
+        /// <para>0白 1黑</para>
         /// </summary>
-        public readonly bool[,] BestPattern;
+        public readonly byte[,] BestPattern;
 
         /// <summary>
         /// 构建模板
@@ -77,29 +77,7 @@ namespace ConsoleDemo.Model
                     Best = i;
                 }
             }
-            BestPattern = Convert(Patterns[Best], dimension);
-        }
-
-        /// <summary>
-        /// 转换
-        /// </summary>
-        /// <param name="bytes">byte</param>
-        /// <param name="dimension">尺寸</param>
-        /// <returns>bool</returns>
-        private static bool[,] Convert(byte[,] bytes, int dimension)
-        {
-            bool[,] data = new bool[dimension, dimension];
-            for (int i = 0; i < dimension; i++)
-            {
-                for (int j = 0; j < dimension; j++)
-                {
-                    if (bytes[i, j] == 1)
-                    {
-                        data[i, j] = true;
-                    }
-                }
-            }
-            return data;
+            BestPattern = Patterns[Best];
         }
 
         /// <summary>
@@ -122,9 +100,9 @@ namespace ConsoleDemo.Model
         /// 嵌入基础图形
         /// <para>包含：</para>
         /// <para>位置探测图形和分隔符</para>
-        /// <para>左下角黑点</para>
         /// <para>位置校正图形(版本2+)</para>
         /// <para>定位图形</para>
+        /// <para>左下角黑点</para>
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
@@ -242,7 +220,7 @@ namespace ConsoleDemo.Model
             {
                 return;
             }
-            int[] coordinates = POSITION_ALIGNMENT_PATTERN_COORDINATE[versionNumber];
+            int[] coordinates = POSITION_ALIGNMENT_PATTERN_COORDINATE[versionNumber - 2];
             int length = coordinates.Length;
             for (int x = 0; x < length; x++)
             {
@@ -266,11 +244,11 @@ namespace ConsoleDemo.Model
         /// <param name="yStart">y起始坐标</param>
         private static void EmbedPositionAlignmentPattern(byte[,] pattern, int xStart, int yStart)
         {
-            for (int y = 0; y < 5; y++)
+            for (int x = 0; x < 5; x++)
             {
-                for (int x = 0; x < 5; x++)
+                for (int y = 0; y < 5; y++)
                 {
-                    pattern[xStart + x, yStart + y] = POSITION_ALIGNMENT_PATTERN[y, x];
+                    pattern[xStart + x, yStart + y] = POSITION_ALIGNMENT_PATTERN[x, y];
                 }
             }
         }
@@ -335,7 +313,7 @@ namespace ConsoleDemo.Model
             {
                 return;
             }
-            bool[] versionInfo = VERSION_INFO[versionNumber];
+            bool[] versionInfo = VERSION_INFO[versionNumber - 7];
             int index = 17;
             for (int i = 0; i < 6; i++)
             {
@@ -411,8 +389,8 @@ namespace ConsoleDemo.Model
         /// 获取指定坐标是否需要掩模
         /// </summary>
         /// <param name="id">模板序号</param>
-        /// <param name="x">坐标x</param>
-        /// <param name="y">坐标y</param>
+        /// <param name="x">x坐标</param>
+        /// <param name="y">y坐标</param>
         /// <returns>是否需要掩模</returns>
         public static bool GetMaskBit(int id, int x, int y)
         {
@@ -464,7 +442,7 @@ namespace ConsoleDemo.Model
         /// <returns>惩戒分</returns>
         private static int MaskPenaltyRule(byte[,] pattern, int dimension)
         {
-            return MaskPenaltyRule1(pattern, dimension, true) + MaskPenaltyRule1(pattern, dimension, false)
+            return MaskPenaltyRule1(pattern, dimension)
                 + MaskPenaltyRule2(pattern, dimension)
                 + MaskPenaltyRule3(pattern, dimension)
                 + MaskPenaltyRule4(pattern, dimension);
@@ -472,38 +450,62 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 掩模惩戒规则1
+        /// <para>行或列，连续颜色相同(不可重复计算)</para>
+        /// <para>惩戒分=PENALTY1+(个数-5)</para>
+        /// <para>惩戒分在个数>=5时生效</para>
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
-        /// <param name="isHorizontal">水平</param>
         /// <returns>规则1惩戒分</returns>
-        private static int MaskPenaltyRule1(byte[,] pattern, int dimension, bool isHorizontal)
+        private static int MaskPenaltyRule1(byte[,] pattern, int dimension)
         {
             int penalty = 0;
             for (int i = 0; i < dimension; i++)
             {
-                int numSameBitCells = 0;
-                int prevBit = -1;
+                int countRow = 0;
+                int countCol = 0;
+                byte prevBitRow = 2;
+                byte prevBitCol = 2;
                 for (int j = 0; j < dimension; j++)
                 {
-                    int bit = isHorizontal ? pattern[i, j] : pattern[j, i];
-                    if (bit == prevBit)
+                    byte bitRow = pattern[i, j];
+                    byte bitCol = pattern[j, i];
+                    // 行
+                    if (bitRow == prevBitRow)
                     {
-                        numSameBitCells++;
+                        countRow++;
                     }
                     else
                     {
-                        if (numSameBitCells >= 5)
+                        if (countRow >= 5)
                         {
-                            penalty += PENALTY1 + (numSameBitCells - 5);
+                            penalty += PENALTY1 + (countRow - 5);
                         }
-                        numSameBitCells = 1;
-                        prevBit = bit;
+                        countRow = 1;
+                        prevBitRow = bitRow;
+                    }
+                    // 列
+                    if (bitCol == prevBitCol)
+                    {
+                        countCol++;
+                    }
+                    else
+                    {
+                        if (countCol >= 5)
+                        {
+                            penalty += PENALTY1 + (countCol - 5);
+                        }
+                        countCol = 1;
+                        prevBitCol = bitCol;
                     }
                 }
-                if (numSameBitCells >= 5)
+                if (countRow >= 5)
                 {
-                    penalty += PENALTY1 + (numSameBitCells - 5);
+                    penalty += PENALTY1 + (countRow - 5);
+                }
+                if (countCol >= 5)
+                {
+                    penalty += PENALTY1 + (countCol - 5);
                 }
             }
             return penalty;
@@ -511,6 +513,9 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 掩模惩戒规则2
+        /// <para>2x2，块内颜色相同(重复计算)</para>
+        /// <para>惩戒分=PENALTY2*出现次数</para>
+        /// <para>惩戒分在出现次数>=1时生效</para>
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
@@ -518,12 +523,13 @@ namespace ConsoleDemo.Model
         private static int MaskPenaltyRule2(byte[,] pattern, int dimension)
         {
             int penalty = 0;
-            for (int y = 0; y < dimension - 1; y++)
+            for (int x = 0; x < dimension - 1; x++)
             {
-                for (int x = 0; x < dimension - 1; x++)
+                for (int y = 0; y < dimension - 1; y++)
                 {
-                    int value = pattern[y, x];
-                    if (value == pattern[y, x + 1] && value == pattern[y + 1, x] && value == pattern[y + 1, x + 1])
+                    byte bit = pattern[x, y];
+                    // 2x2块
+                    if (bit == pattern[x, y + 1] && bit == pattern[x + 1, y] && bit == pattern[x + 1, y + 1])
                     {
                         penalty++;
                     }
@@ -534,6 +540,9 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 掩模惩戒规则3
+        /// <para>行或列，出现[黑,白,黑黑黑,白,黑]序列，并且前或后有4+个白色</para>
+        /// <para>惩戒分=PENALTY3*出现次数</para>
+        /// <para>惩戒分在出现次数>=1时生效</para>
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
@@ -541,37 +550,39 @@ namespace ConsoleDemo.Model
         private static int MaskPenaltyRule3(byte[,] pattern, int dimension)
         {
             int penalty = 0;
-            for (int y = 0; y < dimension; y++)
+            for (int x = 0; x < dimension; x++)
             {
-                for (int x = 0; x < dimension; x++)
+                for (int y = 0; y < dimension; y++)
                 {
-                    if (x + 6 < dimension &&
-                        pattern[y, x] == 1 &&
-                        pattern[y, x + 1] == 0 &&
-                        pattern[y, x + 2] == 1 &&
-                        pattern[y, x + 3] == 1 &&
-                        pattern[y, x + 4] == 1 &&
-                        pattern[y, x + 5] == 0 &&
-                        pattern[y, x + 6] == 1 &&
-                        (IsWhiteHorizontal(pattern, dimension, y, x - 4, x) || IsWhiteHorizontal(pattern, dimension, y, x + 7, x + 11)))
+                    // 行
+                    if (y < dimension - 6 &&
+                        pattern[x, y] == 1 &&
+                        pattern[x, y + 1] == 0 &&
+                        pattern[x, y + 2] == 1 &&
+                        pattern[x, y + 3] == 1 &&
+                        pattern[x, y + 4] == 1 &&
+                        pattern[x, y + 5] == 0 &&
+                        pattern[x, y + 6] == 1 &&
+                        (IsWhiteHorizontal(pattern, dimension, x, y - 4, y) || IsWhiteHorizontal(pattern, dimension, x, y + 7, y + 11)))
                     {
                         penalty++;
                     }
-                    if (y + 6 < dimension &&
-                        pattern[y, x] == 1 &&
-                        pattern[y + 1, x] == 0 &&
-                        pattern[y + 2, x] == 1 &&
-                        pattern[y + 3, x] == 1 &&
-                        pattern[y + 4, x] == 1 &&
-                        pattern[y + 5, x] == 0 &&
-                        pattern[y + 6, x] == 1 &&
-                        (IsWhiteVertical(pattern, dimension, x, y - 4, y) || IsWhiteVertical(pattern, dimension, x, y + 7, y + 11)))
+                    // 列
+                    if (x < dimension - 6 &&
+                        pattern[x, y] == 1 &&
+                        pattern[x + 1, y] == 0 &&
+                        pattern[x + 2, y] == 1 &&
+                        pattern[x + 3, y] == 1 &&
+                        pattern[x + 4, y] == 1 &&
+                        pattern[x + 5, y] == 0 &&
+                        pattern[x + 6, y] == 1 &&
+                        (IsWhiteVertical(pattern, dimension, y, x - 4, x) || IsWhiteVertical(pattern, dimension, y, x + 7, x + 11)))
                     {
                         penalty++;
                     }
                 }
             }
-            return penalty * PENALTY3;
+            return PENALTY3 * penalty;
         }
 
         /// <summary>
@@ -585,7 +596,7 @@ namespace ConsoleDemo.Model
         /// <returns>是否水平全是白色</returns>
         private static bool IsWhiteHorizontal(byte[,] pattern, int dimension, int row, int from, int to)
         {
-            if (from < 0 || dimension < to)
+            if (from < 0 || to > dimension)
             {
                 return false;
             }
@@ -612,7 +623,7 @@ namespace ConsoleDemo.Model
         /// <returns>是否垂直全是白色</returns>
         private static bool IsWhiteVertical(byte[,] pattern, int dimension, int col, int from, int to)
         {
-            if (from < 0 || dimension < to)
+            if (from < 0 || to > dimension)
             {
                 return false;
             }
@@ -630,27 +641,29 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 掩模惩戒规则4
+        /// <para>颜色占比</para>
+        /// <para>惩戒分=PENALTY4*((黑色占比-0.5)的绝对值*20)</para>
+        /// <para>惩戒分始终生效</para>
         /// </summary>
         /// <param name="pattern">模板</param>
         /// <param name="dimension">尺寸</param>
         /// <returns>规则4惩戒分</returns>
         private static int MaskPenaltyRule4(byte[,] pattern, int dimension)
         {
-            int numDarkCells = 0;
-            for (int y = 0; y < dimension; y++)
+            int count = 0;
+            for (int x = 0; x < dimension; x++)
             {
-                for (int x = 0; x < dimension; x++)
+                for (int y = 0; y < dimension; y++)
                 {
-                    if (pattern[y, x] == 1)
+                    if (pattern[x, y] == 1)
                     {
-                        numDarkCells++;
+                        count++;
                     }
                 }
             }
-            var numTotalCells = dimension * dimension;
-            var darkRatio = (double)numDarkCells / numTotalCells;
-            var fivePercentVariances = (int)(Math.Abs(darkRatio - 0.5) * 20.0);
-            return fivePercentVariances * PENALTY4;
+            double ratio = (double)count / (dimension * dimension);
+            int penalty = (int)(Math.Abs(ratio - 0.5) * 20);
+            return PENALTY4 * penalty;
         }
 
         /// <summary>
@@ -686,14 +699,12 @@ namespace ConsoleDemo.Model
         };
 
         /// <summary>
-        /// 位置校正图形坐标
-        /// <para>索引[版本号,坐标]:41x7</para>
+        /// 位置校正图形坐标(版本2+)
+        /// <para>索引[版本号][坐标]:39x?</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> Annex E -> Table E.1</para>
         /// </summary>
         private static readonly int[][] POSITION_ALIGNMENT_PATTERN_COORDINATE =
         {
-             new int[] {},
-             new int[] {},
              new int[] {6, 18},
              new int[] {6, 22},
              new int[] {6, 26},
@@ -761,9 +772,9 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 格式信息
-        /// <para>索引[纠错等级,模板序号]</para>
+        /// <para>索引[纠错等级,模板序号][格式信息]:4x8x15</para>
         /// </summary>
-        private static readonly bool[,][] FORMAT_INFO = new bool[4, 8][]
+        private static readonly bool[,][] FORMAT_INFO = new bool[,][]
         {
             {
                 new bool[] { true,  true,  true, false,  true,  true,  true,  true,  true, false, false, false,  true, false, false, },
@@ -808,18 +819,11 @@ namespace ConsoleDemo.Model
         };
 
         /// <summary>
-        /// 版本信息
-        /// <para>索引[版本号]</para>
+        /// 版本信息(版本7+)
+        /// <para>索引[版本号][版本信息]:34x18</para>
         /// </summary>
-        private static readonly bool[][] VERSION_INFO = new bool[41][]
+        private static readonly bool[][] VERSION_INFO = new bool[][]
         {
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
-            new bool[] {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, },
             new bool[] {false, false, false,  true,  true,  true,  true,  true, false, false,  true, false, false,  true, false,  true, false, false, },
             new bool[] {false, false,  true, false, false, false, false,  true, false,  true,  true, false,  true,  true,  true,  true, false, false, },
             new bool[] {false, false,  true, false, false,  true,  true, false,  true, false,  true, false, false,  true,  true, false, false,  true, },
@@ -857,19 +861,19 @@ namespace ConsoleDemo.Model
         };
 
         /// <summary>
-        /// 惩戒规则1 3分
+        /// 惩戒规则1惩戒分 3
         /// </summary>
         private static readonly int PENALTY1 = 3;
         /// <summary>
-        /// 惩戒规则2 3分
+        /// 惩戒规则2惩戒分 3
         /// </summary>
         private static readonly int PENALTY2 = 3;
         /// <summary>
-        /// 惩戒规则3 40分
+        /// 惩戒规则3惩戒分 40
         /// </summary>
         private static readonly int PENALTY3 = 40;
         /// <summary>
-        /// 惩戒规则4 10分
+        /// 惩戒规则4惩戒分 10
         /// </summary>
         private static readonly int PENALTY4 = 10;
 

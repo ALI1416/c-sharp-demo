@@ -29,7 +29,6 @@ namespace ConsoleDemo.Model
         /// 构造二维码
         /// <para>编码模式 BYTE</para>
         /// <para>编码格式 UTF-8</para>
-        /// <para>停用ECI true</para>
         /// </summary>
         /// <param name="content">
         /// 内容
@@ -50,30 +49,35 @@ namespace ConsoleDemo.Model
             int contentBytes = bits.Length;
             // 内容bit数
             int contentBits = contentBytes * 8;
-            // 获取版本
-            Version = new Version(contentBytes, level);
+            // 获取版本(ECI多占1字节)
+            Version = new Version(contentBytes + 1, level);
             // 数据bit数
             bool[] dataBits = new bool[Version.DataBits];
-            // 编码模式(4bit) Byte 0b0100=4
+            // ECI模式指示符(4bit) 0b0111=7
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列ECI行
+            QrCodeUtils.AddBits(dataBits, 0, 7, 4);
+            // ECI指定符(8/16/24bit) UTF-8(8bit) 0b00011010=26
+            // 数据来源 ?
+            QrCodeUtils.AddBits(dataBits, 4, 26, 8);
+            // 模式指示符(4bit) BYTE 0b0100=4
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
-            QrCodeUtils.AddBits(dataBits, 0, 4, 4);
-            // `内容字节数`bit数
+            QrCodeUtils.AddBits(dataBits, 12, 4, 4);
+            // `内容字节数`bit数(8/16bit)
             int contentBytesBits = Version.ContentBytesBits;
-            QrCodeUtils.AddBits(dataBits, 4, contentBytes, contentBytesBits);
+            QrCodeUtils.AddBits(dataBits, 16, contentBytes, contentBytesBits);
             // 内容
             for (int i = 0; i < contentBytes; i++)
             {
-                QrCodeUtils.AddBits(dataBits, 4 + contentBytesBits + 8 * i, bits[i], 8);
+                QrCodeUtils.AddBits(dataBits, 16 + contentBytesBits + 8 * i, bits[i], 8);
             }
-            // 结束符(4bit) 0b0000=0
+            // 结束符(0bit)
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
-            QrCodeUtils.AddBits(dataBits, 4 + contentBytesBits + contentBits, 0, 4);
             // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
-            int paddingPos = 8 + contentBytesBits + contentBits;
-            int paddingCount = Version.ContentBytes - contentBytes;
-            bool[] number0xecBits= QrCodeUtils.GetBits(0xEC, 10);
-            bool[] number0x11Bits= QrCodeUtils.GetBits(0x11, 8);
+            int paddingPos = 16 + contentBytesBits + contentBits;
+            int paddingCount = Version.ContentBytes - contentBytes - 1;
+            bool[] number0xecBits = QrCodeUtils.GetBits(0xEC, 10);
+            bool[] number0x11Bits = QrCodeUtils.GetBits(0x11, 8);
             for (int i = 0; i < paddingCount; i++)
             {
                 if (i % 2 == 0)
@@ -139,7 +143,7 @@ namespace ConsoleDemo.Model
 
             /* 构造掩模模板 */
             MaskPattern = new MaskPattern(dataAndEcBits, Version, level);
-            Matrix = MaskPattern.BestPattern;
+            Matrix = QrCodeUtils.Convert(MaskPattern.BestPattern, Version.Dimension);
         }
 
         /// <summary>

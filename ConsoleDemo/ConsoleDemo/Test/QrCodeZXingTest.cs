@@ -30,7 +30,7 @@ namespace ConsoleDemo.Test
             Dictionary<EncodeHintType, object> hints = new Dictionary<EncodeHintType, object>(1)
             {
                 { EncodeHintType.CHARACTER_SET, "UTF-8" },
-                { EncodeHintType.DISABLE_ECI, true },
+                //{ EncodeHintType.DISABLE_ECI, true },
             };
             QRCode qr = Encoder.encode(content, level, hints);
             Bitmap bitmap = ImageUtils.QrBytes2Bitmap(qr.Matrix.Array, 10);

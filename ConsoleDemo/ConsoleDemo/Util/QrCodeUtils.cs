@@ -8,6 +8,30 @@
     {
 
         /// <summary>
+        /// byte[,]转为bool[,]
+        /// <para>0 -> false</para>
+        /// <para>1 -> true</para>
+        /// </summary>
+        /// <param name="bytes">byte[,]</param>
+        /// <param name="dimension">尺寸</param>
+        /// <returns>bool</returns>
+        public static bool[,] Convert(byte[,] bytes, int dimension)
+        {
+            bool[,] data = new bool[dimension, dimension];
+            for (int i = 0; i < dimension; i++)
+            {
+                for (int j = 0; j < dimension; j++)
+                {
+                    if (bytes[i, j] == 1)
+                    {
+                        data[i, j] = true;
+                    }
+                }
+            }
+            return data;
+        }
+
+        /// <summary>
         /// 添加bit
         /// </summary>
         /// <param name="bits">目的数据</param>
