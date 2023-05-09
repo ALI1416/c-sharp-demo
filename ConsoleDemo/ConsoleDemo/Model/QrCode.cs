@@ -1,6 +1,5 @@
-﻿using ConsoleDemo.Util;
-using System;
-using System.Text;
+﻿using System.Text;
+using ConsoleDemo.Util;
 
 namespace ConsoleDemo.Model
 {
@@ -47,47 +46,54 @@ namespace ConsoleDemo.Model
             byte[] bits = Encoding.UTF8.GetBytes(content);
             // 内容字节数
             int contentBytes = bits.Length;
-            // 内容bit数
-            int contentBits = contentBytes * 8;
             // 获取版本(ECI多占1字节)
             Version = new Version(contentBytes + 1, level);
             // 数据bit数
             bool[] dataBits = new bool[Version.DataBits];
+            // 数据指针
+            int ptr = 0;
             // ECI模式指示符(4bit) 0b0111=7
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列ECI行
-            QrCodeUtils.AddBits(dataBits, 0, 7, 4);
+            QrCodeUtils.AddBits(dataBits, ptr, 7, 4);
+            ptr += 4;
             // ECI指定符(8/16/24bit) UTF-8(8bit) 0b00011010=26
             // 数据来源 ?
-            QrCodeUtils.AddBits(dataBits, 4, 26, 8);
+            QrCodeUtils.AddBits(dataBits, ptr, 26, 8);
+            ptr += 8;
             // 模式指示符(4bit) BYTE 0b0100=4
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
-            QrCodeUtils.AddBits(dataBits, 12, 4, 4);
+            QrCodeUtils.AddBits(dataBits, ptr, 4, 4);
+            ptr += 4;
             // `内容字节数`bit数(8/16bit)
             int contentBytesBits = Version.ContentBytesBits;
-            QrCodeUtils.AddBits(dataBits, 16, contentBytes, contentBytesBits);
+            QrCodeUtils.AddBits(dataBits, ptr, contentBytes, contentBytesBits);
+            ptr += contentBytesBits;
             // 内容
             for (int i = 0; i < contentBytes; i++)
             {
-                QrCodeUtils.AddBits(dataBits, 16 + contentBytesBits + 8 * i, bits[i], 8);
+                QrCodeUtils.AddBits(dataBits, ptr, bits[i], 8);
+                ptr += 8;
             }
-            // 结束符(0bit)
+            // 结束符(4-8bit) UTF-8(8bit) 0b00000000=0
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
+            QrCodeUtils.AddBits(dataBits, ptr, 0, 8);
+            ptr += 8;
             // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
-            int paddingPos = 16 + contentBytesBits + contentBits;
-            int paddingCount = Version.ContentBytes - contentBytes - 1;
+            int paddingCount = (Version.DataBits - ptr) / 8;
             bool[] number0xecBits = QrCodeUtils.GetBits(0xEC, 10);
             bool[] number0x11Bits = QrCodeUtils.GetBits(0x11, 8);
             for (int i = 0; i < paddingCount; i++)
             {
                 if (i % 2 == 0)
                 {
-                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, number0xecBits, 8);
+                    QrCodeUtils.AddBits(dataBits, ptr, number0xecBits, 8);
                 }
                 else
                 {
-                    QrCodeUtils.AddBits(dataBits, paddingPos + i * 8, number0x11Bits, 8);
+                    QrCodeUtils.AddBits(dataBits, ptr, number0x11Bits, 8);
                 }
+                ptr += 8;
             }
 
             /* 纠错 */
@@ -110,7 +116,7 @@ namespace ConsoleDemo.Model
                     int[] dataBlock = QrCodeUtils.GetBytes(dataBits, dataByteNum * 8, dataBytes);
                     dataBlocks[blockNum] = dataBlock;
                     // 纠错块
-                    int[] ecBlock = CalculateEc(dataBlock, ecBlockBytes);
+                    int[] ecBlock = ReedSolomon.Encoder(dataBlock, ecBlockBytes);
                     ecBlocks[blockNum] = ecBlock;
                     blockNum++;
                     dataByteNum += dataBytes;
@@ -144,30 +150,6 @@ namespace ConsoleDemo.Model
             /* 构造掩模模板 */
             MaskPattern = new MaskPattern(dataAndEcBits, Version, level);
             Matrix = QrCodeUtils.Convert(MaskPattern.BestPattern, Version.Dimension);
-        }
-
-        /// <summary>
-        /// 计算纠错码
-        /// </summary>
-        /// <param name="dataBlock">数据块</param>
-        /// <param name="ecBlockLength">纠错块长度</param>
-        /// <returns>纠错块</returns>
-        private static int[] CalculateEc(int[] dataBlock, int ecBlockLength)
-        {
-            // 纠错码
-            int[] result = ReedSolomon.Encoder(dataBlock, ecBlockLength);
-            // 长度不够前面补0
-            int padding = ecBlockLength - result.Length;
-            if (padding == 0)
-            {
-                return result;
-            }
-            else
-            {
-                int[] ecBlock = new int[ecBlockLength];
-                Array.Copy(result, 0, ecBlock, padding, result.Length);
-                return ecBlock;
-            }
         }
 
     }

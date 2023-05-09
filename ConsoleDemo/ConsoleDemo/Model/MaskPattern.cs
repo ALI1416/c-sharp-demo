@@ -477,7 +477,7 @@ namespace ConsoleDemo.Model
                     }
                     else
                     {
-                        if (countRow >= 5)
+                        if (countRow > 4)
                         {
                             penalty += PENALTY1 + (countRow - 5);
                         }
@@ -491,7 +491,7 @@ namespace ConsoleDemo.Model
                     }
                     else
                     {
-                        if (countCol >= 5)
+                        if (countCol > 4)
                         {
                             penalty += PENALTY1 + (countCol - 5);
                         }
@@ -499,11 +499,13 @@ namespace ConsoleDemo.Model
                         prevBitCol = bitCol;
                     }
                 }
-                if (countRow >= 5)
+                // 行
+                if (countRow > 4)
                 {
                     penalty += PENALTY1 + (countRow - 5);
                 }
-                if (countCol >= 5)
+                // 列
+                if (countCol > 4)
                 {
                     penalty += PENALTY1 + (countCol - 5);
                 }
@@ -527,8 +529,8 @@ namespace ConsoleDemo.Model
             {
                 for (int y = 0; y < dimension - 1; y++)
                 {
-                    byte bit = pattern[x, y];
                     // 2x2块
+                    byte bit = pattern[x, y];
                     if (bit == pattern[x, y + 1] && bit == pattern[x + 1, y] && bit == pattern[x + 1, y + 1])
                     {
                         penalty++;
@@ -540,7 +542,7 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 掩模惩戒规则3
-        /// <para>行或列，出现[黑,白,黑黑黑,白,黑]序列，并且前或后有4+个白色</para>
+        /// <para>行或列，出现[黑,白,黑黑黑,白,黑]序列，并且前或后有4个白色</para>
         /// <para>惩戒分=PENALTY3*出现次数</para>
         /// <para>惩戒分在出现次数>=1时生效</para>
         /// </summary>
@@ -555,7 +557,10 @@ namespace ConsoleDemo.Model
                 for (int y = 0; y < dimension; y++)
                 {
                     // 行
-                    if (y < dimension - 6 &&
+                    if (
+                        // 列区间[0, dimension - 6)
+                        y < dimension - 6 &&
+                        // [黑,白,黑黑黑,白,黑]序列
                         pattern[x, y] == 1 &&
                         pattern[x, y + 1] == 0 &&
                         pattern[x, y + 2] == 1 &&
@@ -563,12 +568,34 @@ namespace ConsoleDemo.Model
                         pattern[x, y + 4] == 1 &&
                         pattern[x, y + 5] == 0 &&
                         pattern[x, y + 6] == 1 &&
-                        (IsWhiteHorizontal(pattern, dimension, x, y - 4, y) || IsWhiteHorizontal(pattern, dimension, x, y + 7, y + 11)))
+                        // 左或右有4个白色
+                        (
+                            // 左有4个白色
+                            (
+                                // 列区间[4,)
+                                y > 3 &&
+                                // [白白白白]序列
+                                pattern[x, y - 1] == 0 &&
+                                pattern[x, y - 2] == 0 &&
+                                pattern[x, y - 3] == 0 &&
+                                pattern[x, y - 4] == 0) ||
+                            // 右有4个白色
+                            (
+                                // 列区间[0, dimension - 10)
+                                y < dimension - 10 &&
+                                // [白白白白]序列
+                                pattern[x, y + 7] == 0 &&
+                                pattern[x, y + 8] == 0 &&
+                                pattern[x, y + 9] == 0 &&
+                                pattern[x, y + 10] == 0)))
                     {
                         penalty++;
                     }
                     // 列
-                    if (x < dimension - 6 &&
+                    if (
+                        // 行区间[0, dimension - 6)
+                        x < dimension - 6 &&
+                        // [黑,白,黑黑黑,白,黑]序列
                         pattern[x, y] == 1 &&
                         pattern[x + 1, y] == 0 &&
                         pattern[x + 2, y] == 1 &&
@@ -576,67 +603,32 @@ namespace ConsoleDemo.Model
                         pattern[x + 4, y] == 1 &&
                         pattern[x + 5, y] == 0 &&
                         pattern[x + 6, y] == 1 &&
-                        (IsWhiteVertical(pattern, dimension, y, x - 4, x) || IsWhiteVertical(pattern, dimension, y, x + 7, x + 11)))
+                        // 上或下有4个白色
+                        (
+                            // 上有4个白色
+                            (
+                                // 行区间[4,)
+                                x > 3 &&
+                                // [白白白白]序列
+                                pattern[x - 1, y] == 0 &&
+                                pattern[x - 2, y] == 0 &&
+                                pattern[x - 3, y] == 0 &&
+                                pattern[x - 4, y] == 0) ||
+                            // 下有4个白色
+                            (
+                                // 行区间[0, dimension - 10)
+                                x < dimension - 10 &&
+                                // [白白白白]序列
+                                pattern[x + 7, y] == 0 &&
+                                pattern[x + 8, y] == 0 &&
+                                pattern[x + 9, y] == 0 &&
+                                pattern[x + 10, y] == 0)))
                     {
                         penalty++;
                     }
                 }
             }
             return PENALTY3 * penalty;
-        }
-
-        /// <summary>
-        /// 水平全是白色
-        /// </summary>
-        /// <param name="pattern">模板</param>
-        /// <param name="dimension">尺寸</param>
-        /// <param name="row">行数</param>
-        /// <param name="from">从</param>
-        /// <param name="to">到</param>
-        /// <returns>是否水平全是白色</returns>
-        private static bool IsWhiteHorizontal(byte[,] pattern, int dimension, int row, int from, int to)
-        {
-            if (from < 0 || to > dimension)
-            {
-                return false;
-            }
-            from = Math.Max(from, 0);
-            to = Math.Min(to, dimension);
-            for (int i = from; i < to; i++)
-            {
-                if (pattern[row, i] == 1)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// 垂直全是白色
-        /// </summary>
-        /// <param name="pattern">模板</param>
-        /// <param name="dimension">尺寸</param>
-        /// <param name="col">列数</param>
-        /// <param name="from">从</param>
-        /// <param name="to">到</param>
-        /// <returns>是否垂直全是白色</returns>
-        private static bool IsWhiteVertical(byte[,] pattern, int dimension, int col, int from, int to)
-        {
-            if (from < 0 || to > dimension)
-            {
-                return false;
-            }
-            from = Math.Max(from, 0);
-            to = Math.Min(to, dimension);
-            for (int i = from; i < to; i++)
-            {
-                if (pattern[i, col] == 1)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         /// <summary>

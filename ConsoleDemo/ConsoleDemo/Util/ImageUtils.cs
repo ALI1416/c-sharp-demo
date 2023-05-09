@@ -56,8 +56,7 @@ namespace ConsoleDemo.Util
             {
                 for (int x = 0; x < length; x++)
                 {
-                    int value = bytes[y][x];
-                    if (value == 1)
+                    if (bytes[y][x] == 1)
                     {
                         rects.Add(new Rectangle((x + 1) * pixelSize, (y + 1) * pixelSize, pixelSize, pixelSize));
                     }

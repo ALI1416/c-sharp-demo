@@ -4,7 +4,8 @@ namespace ConsoleDemo.Model
 {
 
     /// <summary>
-    /// Reed-Solomon(QrCode)
+    /// Reed-Solomon(里德-所罗门码)
+    /// <para>仅适用于QrCode</para>
     /// </summary>
     public class ReedSolomon
     {
@@ -16,7 +17,7 @@ namespace ConsoleDemo.Model
 
         static ReedSolomon()
         {
-            // 初始化GenericGFPoly
+            // 初始化GenericGFPoly列表
             GenericGFPolyList.Add(new GenericGFPoly(new int[] { 1 }));
             // 最大值68
             // 数据来源 ISO/IEC 18004-2015 -> Annex A -> Table A.1 -> Number of error correction codewords列最大值
@@ -29,14 +30,14 @@ namespace ConsoleDemo.Model
         /// <summary>
         /// 编码
         /// </summary>
-        /// <param name="coefficients">多项式常数</param>
-        /// <param name="degree">多项式次数</param>
+        /// <param name="coefficients">系数</param>
+        /// <param name="degree">次数</param>
         /// <returns>结果</returns>
         public static int[] Encoder(int[] coefficients, int degree)
         {
             GenericGFPoly info = new GenericGFPoly(coefficients);
             info = info.MultiplyByMonomial(degree, 1);
-            GenericGFPoly remainder = info.Divide(GenericGFPolyList[degree])[1];
+            GenericGFPoly remainder = info.RemainderOfDivide(GenericGFPolyList[degree]);
             return remainder.Coefficients;
         }
 

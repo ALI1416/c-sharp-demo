@@ -29,12 +29,11 @@
         public readonly int DataAndEcBits;
         /// <summary>
         /// `内容字节数`bit数
-        /// <para>8或16</para>
         /// </summary>
         public readonly int ContentBytesBits;
         /// <summary>
         /// 数据bit数
-        /// <para>编码模式(4bit)+`内容字节数`bit数+内容bit数+结束符(4bit)</para>
+        /// <para>ECI模式指示符+ECI指定符+模式指示符+`内容字节数`bit数+内容+结束符+补齐符</para>
         /// </summary>
         public readonly int DataBits;
         /// <summary>

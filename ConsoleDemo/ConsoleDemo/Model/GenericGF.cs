@@ -2,21 +2,12 @@
 {
 
     /// <summary>
-    /// GenericGF(QrCode)
+    /// 通用Galois Fields域(通用伽罗华域)
+    /// <para>仅适用于QrCode</para>
     /// </summary>
     public class GenericGF
     {
 
-        /// <summary>
-        /// 多项式
-        /// <para>0x011D -> 0000 0001 0001 1101 -> x^8 + x^4 + x^3 + x^2 + 1</para>
-        /// </summary>
-        private static readonly int Primitive = 0x011D;
-        /// <summary>
-        /// 大小
-        /// <para>256</para>
-        /// </summary>
-        private static readonly int Size = 256;
         /// <summary>
         /// 指数表
         /// </summary>
@@ -26,45 +17,26 @@
         /// </summary>
         private static readonly int[] LogTable;
 
-        /// <summary>
-        /// 0
-        /// </summary>
-        public static readonly GenericGFPoly Zero = new GenericGFPoly(new int[] { 0 });
-
         static GenericGF()
         {
-            // 生成指数表和对数表
-            ExpTable = new int[Size];
-            LogTable = new int[Size];
+            // 初始化指数表和对数表
+            ExpTable = new int[DIMENSION];
+            LogTable = new int[DIMENSION];
             int x = 1;
-            for (int i = 0; i < Size; i++)
+            for (int i = 0; i < DIMENSION; i++)
             {
                 ExpTable[i] = x;
                 x <<= 1;
-                if (x >= Size)
+                if (x >= DIMENSION)
                 {
-                    x ^= Primitive;
-                    x &= Size - 1;
+                    x ^= POLY;
+                    x &= DIMENSION - 1;
                 }
             }
-            for (int i = 0; i < Size - 1; i++)
+            for (int i = 0; i < DIMENSION - 1; i++)
             {
                 LogTable[ExpTable[i]] = i;
             }
-        }
-
-        /// <summary>
-        /// 构建单项式
-        /// </summary>
-        public static GenericGFPoly BuildMonomial(int degree, int coefficient)
-        {
-            if (coefficient == 0)
-            {
-                return Zero;
-            }
-            int[] coefficients = new int[degree + 1];
-            coefficients[0] = coefficient;
-            return new GenericGFPoly(coefficients);
         }
 
         /// <summary>
@@ -84,19 +56,11 @@
         }
 
         /// <summary>
-        /// 以2位底的对数
-        /// </summary>
-        public static int Log(int a)
-        {
-            return LogTable[a];
-        }
-
-        /// <summary>
-        /// 反转
+        /// 逆运算
         /// </summary>
         public static int Inverse(int a)
         {
-            return ExpTable[Size - LogTable[a] - 1];
+            return ExpTable[DIMENSION - LogTable[a] - 1];
         }
 
         /// <summary>
@@ -108,8 +72,19 @@
             {
                 return 0;
             }
-            return ExpTable[(LogTable[a] + LogTable[b]) % (Size - 1)];
+            return ExpTable[(LogTable[a] + LogTable[b]) % (DIMENSION - 1)];
         }
+
+        /// <summary>
+        /// 维度
+        /// <para>256</para>
+        /// </summary>
+        private static readonly int DIMENSION = 256;
+        /// <summary>
+        /// 多项式
+        /// <para>0x011D -> 0000 0001 0001 1101 -> x^8 + x^4 + x^3 + x^2 + 1</para>
+        /// </summary>
+        private static readonly int POLY = 0x011D;
 
     }
 }
