@@ -28,6 +28,10 @@
         /// </summary>
         public readonly int DataAndEcBits;
         /// <summary>
+        /// 内容bit数
+        /// </summary>
+        public readonly int ContentBits;
+        /// <summary>
         /// `内容字节数`bit数
         /// </summary>
         public readonly int ContentBytesBits;
@@ -91,6 +95,60 @@
         }
 
         /// <summary>
+        /// 获取 编码模式为NUMERIC 的版本号
+        /// </summary>
+        /// <param name="length">内容字节数</param>
+        /// <param name="level">纠错等级</param>
+        /// <returns>版本号</returns>
+        private static int ModeNumeric(int length, int level)
+        {
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取 编码模式为ALPHANUMERIC 的版本号
+        /// </summary>
+        /// <param name="length">内容字节数</param>
+        /// <param name="level">纠错等级</param>
+        /// <returns>版本号</returns>
+        private static int ModeAlphaNumeric(int length, int level)
+        {
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取 编码模式为BYTE 编码格式为ISO-8859-1 的版本号
+        /// </summary>
+        /// <param name="length">内容字节数</param>
+        /// <param name="level">纠错等级</param>
+        /// <returns>版本号</returns>
+        private static int ModeByteIso8859_1(int length, int level)
+        {
+            int contentBytes;
+            for (int i = 1; i < 10; i++)
+            {
+                // 模式指示符(4bit)+`内容字节数`bit数(8bit)+结束符(4bit)=2字节
+                contentBytes = CONTENT_BITS[i - 1, level] / 8 - 2;
+                if (length <= contentBytes)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取 编码模式为BYTE 编码格式为UTF-8 的版本号
+        /// </summary>
+        /// <param name="length">内容字节数</param>
+        /// <param name="level">纠错等级</param>
+        /// <returns>版本号</returns>
+        private static int ModeByteUtf8(int length, int level)
+        {
+            return 0;
+        }
+
+        /// <summary>
         /// 数据bit数+纠错bit数
         /// <para>索引[版本号]:40</para>
         /// <para>数据来源 ISO/IEC 18004-2015 -> 7.1 -> Table 1 -> Data modules except(C)列</para>
@@ -105,6 +163,23 @@
             13652, 14628, 15371, 16411, 17483, // 26-30
             18587, 19723, 20891, 22091, 23008, // 31-35
             24272, 25568, 26896, 28256, 29648, // 36-40
+        };
+
+        /// <summary>
+        /// 内容bit数
+        /// <para>索引[版本号,纠错等级]:40x4</para>
+        /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Number of data bits列</para>
+        /// </summary>
+        private static readonly int[,] CONTENT_BITS =
+        {
+            {   152,   128,   104,    72 }, {   272,   224,   176,   128 }, {   440,   352,   272,   208 }, {   640,   512,   384,   288 }, {   864,   688,   496,   368 }, // 1-5
+            {  1088,   864,   608,   480 }, {  1248,   992,   704,   528 }, {  1552,  1232,   880,   688 }, {  1856,  1456,  1056,   800 }, {  2192,  1728,  1232,   976 }, // 6-10
+            {  2592,  2032,  1440,  1120 }, {  2960,  2320,  1648,  1264 }, {  3424,  2672,  1952,  1440 }, {  3688,  2920,  2088,  1576 }, {  4184,  3320,  2360,  1784 }, // 11-15
+            {  4712,  3624,  2600,  2024 }, {  5176,  4056,  2936,  2264 }, {  5768,  4504,  3176,  2504 }, {  6360,  5016,  3560,  2728 }, {  6888,  5352,  3880,  3080 }, // 16-20
+            {  7456,  5712,  4096,  3248 }, {  8048,  6256,  4544,  3536 }, {  8752,  6880,  4912,  3712 }, {  9392,  7312,  5312,  4112 }, { 10208,  8000,  5744,  4304 }, // 21-25
+            { 10960,  8496,  6032,  4768 }, { 11744,  9024,  6464,  5024 }, { 12248,  9544,  6968,  5288 }, { 13048, 10136,  7288,  5608 }, { 13880, 10984,  7880,  5960 }, // 26-30
+            { 14744, 11640,  8264,  6344 }, { 15640, 12328,  8920,  6760 }, { 16568, 13048,  9368,  7208 }, { 17528, 13800,  9848,  7688 }, { 18448, 14496, 10288,  7888 }, // 31-35
+            { 19472, 15312, 10832,  8432 }, { 20528, 15936, 11408,  8768 }, { 21616, 16816, 12016,  9136 }, { 22496, 17728, 12656,  9776 }, { 23648, 18672, 13328, 10208 }, // 36-40
         };
 
         /// <summary>

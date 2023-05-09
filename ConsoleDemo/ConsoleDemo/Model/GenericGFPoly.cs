@@ -106,7 +106,7 @@ namespace ConsoleDemo.Model
         {
             if (IsZero || other.IsZero)
             {
-                return new GenericGFPoly(new int[] { 0 });
+                return ReedSolomon.Zero;
             }
             int[] aCoefficients = Coefficients;
             int[] bCoefficients = other.Coefficients;
@@ -133,7 +133,7 @@ namespace ConsoleDemo.Model
         {
             if (coefficient == 0)
             {
-                return new GenericGFPoly(new int[] { 0 });
+                return ReedSolomon.Zero;
             }
             int size = Coefficients.Length;
             int[] product = new int[size + degree];

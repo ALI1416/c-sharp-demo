@@ -11,6 +11,11 @@ namespace ConsoleDemo.Model
     {
 
         /// <summary>
+        /// 多项式0
+        /// </summary>
+        public static readonly GenericGFPoly Zero = new GenericGFPoly(new int[] { 0 });
+
+        /// <summary>
         /// GenericGFPoly列表
         /// </summary>
         private static readonly List<GenericGFPoly> GenericGFPolyList = new List<GenericGFPoly>();
