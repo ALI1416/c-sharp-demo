@@ -2,7 +2,7 @@
 {
 
     /// <summary>
-    /// 版本(编码模式 BYTE)
+    /// 版本
     /// </summary>
     public class Version
     {
@@ -19,44 +19,27 @@
         /// </summary>
         public readonly int Dimension;
         /// <summary>
-        /// 内容字节数
+        /// `内容长度`bit数
         /// </summary>
-        public readonly int ContentBytes;
+        public readonly int ContentLengthBits;
+        /// <summary>
+        /// 数据bit数
+        /// <para>ECI模式指示符+ECI指定符+模式指示符+`内容长度`bit数+内容+结束符+补齐符</para>
+        /// </summary>
+        public readonly int DataBits;
         /// <summary>
         /// 数据和纠错bit数
         /// <para>数据bit数+纠错bit数</para>
         /// </summary>
         public readonly int DataAndEcBits;
         /// <summary>
-        /// 内容bit数
-        /// </summary>
-        public readonly int ContentBits;
-        /// <summary>
-        /// `内容字节数`bit数
-        /// </summary>
-        public readonly int ContentBytesBits;
-        /// <summary>
-        /// 数据bit数
-        /// <para>ECI模式指示符+ECI指定符+模式指示符+`内容字节数`bit数+内容+结束符+补齐符</para>
-        /// </summary>
-        public readonly int DataBits;
-        /// <summary>
-        /// 纠错字节数
-        /// </summary>
-        public readonly int EcBytes;
-        /// <summary>
         /// 纠错
         /// <para>[纠错块,(块数量,纠错码)]</para>
         /// </summary>
         public readonly int[,] Ec;
-        /// <summary>
-        /// 纠错块数
-        /// </summary>
-        public readonly int EcBlocks;
 
         /// <summary>
         /// 构造版本
-        /// <para>`内容字节数`过长`VersionNumber`值为`0`</para>
         /// </summary>
         /// <param name="length">
         /// 内容字节数
@@ -68,68 +51,93 @@
         /// <para>2 Q 25%</para>
         /// <para>3 H 30%</para>
         /// </param>
-        public Version(int length, int level)
+        /// <param name="mode">
+        /// 编码模式
+        /// <para>0 NUMERIC 数字0-9</para>
+        /// <para>1 ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:</para>
+        /// <para>2 BYTE(ISO-8859-1)</para>
+        /// <para>3 BYTE(UTF-8)</para>
+        /// </param>
+        public Version(int length, int level, int mode)
         {
-            for (int i = 1; i < 41; i++)
+            // 编码模式
+            switch (mode)
             {
-                if (length <= CONTENT_BYTES[i - 1, level])
-                {
-                    ContentBytes = CONTENT_BYTES[i - 1, level];
-                    VersionNumber = i;
-                    break;
-                }
+                // NUMERIC 数字0-9
+                case 0:
+                    {
+                        VersionNumber = ModeNumeric(length, level) + 1;
+                        // `内容长度`bit数 1-9版本10bit 10-26版本12bit 27-40版本14bit
+                        // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Numeric mode列
+                        ContentLengthBits = VersionNumber < 10 ? 10 : (VersionNumber < 27 ? 12 : 14);
+                        break;
+                    }
+                // ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:
+                case 1:
+                    {
+                        VersionNumber = ModeAlphaNumeric(length, level) + 1;
+                        // `内容长度`bit数 1-9版本9bit 10-26版本11bit 27-40版本13bit
+                        // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Alphanumeric mode列
+                        ContentLengthBits = VersionNumber < 10 ? 9 : (VersionNumber < 27 ? 11 : 13);
+                        break;
+                    }
+                // BYTE(ISO-8859-1)
+                case 2:
+                    {
+                        VersionNumber = ModeByte(length, level) + 1;
+                        // `内容长度`bit数 1-9版本8bit 10-40版本16bit
+                        // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
+                        ContentLengthBits = VersionNumber < 10 ? 8 : 16;
+                        break;
+                    }
+                // BYTE(UTF-8)
+                default:
+                case 3:
+                    {
+                        // 相比ISO-8859-1多1字节(不需要补齐符的情况下)
+                        // ECI模式指示符(4bit)+ECI指定符(8bit)-结束符(4bit)=1字节
+                        VersionNumber = ModeByte(length + 1, level) + 1;
+                        ContentLengthBits = VersionNumber < 10 ? 8 : 16;
+                        break;
+                    }
             }
             Dimension = (VersionNumber - 1) * 4 + 21;
-            // `内容字节数`bit数 1-9版本8bit 10-40版本16bit
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
-            ContentBytesBits = VersionNumber < 10 ? 8 : 16;
+            DataBits = DATA_BYTES[VersionNumber - 1, level] * 8;
             DataAndEcBits = DATA_AND_EC_BITS[VersionNumber - 1];
-            // 编码模式(4bit)+`内容字节数`bit数+内容bit数+结束符(4bit)
-            DataBits = 4 + ContentBytesBits + ContentBytes * 8 + 4;
-            EcBytes = (DataAndEcBits - DataBits) / 8;
             Ec = EC[VersionNumber - 1, level];
-            for (int i = 0; i < Ec.GetLength(0); i++)
-            {
-                EcBlocks += Ec[i, 0];
-            }
         }
 
         /// <summary>
-        /// 获取 编码模式为NUMERIC 的版本号
+        /// 获取编码模式为NUMERIC的版本号
         /// </summary>
         /// <param name="length">内容字节数</param>
         /// <param name="level">纠错等级</param>
         /// <returns>版本号</returns>
         private static int ModeNumeric(int length, int level)
         {
-            return 0;
-        }
-
-        /// <summary>
-        /// 获取 编码模式为ALPHANUMERIC 的版本号
-        /// </summary>
-        /// <param name="length">内容字节数</param>
-        /// <param name="level">纠错等级</param>
-        /// <returns>版本号</returns>
-        private static int ModeAlphaNumeric(int length, int level)
-        {
-            return 0;
-        }
-
-        /// <summary>
-        /// 获取 编码模式为BYTE 编码格式为ISO-8859-1 的版本号
-        /// </summary>
-        /// <param name="length">内容字节数</param>
-        /// <param name="level">纠错等级</param>
-        /// <returns>版本号</returns>
-        private static int ModeByteIso8859_1(int length, int level)
-        {
-            int contentBytes;
-            for (int i = 1; i < 10; i++)
+            // `内容长度`bit数 1-9版本10bit
+            for (int i = 0; i < 9; i++)
             {
-                // 模式指示符(4bit)+`内容字节数`bit数(8bit)+结束符(4bit)=2字节
-                contentBytes = CONTENT_BITS[i - 1, level] / 8 - 2;
-                if (length <= contentBytes)
+                // 模式指示符(4bit)+`内容长度`bit数(10bit)=14bit
+                if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 14))
+                {
+                    return i;
+                }
+            }
+            // `内容长度`bit数 10-26版本12bit
+            for (int i = 9; i < 26; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(12bit)=16bit
+                if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 16))
+                {
+                    return i;
+                }
+            }
+            // `内容长度`bit数 27-40版本14bit
+            for (int i = 26; i < 40; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(14bit)=18bit
+                if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 18))
                 {
                     return i;
                 }
@@ -138,13 +146,107 @@
         }
 
         /// <summary>
-        /// 获取 编码模式为BYTE 编码格式为UTF-8 的版本号
+        /// 获取编码模式为NUMERIC的最大字符长度
+        /// </summary>
+        /// <param name="maxBits">最大bit数</param>
+        /// <returns>最大字符长度</returns>
+        private static int ModeNumericMaxLength(int maxBits)
+        {
+            // 3个字符10bit 2个字符7bit 1个字符4bit
+            int maxLength = maxBits / 10;
+            int remainder = maxBits % 10;
+            if (remainder > 6)
+            {
+                maxLength += 2;
+            }
+            else if (remainder > 3)
+            {
+                maxLength++;
+            }
+            return maxLength;
+        }
+
+        /// <summary>
+        /// 获取编码模式为ALPHANUMERIC的版本号
         /// </summary>
         /// <param name="length">内容字节数</param>
         /// <param name="level">纠错等级</param>
         /// <returns>版本号</returns>
-        private static int ModeByteUtf8(int length, int level)
+        private static int ModeAlphaNumeric(int length, int level)
         {
+            // `内容长度`bit数 1-9版本9bit
+            for (int i = 0; i < 9; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(9bit)=13bit
+                if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 13))
+                {
+                    return i;
+                }
+            }
+            // `内容长度`bit数 10-26版本11bit
+            for (int i = 9; i < 26; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(11bit)=15bit
+                if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 15))
+                {
+                    return i;
+                }
+            }
+            // `内容长度`bit数 27-40版本13bit
+            for (int i = 26; i < 40; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(13bit)=17bit
+                if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 17))
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取编码模式为ALPHANUMERIC的最大字符长度
+        /// </summary>
+        /// <param name="maxBits">最大bit数</param>
+        /// <returns>最大字符长度</returns>
+        private static int ModeAlphaNumericMaxLength(int maxBits)
+        {
+            // 2个字符11bit 1个字符6bit
+            int maxLength = maxBits / 11;
+            int remainder = maxBits % 11;
+            if (remainder > 5)
+            {
+                maxLength++;
+            }
+            return maxLength;
+        }
+
+        /// <summary>
+        /// 获取编码模式为BYTE的版本号
+        /// </summary>
+        /// <param name="length">内容字节数</param>
+        /// <param name="level">纠错等级</param>
+        /// <returns>版本号</returns>
+        private static int ModeByte(int length, int level)
+        {
+            // `内容长度`bit数 1-9版本8bit
+            for (int i = 0; i < 9; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(8bit)+结束符(4bit)=2字节
+                if (length < DATA_BYTES[i, level] - 1)
+                {
+                    return i;
+                }
+            }
+            // `内容长度`bit数 10-40版本16bit
+            for (int i = 9; i < 40; i++)
+            {
+                // 模式指示符(4bit)+`内容长度`bit数(16bit)+结束符(4bit)=3字节
+                if (length < DATA_BYTES[i, level] - 2)
+                {
+                    return i;
+                }
+            }
             return 0;
         }
 
@@ -166,37 +268,20 @@
         };
 
         /// <summary>
-        /// 内容bit数
+        /// 数据字节数
         /// <para>索引[版本号,纠错等级]:40x4</para>
-        /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Number of data bits列</para>
+        /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Number of data codewords列</para>
         /// </summary>
-        private static readonly int[,] CONTENT_BITS =
+        private static readonly int[,] DATA_BYTES =
         {
-            {   152,   128,   104,    72 }, {   272,   224,   176,   128 }, {   440,   352,   272,   208 }, {   640,   512,   384,   288 }, {   864,   688,   496,   368 }, // 1-5
-            {  1088,   864,   608,   480 }, {  1248,   992,   704,   528 }, {  1552,  1232,   880,   688 }, {  1856,  1456,  1056,   800 }, {  2192,  1728,  1232,   976 }, // 6-10
-            {  2592,  2032,  1440,  1120 }, {  2960,  2320,  1648,  1264 }, {  3424,  2672,  1952,  1440 }, {  3688,  2920,  2088,  1576 }, {  4184,  3320,  2360,  1784 }, // 11-15
-            {  4712,  3624,  2600,  2024 }, {  5176,  4056,  2936,  2264 }, {  5768,  4504,  3176,  2504 }, {  6360,  5016,  3560,  2728 }, {  6888,  5352,  3880,  3080 }, // 16-20
-            {  7456,  5712,  4096,  3248 }, {  8048,  6256,  4544,  3536 }, {  8752,  6880,  4912,  3712 }, {  9392,  7312,  5312,  4112 }, { 10208,  8000,  5744,  4304 }, // 21-25
-            { 10960,  8496,  6032,  4768 }, { 11744,  9024,  6464,  5024 }, { 12248,  9544,  6968,  5288 }, { 13048, 10136,  7288,  5608 }, { 13880, 10984,  7880,  5960 }, // 26-30
-            { 14744, 11640,  8264,  6344 }, { 15640, 12328,  8920,  6760 }, { 16568, 13048,  9368,  7208 }, { 17528, 13800,  9848,  7688 }, { 18448, 14496, 10288,  7888 }, // 31-35
-            { 19472, 15312, 10832,  8432 }, { 20528, 15936, 11408,  8768 }, { 21616, 16816, 12016,  9136 }, { 22496, 17728, 12656,  9776 }, { 23648, 18672, 13328, 10208 }, // 36-40
-        };
-
-        /// <summary>
-        /// 内容字节数
-        /// <para>索引[版本号,纠错等级]:40x4</para>
-        /// <para>数据来源 ISO/IEC 18004-2015 -> 7.4.10 -> Table 7 -> Data capacity列 -> Byte列</para>
-        /// </summary>
-        private static readonly int[,] CONTENT_BYTES =
-        {
-            {   17,   14,   11,    7 }, {   32,   26,   20,   14 }, {   53,   42,   32,   24 }, {   78,   62,   46,   34 }, {  106,   84,   60,   44 }, // 1-5
-            {  134,  106,   74,   58 }, {  154,  122,   86,   64 }, {  192,  152,  108,   84 }, {  230,  180,  130,   98 }, {  271,  213,  151,  119 }, // 6-10
-            {  321,  251,  177,  137 }, {  367,  287,  203,  155 }, {  425,  331,  241,  177 }, {  458,  362,  258,  194 }, {  520,  412,  292,  220 }, // 11-15
-            {  586,  450,  322,  250 }, {  644,  504,  364,  280 }, {  718,  560,  394,  310 }, {  792,  624,  442,  338 }, {  858,  666,  482,  382 }, // 16-20
-            {  929,  711,  509,  403 }, { 1003,  779,  565,  439 }, { 1091,  857,  611,  461 }, { 1171,  911,  661,  511 }, { 1273,  997,  715,  535 }, // 21-25
-            { 1367, 1059,  751,  593 }, { 1465, 1125,  805,  625 }, { 1528, 1190,  868,  658 }, { 1628, 1264,  908,  698 }, { 1732, 1370,  982,  742 }, // 26-30
-            { 1840, 1452, 1030,  790 }, { 1952, 1538, 1112,  842 }, { 2068, 1628, 1168,  898 }, { 2188, 1722, 1228,  958 }, { 2303, 1809, 1283,  983 }, // 31-35
-            { 2431, 1911, 1351, 1051 }, { 1591, 2563, 1989, 1423 }, { 2699, 2099, 1499, 1139 }, { 2809, 2213, 1579, 1219 }, { 2953, 2331, 1663, 1273 }, // 36-40
+            {   19,   16,   13,    9 }, {   34,   28,   22,   16 }, {   55,   44,   34,   26 }, {   80,   64,   48,   36 }, {  108,   86,   62,   46 }, // 1-5
+            {  136,  108,   76,   60 }, {  156,  124,   88,   66 }, {  194,  154,  110,   86 }, {  232,  182,  132,  100 }, {  274,  216,  154,  122 }, // 6-10
+            {  324,  254,  180,  140 }, {  370,  290,  206,  158 }, {  428,  334,  244,  180 }, {  461,  365,  261,  197 }, {  523,  415,  295,  223 }, // 11-15
+            {  589,  453,  325,  253 }, {  647,  507,  367,  283 }, {  721,  563,  397,  313 }, {  795,  627,  445,  341 }, {  861,  669,  485,  385 }, // 16-20
+            {  932,  714,  512,  406 }, { 1006,  782,  568,  442 }, { 1094,  860,  614,  464 }, { 1174,  914,  664,  514 }, { 1276, 1000,  718,  538 }, // 21-25
+            { 1370, 1062,  754,  596 }, { 1468, 1128,  808,  628 }, { 1531, 1193,  871,  661 }, { 1631, 1267,  911,  701 }, { 1735, 1373,  985,  745 }, // 26-30
+            { 1843, 1455, 1033,  793 }, { 1955, 1541, 1115,  845 }, { 2071, 1631, 1171,  901 }, { 2191, 1725, 1231,  961 }, { 2306, 1812, 1286,  986 }, // 31-35
+            { 2434, 1914, 1354, 1054 }, { 2566, 1992, 1426, 1096 }, { 2702, 2102, 1502, 1142 }, { 2812, 2216, 1582, 1222 }, { 2956, 2334, 1666, 1276 }, // 36-40
         };
 
         /// <summary>
