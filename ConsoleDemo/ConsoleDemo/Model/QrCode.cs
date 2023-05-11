@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using ConsoleDemo.Util;
 
 namespace ConsoleDemo.Model
@@ -26,54 +27,150 @@ namespace ConsoleDemo.Model
 
         /// <summary>
         /// 构造二维码
+        /// <para>编码模式 自动探测</para>
+        /// <para>纠错等级 0 L 7%</para>
+        /// <para>版本号 最小版本</para>
         /// </summary>
         /// <param name="content">
         /// 内容
         /// </param>
+        public QrCode(string content) : this(content, null, null, null) { }
+
+        /// <summary>
+        /// 构造二维码
+        /// <para>纠错等级 0 L 7%</para>
+        /// <para>版本号 最小版本</para>
+        /// </summary>
+        /// <param name="content">
+        /// 内容
+        /// </param>
+        /// <param name="mode">
+        /// 编码模式(默认自动探测)
+        /// <para>0 NUMERIC 数字0-9</para>
+        /// <para>1 ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:</para>
+        /// <para>2 BYTE(ISO-8859-1)</para>
+        /// <para>3 BYTE(UTF-8)</para>
+        /// </param>
+        public QrCode(string content, int? mode) : this(content, mode, null, null) { }
+
+        /// <summary>
+        /// 构造二维码
+        /// <para>版本号 最小版本</para>
+        /// </summary>
+        /// <param name="content">
+        /// 内容
+        /// </param>
+        /// <param name="mode">
+        /// 编码模式(默认自动探测)
+        /// <para>0 NUMERIC 数字0-9</para>
+        /// <para>1 ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:</para>
+        /// <para>2 BYTE(ISO-8859-1)</para>
+        /// <para>3 BYTE(UTF-8)</para>
+        /// </param>
         /// <param name="level">
         /// 纠错等级
-        /// <para>0 L 7%</para>
+        /// <para>0 L 7%(默认)</para>
         /// <para>1 M 15%</para>
         /// <para>2 Q 25%</para>
         /// <para>3 H 30%</para>
         /// </param>
-        public QrCode(string content, int level)
+        public QrCode(string content, int? mode, int? level) : this(content, mode, level, null) { }
+
+        /// <summary>
+        /// 构造二维码
+        /// </summary>
+        /// <param name="content">
+        /// 内容
+        /// </param>
+        /// <param name="mode">
+        /// 编码模式(默认自动探测)
+        /// <para>0 NUMERIC 数字0-9</para>
+        /// <para>1 ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:</para>
+        /// <para>2 BYTE(ISO-8859-1)</para>
+        /// <para>3 BYTE(UTF-8)</para>
+        /// </param>
+        /// <param name="level">
+        /// 纠错等级
+        /// <para>0 L 7%(默认)</para>
+        /// <para>1 M 15%</para>
+        /// <para>2 Q 25%</para>
+        /// <para>3 H 30%</para>
+        /// </param>
+        /// <param name="versionNumber">
+        /// 版本号(默认最小版本)
+        /// <para>[1,40]</para>
+        /// </param>
+        public QrCode(string content, int? mode, int? level, int? versionNumber)
         {
+            int modeValue;
+            int levelValue;
             /* 数据 */
-            // 内容bits
-            byte[] bits = Encoding.UTF8.GetBytes(content);
-            // 获取模式
-            int mode = DetectionMode(bits, content.Length);
-            // 获取版本
-            Version = new Version(bits.Length, level, mode);
+            // 编码模式
+            if (mode == null)
+            {
+                modeValue = DetectionMode(content);
+            }
+            else if (mode < 0 || mode > 3)
+            {
+                throw new ArgumentException("编码模式不合法！");
+            }
+            else
+            {
+                modeValue = (int)mode;
+            }
+            // 内容bytes
+            byte[] contentBytes;
+            if (modeValue == 3)
+            {
+                contentBytes = UTF8.GetBytes(content);
+            }
+            else
+            {
+                contentBytes = ISO88591.GetBytes(content);
+            }
+            // 纠错等级
+            if (level == null)
+            {
+                levelValue = 0;
+            }
+            else if (mode < 0 || mode > 3)
+            {
+                throw new ArgumentException("纠错等级不合法！");
+            }
+            else
+            {
+                levelValue = (int)level;
+            }
+            // 版本
+            Version = new Version(contentBytes.Length, levelValue, modeValue, versionNumber);
             // 数据bits
             bool[] dataBits = new bool[Version.DataBits];
             // 填充数据
-            switch (mode)
+            switch (modeValue)
             {
                 // 填充编码模式为NUMERIC的数据
                 case 0:
                     {
-                        ModeNumbers(dataBits, bits, Version);
+                        ModeNumbers(dataBits, contentBytes, Version);
                         break;
                     }
                 // 填充编码模式为ALPHANUMERIC的数据
                 case 1:
                     {
-                        ModeAlphaNumeric(dataBits, bits, Version);
+                        ModeAlphaNumeric(dataBits, contentBytes, Version);
                         break;
                     }
                 // 填充编码模式为BYTE编码格式为ISO-8859-1的数据
                 case 2:
                     {
-                        ModeByteIso88591(dataBits, bits, Version);
+                        ModeByteIso88591(dataBits, contentBytes, Version);
                         break;
                     }
                 // 填充编码模式为BYTE编码格式为UTF-8的数据
                 default:
                 case 3:
                     {
-                        ModeByteUtf8(dataBits, bits, Version);
+                        ModeByteUtf8(dataBits, contentBytes, Version);
                         break;
                     }
             }
@@ -134,7 +231,7 @@ namespace ConsoleDemo.Model
             }
 
             /* 构造掩模模板 */
-            MaskPattern = new MaskPattern(dataAndEcBits, Version, level);
+            MaskPattern = new MaskPattern(dataAndEcBits, Version, levelValue);
             Matrix = QrCodeUtils.Convert(MaskPattern.BestPattern, Version.Dimension);
         }
 
@@ -142,73 +239,120 @@ namespace ConsoleDemo.Model
         /// 填充编码模式为NUMERIC的数据
         /// </summary>
         /// <param name="dataBits">数据bits</param>
-        /// <param name="bits">内容bits</param>
+        /// <param name="contentBytes">内容bytes</param>
         /// <param name="version">版本</param>
-        private static void ModeNumbers(bool[] dataBits, byte[] bits, Version version)
+        private static void ModeNumbers(bool[] dataBits, byte[] contentBytes, Version version)
         {
-
+            // 数据指针
+            int ptr = 0;
+            // 模式指示符(4bit) NUMERIC 0b0001=1
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Numbers行
+            QrCodeUtils.AddBits(dataBits, ptr, 1, 4);
+            ptr += 4;
+            // 内容字节数
+            int contentLength = contentBytes.Length;
+            // `内容字节数`bit数(10/12/14bit)
+            int contentBytesBits = version.ContentBytesBits;
+            QrCodeUtils.AddBits(dataBits, ptr, contentLength, contentBytesBits);
+            ptr += contentBytesBits;
+            // 内容 3个字符10bit 2个字符7bit 1个字符4bit
+            for (int i = 0; i < contentLength - 2; i += 3)
+            {
+                QrCodeUtils.AddBits(dataBits, ptr, (contentBytes[i] - 48) * 100 + (contentBytes[i + 1] - 48) * 10 + contentBytes[i + 2] - 48, 10);
+                ptr += 10;
+            }
+            switch (contentLength % 3)
+            {
+                case 2:
+                    {
+                        QrCodeUtils.AddBits(dataBits, ptr, (contentBytes[contentLength - 2] - 48) * 10 + contentBytes[contentLength - 1] - 48, 7);
+                        ptr += 7;
+                        break;
+                    }
+                case 1:
+                    {
+                        QrCodeUtils.AddBits(dataBits, ptr, contentBytes[contentLength - 1] - 48, 4);
+                        ptr += 4;
+                        break;
+                    }
+            }
+            // 结束符和补齐符
+            TerminatorAndPadding(dataBits, version.DataBits, ptr);
         }
 
         /// <summary>
         /// 填充编码模式为ALPHANUMERIC的数据
         /// </summary>
         /// <param name="dataBits">数据bits</param>
-        /// <param name="bits">内容bits</param>
+        /// <param name="contentBytes">内容bytes</param>
         /// <param name="version">版本</param>
-        private static void ModeAlphaNumeric(bool[] dataBits, byte[] bits, Version version)
+        private static void ModeAlphaNumeric(bool[] dataBits, byte[] contentBytes, Version version)
         {
-
+            // 数据指针
+            int ptr = 0;
+            // 模式指示符(4bit) ALPHANUMERIC 0b0010=2
+            // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Alphanumeric行
+            QrCodeUtils.AddBits(dataBits, ptr, 2, 4);
+            ptr += 4;
+            // 内容字节数
+            int contentLength = contentBytes.Length;
+            // `内容字节数`bit数(9/11/13bit)
+            int contentBytesBits = version.ContentBytesBits;
+            QrCodeUtils.AddBits(dataBits, ptr, contentLength, contentBytesBits);
+            ptr += contentBytesBits;
+            // 内容 2个字符11bit 1个字符6bit
+            for (int i = 0; i < contentLength - 1; i += 2)
+            {
+                QrCodeUtils.AddBits(dataBits, ptr, ALPHA_NUMERIC_TABLE[contentBytes[i]] * 45 + ALPHA_NUMERIC_TABLE[contentBytes[i + 1]], 11);
+                ptr += 11;
+            }
+            if (contentLength % 2 == 1)
+            {
+                QrCodeUtils.AddBits(dataBits, ptr, ALPHA_NUMERIC_TABLE[contentBytes[contentLength - 1]], 6);
+                ptr += 6;
+            }
+            // 结束符和补齐符
+            TerminatorAndPadding(dataBits, version.DataBits, ptr);
         }
 
         /// <summary>
         /// 填充编码模式为BYTE编码格式为ISO-8859-1的数据
         /// </summary>
         /// <param name="dataBits">数据bits</param>
-        /// <param name="bits">内容bits</param>
+        /// <param name="contentBytes">内容bytes</param>
         /// <param name="version">版本</param>
-        private static void ModeByteIso88591(bool[] dataBits, byte[] bits, Version version)
+        private static void ModeByteIso88591(bool[] dataBits, byte[] contentBytes, Version version)
         {
-            // 内容字节数
-            int contentBytes = bits.Length;
             // 数据指针
             int ptr = 0;
             // 模式指示符(4bit) BYTE 0b0100=4
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
             QrCodeUtils.AddBits(dataBits, ptr, 4, 4);
             ptr += 4;
-            // `内容长度`bit数(8/16bit)
-            int contentBytesBits = version.ContentLengthBits;
-            QrCodeUtils.AddBits(dataBits, ptr, contentBytes, contentBytesBits);
+            // 内容字节数
+            int contentLength = contentBytes.Length;
+            // `内容字节数`bit数(8/16bit)
+            int contentBytesBits = version.ContentBytesBits;
+            QrCodeUtils.AddBits(dataBits, ptr, contentLength, contentBytesBits);
             ptr += contentBytesBits;
             // 内容
-            for (int i = 0; i < contentBytes; i++)
+            for (int i = 0; i < contentLength; i++)
             {
-                QrCodeUtils.AddBits(dataBits, ptr, bits[i], 8);
+                QrCodeUtils.AddBits(dataBits, ptr, contentBytes[i], 8);
                 ptr += 8;
             }
-            // 结束符(4bit) 0b0000=0
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
-            QrCodeUtils.AddBits(dataBits, ptr, 0, 4);
-            ptr += 4;
-            // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
-            int paddingCount = (version.DataBits - ptr) / 8;
-            if (paddingCount > 0)
-            {
-                Padding(dataBits, paddingCount, ptr);
-            }
+            // 结束符和补齐符
+            TerminatorAndPadding(dataBits, version.DataBits, ptr);
         }
 
         /// <summary>
         /// 填充编码模式为BYTE编码格式为UTF-8的数据
         /// </summary>
         /// <param name="dataBits">数据bits</param>
-        /// <param name="bits">内容bits</param>
+        /// <param name="contentBytes">内容bytes</param>
         /// <param name="version">版本</param>
-        private static void ModeByteUtf8(bool[] dataBits, byte[] bits, Version version)
+        private static void ModeByteUtf8(bool[] dataBits, byte[] contentBytes, Version version)
         {
-            // 内容字节数
-            int contentBytes = bits.Length;
             // 数据指针
             int ptr = 0;
             // ECI模式指示符(4bit) 0b0111=7
@@ -223,64 +367,61 @@ namespace ConsoleDemo.Model
             // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 2 -> QR Code symbols列Byte行
             QrCodeUtils.AddBits(dataBits, ptr, 4, 4);
             ptr += 4;
-            // `内容长度`bit数(8/16bit)
-            int contentBytesBits = version.ContentLengthBits;
-            QrCodeUtils.AddBits(dataBits, ptr, contentBytes, contentBytesBits);
+            // 内容字节数
+            int contentLength = contentBytes.Length;
+            // `内容字节数`bit数(8/16bit)
+            int contentBytesBits = version.ContentBytesBits;
+            QrCodeUtils.AddBits(dataBits, ptr, contentLength, contentBytesBits);
             ptr += contentBytesBits;
             // 内容
-            for (int i = 0; i < contentBytes; i++)
+            for (int i = 0; i < contentLength; i++)
             {
-                QrCodeUtils.AddBits(dataBits, ptr, bits[i], 8);
+                QrCodeUtils.AddBits(dataBits, ptr, contentBytes[i], 8);
                 ptr += 8;
             }
-            // 如果有刚好填满，则不需要结束符和补齐符
-            // 如果还剩8bit，需要8bit结束符，不用补齐符
-            // 如果还剩16+bit，需要8bit结束符，交替补齐符至填满
-            if (version.DataBits - ptr > 7)
-            {
-                // 结束符 UTF-8(8bit) 0b00000000=0
-                // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
-                QrCodeUtils.AddBits(dataBits, ptr, 0, 8);
-                ptr += 8;
-            }
-            // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
-            // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
-            int paddingCount = (version.DataBits - ptr) / 8;
-            if (paddingCount > 0)
-            {
-                Padding(dataBits, paddingCount, ptr);
-            }
+            // 结束符和补齐符
+            TerminatorAndPadding(dataBits, version.DataBits, ptr);
         }
 
         /// <summary>
-        /// 填充补齐符
+        /// 结束符和补齐符
         /// </summary>
-        /// <param name="dataBits">数据bits</param>
+        /// <param name="data">数据bits</param>
+        /// <param name="dataBits">数据bits数</param>
         /// <param name="ptr">数据指针</param>
-        /// <param name="paddingCount">补齐符个数</param>
-        private static void Padding(bool[] dataBits, int paddingCount, int ptr)
+        private static void TerminatorAndPadding(bool[] data, int dataBits, int ptr)
         {
-            bool[] number0xecBits = QrCodeUtils.GetBits(0xEC, 10);
-            bool[] number0x11Bits = QrCodeUtils.GetBits(0x11, 8);
-            for (int i = 0; i < paddingCount; i++)
+            // 如果有刚好填满，则不需要结束符和补齐符
+            // 如果还剩1-8bit，需要1-8bit结束符，不用补齐符
+            // 如果还剩8+bit，先填充4bit结束符，再填充结束符使8bit对齐，再交替补齐符至填满
+            if (dataBits - ptr > 7)
             {
-                if (i % 2 == 0)
+                // 结束符(4bit)
+                // 数据来源 ISO/IEC 18004-2015 -> 7.4.9
+                ptr += 4;
+                // 结束符(8bit对齐)
+                ptr = (((ptr - 1) / 8) + 1) * 8;
+                // 补齐符 交替0b11101100=0xEC和0b00010001=0x11至填满
+                // 数据来源 ISO/IEC 18004-2015 -> 7.4.10
+                for (int i = 0; i < dataBits - ptr; i++)
                 {
-                    QrCodeUtils.AddBits(dataBits, ptr, number0xecBits, 8);
+                    if (i % 2 == 0)
+                    {
+                        Array.Copy(NUMBER_0xEC_8BITS, 0, data, ptr, 8);
+                    }
+                    else
+                    {
+                        Array.Copy(NUMBER_0x11_8BITS, 0, data, ptr, 8);
+                    }
+                    ptr += 8;
                 }
-                else
-                {
-                    QrCodeUtils.AddBits(dataBits, ptr, number0x11Bits, 8);
-                }
-                ptr += 8;
             }
         }
 
         /// <summary>
         /// 探测编码模式
         /// </summary>
-        /// <param name="bits">bits</param>
-        /// <param name="length">内容字符数</param>
+        /// <param name="content">内容</param>
         /// <returns>
         /// 编码模式
         /// <para>0 NUMERIC 数字0-9</para>
@@ -288,65 +429,54 @@ namespace ConsoleDemo.Model
         /// <para>2 BYTE(ISO-8859-1)</para>
         /// <para>3 BYTE(UTF-8)</para>
         /// </returns>
-        private static int DetectionMode(byte[] bits, int length)
+        private static int DetectionMode(string content)
         {
+            int length = content.Length;
             // BYTE(UTF-8)
-            if (bits.Length != length)
+            for (int i = 0; i < length; i++)
             {
-                return 3;
-            }
-            // NUMERIC 数字0-9
-            else if (IsAllNumbers(bits, length))
-            {
-                return 0;
-            }
-            // ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:
-            else if (IsAllAlphaNumeric(bits, length))
-            {
-                return 1;
+                if (content[i] > 255)
+                {
+                    return 3;
+                }
             }
             // BYTE(ISO-8859-1)
-            else
+            for (int i = 0; i < length; i++)
             {
-                return 2;
+                if (content[i] > 127)
+                {
+                    return 2;
+                }
             }
+            // ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:
+            for (int i = 0; i < length; i++)
+            {
+                if (ALPHA_NUMERIC_TABLE[content[i]] > 9)
+                {
+                    return 1;
+                }
+            }
+            // NUMERIC 数字0-9
+            return 0;
         }
 
         /// <summary>
-        /// 全部是数字
+        /// 字符编码ISO-8859-1
         /// </summary>
-        /// <param name="bits">bits</param>
-        /// <param name="length">字节数</param>
-        /// <returns>是否全部是数字</returns>
-        private static bool IsAllNumbers(byte[] bits, int length)
-        {
-            for (int i = 0; i < length; i++)
-            {
-                if (ALPHA_NUMERIC_TABLE[bits[i]] > 9)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        private static readonly Encoding ISO88591 = Encoding.GetEncoding("ISO-8859-1");
+        /// <summary>
+        /// 字符编码UTF-8
+        /// </summary>
+        private static readonly Encoding UTF8 = Encoding.UTF8;
 
         /// <summary>
-        /// 全部是数字+字母+符号
+        /// 数字0xEC前8bit
         /// </summary>
-        /// <param name="bits">bits</param>
-        /// <param name="length">字节数</param>
-        /// <returns>是否全部是数字+字母+符号</returns>
-        private static bool IsAllAlphaNumeric(byte[] bits, int length)
-        {
-            for (int i = 0; i < length; i++)
-            {
-                if (ALPHA_NUMERIC_TABLE[bits[i]] > 44)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+        private static readonly bool[] NUMBER_0xEC_8BITS = { true, true, true, false, true, true, false, false };
+        /// <summary>
+        /// 数字0x11前8bit
+        /// </summary>
+        private static readonly bool[] NUMBER_0x11_8BITS = { false, false, false, true, false, false, false, true };
 
         /// <summary>
         /// ALPHANUMERIC模式映射表
@@ -372,14 +502,6 @@ namespace ConsoleDemo.Model
              25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35, 255, 255, 255, 255, 255, // 0x50-0x5F
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0x60-0x6F
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0x70-0x7F
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0x80-0x8F
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0x90-0x9F
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xA0-0xAF
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xB0-0xBF
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xC0-0xCF
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xD0-0xDF
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xE0-0xEF
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // 0xF0-0xFF
         };
 
     }

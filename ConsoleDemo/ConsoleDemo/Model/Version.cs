@@ -1,4 +1,6 @@
-﻿namespace ConsoleDemo.Model
+﻿using System;
+
+namespace ConsoleDemo.Model
 {
 
     /// <summary>
@@ -19,12 +21,12 @@
         /// </summary>
         public readonly int Dimension;
         /// <summary>
-        /// `内容长度`bit数
+        /// `内容字节数`bit数
         /// </summary>
-        public readonly int ContentLengthBits;
+        public readonly int ContentBytesBits;
         /// <summary>
         /// 数据bit数
-        /// <para>ECI模式指示符+ECI指定符+模式指示符+`内容长度`bit数+内容+结束符+补齐符</para>
+        /// <para>ECI模式指示符+ECI指定符+模式指示符+`内容字节数`bit数+内容+结束符+补齐符</para>
         /// </summary>
         public readonly int DataBits;
         /// <summary>
@@ -58,7 +60,33 @@
         /// <para>2 BYTE(ISO-8859-1)</para>
         /// <para>3 BYTE(UTF-8)</para>
         /// </param>
-        public Version(int length, int level, int mode)
+        public Version(int length, int level, int mode) : this(length, level, mode, null) { }
+
+        /// <summary>
+        /// 构造版本
+        /// </summary>
+        /// <param name="length">
+        /// 内容字节数
+        /// </param>
+        /// <param name="level">
+        /// 纠错等级
+        /// <para>0 L 7%</para>
+        /// <para>1 M 15%</para>
+        /// <para>2 Q 25%</para>
+        /// <para>3 H 30%</para>
+        /// </param>
+        /// <param name="mode">
+        /// 编码模式
+        /// <para>0 NUMERIC 数字0-9</para>
+        /// <para>1 ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:</para>
+        /// <para>2 BYTE(ISO-8859-1)</para>
+        /// <para>3 BYTE(UTF-8)</para>
+        /// </param>
+        /// <param name="versionNumber">
+        /// 版本号(默认最小版本)
+        /// <para>[1,40]</para>
+        /// </param>
+        public Version(int length, int level, int mode, int? versionNumber)
         {
             // 编码模式
             switch (mode)
@@ -67,27 +95,27 @@
                 case 0:
                     {
                         VersionNumber = ModeNumeric(length, level) + 1;
-                        // `内容长度`bit数 1-9版本10bit 10-26版本12bit 27-40版本14bit
+                        // `内容字节数`bit数 1-9版本10bit 10-26版本12bit 27-40版本14bit
                         // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Numeric mode列
-                        ContentLengthBits = VersionNumber < 10 ? 10 : (VersionNumber < 27 ? 12 : 14);
+                        ContentBytesBits = VersionNumber < 10 ? 10 : (VersionNumber < 27 ? 12 : 14);
                         break;
                     }
                 // ALPHANUMERIC 数字0-9、大写字母A-Z、符号(空格)$%*+-./:
                 case 1:
                     {
                         VersionNumber = ModeAlphaNumeric(length, level) + 1;
-                        // `内容长度`bit数 1-9版本9bit 10-26版本11bit 27-40版本13bit
+                        // `内容字节数`bit数 1-9版本9bit 10-26版本11bit 27-40版本13bit
                         // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Alphanumeric mode列
-                        ContentLengthBits = VersionNumber < 10 ? 9 : (VersionNumber < 27 ? 11 : 13);
+                        ContentBytesBits = VersionNumber < 10 ? 9 : (VersionNumber < 27 ? 11 : 13);
                         break;
                     }
                 // BYTE(ISO-8859-1)
                 case 2:
                     {
                         VersionNumber = ModeByte(length, level) + 1;
-                        // `内容长度`bit数 1-9版本8bit 10-40版本16bit
+                        // `内容字节数`bit数 1-9版本8bit 10-40版本16bit
                         // 数据来源 ISO/IEC 18004-2015 -> 7.4.1 -> Table 3 -> Byte mode列
-                        ContentLengthBits = VersionNumber < 10 ? 8 : 16;
+                        ContentBytesBits = VersionNumber < 10 ? 8 : 16;
                         break;
                     }
                 // BYTE(UTF-8)
@@ -97,9 +125,26 @@
                         // 相比ISO-8859-1多1字节(不需要补齐符的情况下)
                         // ECI模式指示符(4bit)+ECI指定符(8bit)-结束符(4bit)=1字节
                         VersionNumber = ModeByte(length + 1, level) + 1;
-                        ContentLengthBits = VersionNumber < 10 ? 8 : 16;
+                        ContentBytesBits = VersionNumber < 10 ? 8 : 16;
                         break;
                     }
+            }
+            if (VersionNumber == 0)
+            {
+                throw new ArgumentException("内容过长！");
+            }
+            if (versionNumber == null) { }
+            else if (versionNumber < 0 || versionNumber > 40)
+            {
+                throw new ArgumentException("版本号不合法！");
+            }
+            else if (VersionNumber > versionNumber)
+            {
+                throw new ArgumentException("版本号过小！");
+            }
+            else
+            {
+                VersionNumber = (int)versionNumber;
             }
             Dimension = (VersionNumber - 1) * 4 + 21;
             DataBits = DATA_BYTES[VersionNumber - 1, level] * 8;
@@ -115,28 +160,28 @@
         /// <returns>版本号</returns>
         private static int ModeNumeric(int length, int level)
         {
-            // `内容长度`bit数 1-9版本10bit
+            // `内容字节数`bit数 1-9版本10bit
             for (int i = 0; i < 9; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(10bit)=14bit
+                // 模式指示符(4bit)+`内容字节数`bit数(10bit)=14bit
                 if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 14))
                 {
                     return i;
                 }
             }
-            // `内容长度`bit数 10-26版本12bit
+            // `内容字节数`bit数 10-26版本12bit
             for (int i = 9; i < 26; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(12bit)=16bit
+                // 模式指示符(4bit)+`内容字节数`bit数(12bit)=16bit
                 if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 16))
                 {
                     return i;
                 }
             }
-            // `内容长度`bit数 27-40版本14bit
+            // `内容字节数`bit数 27-40版本14bit
             for (int i = 26; i < 40; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(14bit)=18bit
+                // 模式指示符(4bit)+`内容字节数`bit数(14bit)=18bit
                 if (length <= ModeNumericMaxLength(DATA_BYTES[i, level] * 8 - 18))
                 {
                     return i;
@@ -153,7 +198,7 @@
         private static int ModeNumericMaxLength(int maxBits)
         {
             // 3个字符10bit 2个字符7bit 1个字符4bit
-            int maxLength = maxBits / 10;
+            int maxLength = maxBits / 10 * 3;
             int remainder = maxBits % 10;
             if (remainder > 6)
             {
@@ -174,28 +219,28 @@
         /// <returns>版本号</returns>
         private static int ModeAlphaNumeric(int length, int level)
         {
-            // `内容长度`bit数 1-9版本9bit
+            // `内容字节数`bit数 1-9版本9bit
             for (int i = 0; i < 9; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(9bit)=13bit
+                // 模式指示符(4bit)+`内容字节数`bit数(9bit)=13bit
                 if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 13))
                 {
                     return i;
                 }
             }
-            // `内容长度`bit数 10-26版本11bit
+            // `内容字节数`bit数 10-26版本11bit
             for (int i = 9; i < 26; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(11bit)=15bit
+                // 模式指示符(4bit)+`内容字节数`bit数(11bit)=15bit
                 if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 15))
                 {
                     return i;
                 }
             }
-            // `内容长度`bit数 27-40版本13bit
+            // `内容字节数`bit数 27-40版本13bit
             for (int i = 26; i < 40; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(13bit)=17bit
+                // 模式指示符(4bit)+`内容字节数`bit数(13bit)=17bit
                 if (length <= ModeAlphaNumericMaxLength(DATA_BYTES[i, level] * 8 - 17))
                 {
                     return i;
@@ -212,7 +257,7 @@
         private static int ModeAlphaNumericMaxLength(int maxBits)
         {
             // 2个字符11bit 1个字符6bit
-            int maxLength = maxBits / 11;
+            int maxLength = maxBits / 11 * 2;
             int remainder = maxBits % 11;
             if (remainder > 5)
             {
@@ -229,19 +274,19 @@
         /// <returns>版本号</returns>
         private static int ModeByte(int length, int level)
         {
-            // `内容长度`bit数 1-9版本8bit
+            // `内容字节数`bit数 1-9版本8bit
             for (int i = 0; i < 9; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(8bit)+结束符(4bit)=2字节
+                // 模式指示符(4bit)+`内容字节数`bit数(8bit)+结束符(4bit)=2字节
                 if (length < DATA_BYTES[i, level] - 1)
                 {
                     return i;
                 }
             }
-            // `内容长度`bit数 10-40版本16bit
+            // `内容字节数`bit数 10-40版本16bit
             for (int i = 9; i < 40; i++)
             {
-                // 模式指示符(4bit)+`内容长度`bit数(16bit)+结束符(4bit)=3字节
+                // 模式指示符(4bit)+`内容字节数`bit数(16bit)+结束符(4bit)=3字节
                 if (length < DATA_BYTES[i, level] - 2)
                 {
                     return i;

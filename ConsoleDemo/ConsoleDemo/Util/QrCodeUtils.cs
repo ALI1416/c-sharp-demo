@@ -38,22 +38,6 @@
         /// <param name="pos">位置</param>
         /// <param name="value">值</param>
         /// <param name="numberBits">添加bit个数</param>
-        public static void AddBits(bool[] bits, int pos, bool[] value, int numberBits)
-        {
-            int ptr = value.Length - numberBits;
-            for (int i = 0; i < numberBits; i++)
-            {
-                bits[pos + i] = value[ptr + i];
-            }
-        }
-
-        /// <summary>
-        /// 添加bit
-        /// </summary>
-        /// <param name="bits">目的数据</param>
-        /// <param name="pos">位置</param>
-        /// <param name="value">值</param>
-        /// <param name="numberBits">添加bit个数</param>
         public static void AddBits(bool[] bits, int pos, int value, int numberBits)
         {
             for (int i = 0; i < numberBits; i++)
@@ -66,13 +50,13 @@
         /// 获取bit数组
         /// </summary>
         /// <param name="value">值</param>
-        /// <param name="number">获取数量</param>
-        public static bool[] GetBits(int value, int number)
+        /// <param name="numberBits">获取bit个数</param>
+        public static bool[] GetBits(int value, int numberBits)
         {
-            bool[] bits = new bool[number];
-            for (int i = 0; i < number; i++)
+            bool[] bits = new bool[numberBits];
+            for (int i = 0; i < numberBits; i++)
             {
-                bits[i] = (value & (1 << (number - i - 1))) != 0;
+                bits[i] = (value & (1 << (numberBits - i - 1))) != 0;
             }
             return bits;
         }
