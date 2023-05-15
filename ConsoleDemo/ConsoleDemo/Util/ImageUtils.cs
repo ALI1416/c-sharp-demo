@@ -11,7 +11,10 @@ namespace ConsoleDemo.Util
     public class ImageUtils
     {
 
-        private static readonly Brush brush = new SolidBrush(Color.Black);
+        /// <summary>
+        /// 黑色刷子
+        /// </summary>
+        private static readonly Brush BLACK_BRUSH = new SolidBrush(Color.Black);
 
         /// <summary>
         /// 二维码bool[,]转Bitmap
@@ -37,7 +40,7 @@ namespace ConsoleDemo.Util
             Bitmap bitmap = new Bitmap(size, size);
             using (Graphics g = Graphics.FromImage(bitmap))
             {
-                g.FillRectangles(brush, rects.ToArray());
+                g.FillRectangles(BLACK_BRUSH, rects.ToArray());
             }
             return bitmap;
         }
@@ -52,6 +55,7 @@ namespace ConsoleDemo.Util
         {
             int length = bytes.Length;
             List<Rectangle> rects = new List<Rectangle>();
+            // ZXing反转了xy轴
             for (int y = 0; y < length; y++)
             {
                 for (int x = 0; x < length; x++)
@@ -66,7 +70,7 @@ namespace ConsoleDemo.Util
             Bitmap bitmap = new Bitmap(size, size);
             using (Graphics g = Graphics.FromImage(bitmap))
             {
-                g.FillRectangles(brush, rects.ToArray());
+                g.FillRectangles(BLACK_BRUSH, rects.ToArray());
             }
             return bitmap;
         }
