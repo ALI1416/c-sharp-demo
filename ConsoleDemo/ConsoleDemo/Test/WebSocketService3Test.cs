@@ -97,7 +97,13 @@ namespace ConsoleDemo.Test
             while (isStarted)
             {
                 MemoryStream stream = Utils.GetSendMemoryStream();
-                webSocketService.Send(stream.ToArray());
+                var data = stream.ToArray();
+                // 获取`在线`并且`可发送数据`的用户列表
+                var list = webSocketService.ClientOnlineAndNotTransmission();
+                // 记录webSocket服务端访问记录
+                webSocketService.Server.RecordAccess(list.Count * data.Length);
+                // 发送给webSocket客户端
+                webSocketService.SendDataByClientList(list, data);
                 Thread.Sleep(100);
             }
         }

@@ -323,16 +323,34 @@ namespace ConsoleDemo.Service
             byte[] msg = WebSocketUtils.CodedData(data, false);
             foreach (SocketClient2 client in list)
             {
+                client.Transmission = true;
+                client.RecordAccess(data.Length);
                 SendRaw(client, msg);
             }
         }
 
         /// <summary>
-        /// 发送二进制消息
+        /// 发送二进制消息 给指定客户端列表
+        /// </summary>
+        /// <param name="list">客户端列表</param>
+        /// <param name="data">二进制消息</param>
+        public void SendDataByClientList(List<SocketClient2> list, byte[] data)
+        {
+            byte[] msg = WebSocketUtils.CodedData(data, false);
+            foreach (SocketClient2 client in list)
+            {
+                client.Transmission = true;
+                client.RecordAccess(data.Length);
+                SendRaw(client, msg);
+            }
+        }
+
+        /// <summary>
+        /// 发送二进制消息 给指定客户端
         /// </summary>
         /// <param name="client">客户端</param>
         /// <param name="data">二进制消息</param>
-        public void Send(SocketClient2 client, byte[] data)
+        public void SendDataByClient(SocketClient2 client, byte[] data)
         {
             client.Transmission = true;
             client.RecordAccess(data.Length);

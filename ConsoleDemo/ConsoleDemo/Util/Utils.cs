@@ -98,7 +98,7 @@ namespace ConsoleDemo.Util
         {
             SocketClient2[] clientList = webSocketService.ClientList();
             string msg = "\n\n----- 遍历 客户端 开始 -----\n";
-            msg += " 状态\t | ip\t\t\t | 上线时间\t | 下线时间\t | 连接时长(分钟)\t | 每秒帧数(帧/秒)\t | 传输速度(Kb/秒)\t | 数据总量(Mb)\n";
+            msg += " 状态\t | ip\t\t\t | 上线时间\t | 下线时间\t | 连接时长(分钟)\t | 每秒帧数(帧/秒)\t | 传输速度(Mb/秒)\t | 数据总量(Mb)\n";
             DateTime now = DateTime.Now;
             foreach (SocketClient2 client in clientList)
             {
@@ -113,7 +113,7 @@ namespace ConsoleDemo.Util
                     // 下线时间、连接时长
                     msg += "-\t\t | " + Convert.ToDouble(now.Subtract(client.Online).TotalMinutes).ToString("0.00");
                     // 每秒帧数、传输速度
-                    msg += "\t\t\t | " + (client.FrameAvg / 100f).ToString("0.00") + "\t\t\t | " + (client.ByteAvg / 1024f).ToString("0.00") + "\t\t\t | ";
+                    msg += "\t\t\t | " + (client.FrameAvg / 100f).ToString("0.00") + "\t\t\t | " + (client.ByteAvg / 1048576f).ToString("0.00") + "\t\t\t | ";
                     // 数据总量
                     msg += (client.ByteCount / 1048576f).ToString("0.00") + "\n";
                 }
