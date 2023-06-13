@@ -1,4 +1,4 @@
-﻿using log4net;
+using log4net;
 using System.Net;
 using System;
 using ConsoleDemo.Model;

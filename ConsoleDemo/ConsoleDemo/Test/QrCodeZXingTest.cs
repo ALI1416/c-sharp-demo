@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Util;
+using ConsoleDemo.Util;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;

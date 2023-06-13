@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Model;
+using ConsoleDemo.Model;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;

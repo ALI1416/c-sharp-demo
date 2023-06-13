@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Properties;
+using ConsoleDemo.Properties;
 using ConsoleDemo.Service;
 using ConsoleDemo.Util;
 using log4net;

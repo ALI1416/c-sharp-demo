@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Test;
+using ConsoleDemo.Test;
 using System;
 
 namespace ConsoleDemo

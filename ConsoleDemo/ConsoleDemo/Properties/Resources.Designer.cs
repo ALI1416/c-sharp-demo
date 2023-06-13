@@ -111,7 +111,26 @@ namespace ConsoleDemo.Properties {
         }
         
         /// <summary>
-        ///   查找类似  的本地化字符串。
+        ///   查找类似 &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;zh-cmn-Hans&quot;&gt;
+        ///
+        ///&lt;head&gt;
+        ///  &lt;meta charset=&quot;UTF-8&quot;&gt;
+        ///  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+        ///  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///  &lt;title&gt;socket图片推流演示&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body&gt;
+        ///  &lt;h1&gt;socket图片推流演示&lt;/h1&gt;
+        ///  &lt;div&gt;
+        ///    &lt;input type=&quot;text&quot; id=&quot;address&quot; value=&quot;127.0.0.1:8082&quot;&gt;
+        ///    &lt;button id=&quot;connect&quot;&gt;连接&lt;/button&gt;
+        ///    &lt;span&gt;8082&lt;/span&gt;
+        ///  &lt;/div&gt;
+        ///  &lt;img id=&quot;img&quot; /&gt;
+        ///  &lt;script&gt;
+        ///    const addressText = document.getElementById(&apos;addr [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string socket {
             get {
@@ -140,7 +159,26 @@ namespace ConsoleDemo.Properties {
         }
         
         /// <summary>
-        ///   查找类似  的本地化字符串。
+        ///   查找类似 &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;zh-cmn-Hans&quot;&gt;
+        ///
+        ///&lt;head&gt;
+        ///  &lt;meta charset=&quot;UTF-8&quot;&gt;
+        ///  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+        ///  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///  &lt;title&gt;webSocket演示&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body&gt;
+        ///  &lt;h1&gt;webSocket演示&lt;/h1&gt;
+        ///  &lt;div&gt;
+        ///    &lt;input type=&quot;text&quot; id=&quot;address&quot; value=&quot;127.0.0.1:8083&quot;&gt;
+        ///    &lt;button id=&quot;connect&quot;&gt;连接&lt;/button&gt;
+        ///    &lt;span&gt;8083 8084&lt;/span&gt;
+        ///  &lt;/div&gt;
+        ///  &lt;div&gt;
+        ///    &lt;input type=&quot;text&quot; id=&quot;msg&quot; disabled&gt;
+        ///    &lt;button id=&quot;send&quot; disabled [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string webSocket {
             get {
@@ -149,7 +187,26 @@ namespace ConsoleDemo.Properties {
         }
         
         /// <summary>
-        ///   查找类似  的本地化字符串。
+        ///   查找类似 &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;zh-cmn-Hans&quot;&gt;
+        ///
+        ///&lt;head&gt;
+        ///  &lt;meta charset=&quot;UTF-8&quot;&gt;
+        ///  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+        ///  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///  &lt;title&gt;webSocket图片推流演示&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body&gt;
+        ///  &lt;h1&gt;webSocket图片推流演示&lt;/h1&gt;
+        ///  &lt;div&gt;
+        ///    &lt;input type=&quot;text&quot; id=&quot;address&quot; value=&quot;127.0.0.1:8083&quot;&gt;
+        ///    &lt;button id=&quot;connect&quot;&gt;连接&lt;/button&gt;
+        ///    &lt;span&gt;8083 8084&lt;/span&gt;
+        ///  &lt;/div&gt;
+        ///  &lt;img id=&quot;img&quot; /&gt;
+        ///  &lt;script&gt;
+        ///    const addressText = document.getElemen [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string webSocket2 {
             get {
@@ -158,7 +215,25 @@ namespace ConsoleDemo.Properties {
         }
         
         /// <summary>
-        ///   查找类似  的本地化字符串。
+        ///   查找类似 &lt;!DOCTYPE html&gt;
+        ///&lt;html lang=&quot;zh-cmn-Hans&quot;&gt;
+        ///
+        ///&lt;head&gt;
+        ///  &lt;meta charset=&quot;UTF-8&quot;&gt;
+        ///  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+        ///  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///  &lt;title&gt;webSocket图片推流演示2&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body&gt;
+        ///  &lt;h1&gt;webSocket图片推流演示2&lt;/h1&gt;
+        ///  &lt;div&gt;
+        ///    &lt;input type=&quot;text&quot; id=&quot;address&quot; value=&quot;127.0.0.1:8085&quot;&gt;
+        ///    &lt;button id=&quot;connect&quot;&gt;连接&lt;/button&gt;
+        ///    &lt;span&gt;8085&lt;/span&gt;
+        ///  &lt;/div&gt;
+        ///  &lt;img id=&quot;img&quot; /&gt;
+        ///  &lt;span id=&quot;fps&quot; style=&quot;position:absolute;top:10px;right: [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string webSocket3 {
             get {

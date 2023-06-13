@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Model;
+using ConsoleDemo.Model;
 using log4net;
 using System;
 using System.Collections.Specialized;

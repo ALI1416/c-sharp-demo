@@ -7,13 +7,11 @@
 
 C#控制台示例
 
-## 交流与赞助
+## 关于
 
-- [x] `QQ` : `1416978277`
-- [x] `微信` : `1416978277`
-- [x] `支付宝` : `1416978277@qq.com`
-- [x] `电子邮箱` : `1416978277@qq.com`
-
-![交流](https://cdn.jsdelivr.net/gh/ALI1416/ALI1416/image/contact.png)
-
-![赞助](https://cdn.jsdelivr.net/gh/ALI1416/ALI1416/image/donate.png)
+<object data="https://404z.cn/images/about.svg" style="max-width:100%;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://404z.cn/images/about.dark.svg">
+    <img alt="About" src="https://404z.cn/images/about.light.svg">
+  </picture>
+</object>
