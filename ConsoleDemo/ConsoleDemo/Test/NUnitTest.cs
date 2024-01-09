@@ -36,7 +36,7 @@ namespace ConsoleDemo.Test
         public void Test02ParameterFunction(int a, int b, int c)
         {
             // 断言(预期结果,实际结果)
-            Assert.AreEqual(c, a + b);
+            Assert.Equals(c, a + b);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace ConsoleDemo.Test
         [TestCaseSource(nameof(addCase))]
         public void Test04Source(int a, int b, int c)
         {
-            Assert.AreEqual(c, a + b);
+            Assert.Equals(c, a + b);
         }
 
         /// <summary>
