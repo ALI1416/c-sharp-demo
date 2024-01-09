@@ -40,7 +40,7 @@ namespace ConsoleDemo.Test
             Result result = reader.Decode(bitmapResult);
             string contentResult = result.ToString();
             Console.WriteLine(contentResult);
-            Assert.Equals(content, contentResult);
+            Assert.AreEqual(content, contentResult);
         }
 
     }
