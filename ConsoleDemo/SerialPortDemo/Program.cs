@@ -35,11 +35,11 @@ namespace SerialPortDemo
                 try
                 {
                     serialPort.Open();
-                    Console.WriteLine("串口 已连接！");
+                    Console.WriteLine("串口已连接！");
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("串口 已断开！等待重连...");
+                    Console.WriteLine("串口已断开！等待重试...");
                 }
             }
         }
@@ -103,7 +103,7 @@ namespace SerialPortDemo
             }
             else
             {
-                Console.WriteLine("发送消息 串口已断开，发送失败！");
+                Console.WriteLine("串口已断开，发送失败！");
             }
         }
 
@@ -136,6 +136,6 @@ namespace SerialPortDemo
                 Send(message);
             }
         }
-    }
 
+    }
 }

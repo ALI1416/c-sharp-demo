@@ -14,22 +14,13 @@ namespace RabbitDemo
     {
 
         /// <summary>
-        /// 发送消息交换机名称
+        /// 交换机名称
         /// </summary>
-        private static readonly string sendExchangeName = "test";
+        private static readonly string exchange = "demo";
         /// <summary>
-        /// 发送消息路由名称
+        /// 路由名称
         /// </summary>
-        private static readonly string sendRoutingKey = "a";
-
-        /// <summary>
-        /// 接收消息交换机名称
-        /// </summary>
-        private static readonly string receiveExchangeName = "test";
-        /// <summary>
-        /// 接收消息路由名称
-        /// </summary>
-        private static readonly string receiveRoutingKey = "a";
+        private static readonly string routingKey = "test";
 
         /// <summary>
         /// RabbitMQ连接工厂
@@ -43,93 +34,61 @@ namespace RabbitDemo
         };
 
         /// <summary>
-        /// 发送消息连接
+        /// 连接
         /// </summary>
-        private static IConnection sendConnection;
+        private static IConnection connection;
         /// <summary>
-        /// 发送消息通道
+        /// 通道
         /// </summary>
-        private static IModel sendChannel;
-
-        /// <summary>
-        /// 接收消息连接
-        /// </summary>
-        private static IConnection receiveConnection;
-        /// <summary>
-        /// 接收消息通道
-        /// </summary>
-        private static IModel receiveChannel;
+        private static IModel channel;
 
         /// <summary>
         /// RabbitMQ初始化
         /// </summary>
         private static void RabbitInit()
         {
-            // 发送消息初始化
-            if (sendConnection == null || !sendConnection.IsOpen)
+            // 建立连接
+            if (connection == null || !connection.IsOpen)
             {
-                sendChannel = null;
+                channel = null;
                 try
                 {
-                    sendConnection = factory.CreateConnection();
-                    Console.WriteLine("发送消息 连接已建立！");
+                    connection = factory.CreateConnection();
+                    Console.WriteLine("连接已建立！");
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("发送消息 连接建立失败！等待重连...");
+                    Console.WriteLine("连接建立失败！等待重试...");
                 }
             }
-            if ((sendChannel == null || !sendChannel.IsOpen) && sendConnection != null && sendConnection.IsOpen)
+            // 监听消息
+            if ((channel == null || !channel.IsOpen) && connection != null && connection.IsOpen)
             {
                 try
                 {
-                    sendChannel = sendConnection.CreateModel();
-                    sendChannel.ExchangeDeclare(sendExchangeName, ExchangeType.Topic, durable: true, autoDelete: false, arguments: null);
-                    Console.WriteLine("发送消息 就绪！");
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("发送消息 交换机建立失败！等待重试...");
-                }
-            }
-            // 接收消息初始化
-            if (receiveConnection == null || !receiveConnection.IsOpen)
-            {
-                receiveChannel = null;
-                try
-                {
-                    receiveConnection = factory.CreateConnection();
-                    Console.WriteLine("接收消息 连接已建立！");
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("接收消息 连接建立失败！等待重连...");
-                }
-            }
-            if ((receiveChannel == null || !receiveChannel.IsOpen) && receiveConnection != null && receiveConnection.IsOpen)
-            {
-                try
-                {
-                    receiveChannel = receiveConnection.CreateModel();
-                    receiveChannel.ExchangeDeclare(receiveExchangeName, ExchangeType.Topic, durable: true, autoDelete: false, arguments: null);
-                    // 生成随机队列名
-                    string receiveQueueName = receiveChannel.QueueDeclare().QueueName;
-                    receiveChannel.QueueBind(receiveQueueName, receiveExchangeName, receiveRoutingKey);
+                    // 创建交换机
+                    channel = connection.CreateModel();
+                    channel.ExchangeDeclare(exchange, ExchangeType.Topic, true, false, null);
+                    // 创建队列(随机名称)
+                    string receiveQueueName = channel.QueueDeclare().QueueName;
+                    channel.QueueBind(receiveQueueName, exchange, routingKey);
                     // 监听消息
-                    EventingBasicConsumer consumer = new EventingBasicConsumer(receiveChannel);
-                    receiveChannel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-                    receiveChannel.BasicConsume(receiveQueueName, false, consumer: consumer);
+                    EventingBasicConsumer consumer = new EventingBasicConsumer(channel);
+                    channel.BasicQos(0, 1, false);
+                    channel.BasicConsume(receiveQueueName, false, consumer);
+                    // 接收到消息
                     consumer.Received += (model, msg) =>
                     {
                         string message = Encoding.UTF8.GetString(msg.Body.ToArray());
                         Console.WriteLine("接收到消息：" + message);
-                        receiveChannel.BasicAck(deliveryTag: msg.DeliveryTag, multiple: false);
+                        // 确认消息
+                        channel.BasicAck(msg.DeliveryTag, false);
                     };
-                    Console.WriteLine("接收消息 监听已建立！");
+                    Console.WriteLine("消息监听已建立！");
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("接收消息 监听建立失败！等待重连...");
+                    Console.WriteLine("消息监听建立失败！等待重试...");
                 }
             }
         }
@@ -140,22 +99,22 @@ namespace RabbitDemo
         /// <param name="message">消息</param>
         private static void Send(string message)
         {
-            if (sendChannel != null && sendChannel.IsOpen)
+            if (channel != null && channel.IsOpen)
             {
                 try
                 {
                     byte[] body = Encoding.UTF8.GetBytes(message);
-                    sendChannel.BasicPublish(sendExchangeName, sendRoutingKey, basicProperties: null, body);
+                    channel.BasicPublish(exchange, routingKey, null, body);
                     Console.WriteLine("发送消息：" + message);
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("发送消息 发生错误，发送失败！");
+                    Console.WriteLine("消息发送失败！");
                 }
             }
             else
             {
-                Console.WriteLine("发送消息 连接未建立，发送失败！");
+                Console.WriteLine("连接未建立，发送失败！");
             }
         }
 
@@ -180,6 +139,6 @@ namespace RabbitDemo
                 Send(message);
             }
         }
-    }
 
+    }
 }
