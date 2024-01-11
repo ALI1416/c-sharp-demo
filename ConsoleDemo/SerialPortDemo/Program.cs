@@ -57,7 +57,7 @@ namespace SerialPortDemo
                     int byteSize = serialPort.BytesToRead;
                     if (byteSize > 0)
                     {
-                        // 10毫秒内算同一条内容
+                        // 10毫秒内算同一条消息
                         Thread.Sleep(10);
                         while (serialPort.BytesToRead > byteSize)
                         {
@@ -124,11 +124,7 @@ namespace SerialPortDemo
             // 接收消息
             new Thread(t =>
             {
-                while (true)
-                {
-                    Receive();
-                    Thread.Sleep(10000);
-                }
+                Receive();
             })
             {
                 IsBackground = true
