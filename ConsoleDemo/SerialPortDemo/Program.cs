@@ -17,7 +17,7 @@ namespace SerialPortDemo
         /// </summary>
         private static readonly SerialPort serialPort = new SerialPort
         {
-            PortName = "COM4",
+            PortName = "COM3",
             BaudRate = 4800,
             Parity = Parity.None,
             DataBits = 8,
@@ -29,48 +29,42 @@ namespace SerialPortDemo
         /// </summary>
         private static void SerialPortInit()
         {
-            // 开启串口
-            if (!serialPort.IsOpen)
+            // 建立连接(失败10秒后重连)
+            while (true)
             {
+                // 连接串口
                 try
                 {
                     serialPort.Open();
-                    Console.WriteLine("串口已连接！");
+                    // 接收消息处理
+                    serialPort.DataReceived += Receive;
+                    serialPort.PinChanged += SerialPort_PinChanged;
+                    Console.WriteLine("建立连接成功！");
+                    break;
                 }
-                catch (Exception)
+                catch
                 {
-                    Console.WriteLine("串口已断开！等待重试...");
+                    Console.WriteLine("建立连接失败！等待重连...");
+                    Thread.Sleep(10000);
                 }
             }
         }
 
-        /// <summary>
-        /// 接收消息
-        /// </summary>
-        private static void Receive()
+        private static void SerialPort_PinChanged(object sender, SerialPinChangedEventArgs e)
         {
-            while (true)
-            {
-                if (serialPort.IsOpen)
-                {
-                    // 读取串口数据
-                    int byteSize = serialPort.BytesToRead;
-                    if (byteSize > 0)
-                    {
-                        // 10毫秒内算同一条消息
-                        Thread.Sleep(10);
-                        while (serialPort.BytesToRead > byteSize)
-                        {
-                            byteSize = serialPort.BytesToRead;
-                            Thread.Sleep(10);
-                        }
-                        byte[] buffer = new byte[byteSize];
-                        serialPort.Read(buffer, 0, byteSize);
-                        Console.WriteLine("收到消息：" + Bytes2Hex(buffer));
-                    }
-                }
-                Thread.Sleep(10);
-            }
+        }
+
+        /// <summary>
+        /// 接收消息处理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">SerialDataReceivedEventArgs</param>
+        private static void Receive(object sender, SerialDataReceivedEventArgs e)
+        {
+            // 读取串口数据
+            byte[] buffer = new byte[serialPort.BytesToRead];
+            serialPort.Read(buffer, 0, buffer.Length);
+            Console.WriteLine("收到消息：" + Encoding.UTF8.GetString(buffer) + " ，Hex：" + Bytes2Hex(buffer));
         }
 
         /// <summary>
@@ -95,15 +89,23 @@ namespace SerialPortDemo
         /// <param name="message">消息</param>
         private static void Send(string message)
         {
-            byte[] data = Encoding.UTF8.GetBytes(message);
             if (serialPort.IsOpen)
             {
-                serialPort.Write(data, 0, data.Length);
-                Console.WriteLine("发送消息：" + Bytes2Hex(data));
+                try
+                {
+                    byte[] data = Encoding.UTF8.GetBytes(message);
+                    // 发送消息
+                    serialPort.Write(data, 0, data.Length);
+                    Console.WriteLine("发送消息：" + message + " ，Hex：" + Bytes2Hex(data));
+                }
+                catch
+                {
+                    Console.WriteLine("发送消息失败！");
+                }
             }
             else
             {
-                Console.WriteLine("串口已断开，发送失败！");
+                Console.WriteLine("连接未建立，发送失败！");
             }
         }
 
@@ -112,19 +114,7 @@ namespace SerialPortDemo
             // 串口初始化
             new Thread(t =>
             {
-                while (true)
-                {
-                    SerialPortInit();
-                    Thread.Sleep(10000);
-                }
-            })
-            {
-                IsBackground = true
-            }.Start();
-            // 接收消息
-            new Thread(t =>
-            {
-                Receive();
+                SerialPortInit();
             })
             {
                 IsBackground = true
@@ -132,8 +122,7 @@ namespace SerialPortDemo
             // 发送消息
             while (true)
             {
-                string message = Console.ReadLine();
-                Send(message);
+                Send(Console.ReadLine());
             }
         }
 

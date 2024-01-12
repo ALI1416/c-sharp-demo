@@ -16,12 +16,11 @@ namespace RabbitDemo
         /// <summary>
         /// 交换机名称
         /// </summary>
-        private static readonly string exchange = "demo";
+        private static readonly string exchange = "test";
         /// <summary>
         /// 路由名称
         /// </summary>
-        private static readonly string routingKey = "test";
-
+        private static readonly string routingKey = "demo";
         /// <summary>
         /// RabbitMQ连接工厂
         /// </summary>
@@ -34,10 +33,6 @@ namespace RabbitDemo
         };
 
         /// <summary>
-        /// 连接
-        /// </summary>
-        private static IConnection connection;
-        /// <summary>
         /// 通道
         /// </summary>
         private static IModel channel;
@@ -47,50 +42,88 @@ namespace RabbitDemo
         /// </summary>
         private static void RabbitInit()
         {
-            // 建立连接
-            if (connection == null || !connection.IsOpen)
+            channel = null;
+            IConnection connection;
+            // 建立连接(失败10秒后重连)
+            while (true)
             {
-                channel = null;
                 try
                 {
                     connection = factory.CreateConnection();
-                    Console.WriteLine("连接已建立！");
+                    // 连接关闭处理
+                    connection.ConnectionShutdown += ConnectionShutdown;
+                    Console.WriteLine("建立连接成功！");
+                    break;
                 }
-                catch (Exception)
+                catch
                 {
-                    Console.WriteLine("连接建立失败！等待重试...");
+                    Console.WriteLine("建立连接失败！等待重连...");
+                    Thread.Sleep(10000);
                 }
+            }
+            // 创建交换机
+            try
+            {
+                channel = connection.CreateModel();
+                channel.ExchangeDeclare(exchange, ExchangeType.Topic, false, true);
+                Console.WriteLine("创建交换机成功！");
+            }
+            catch
+            {
+                Console.WriteLine("创建交换机失败！");
+                return;
+            }
+            // 创建队列
+            string queue;
+            try
+            {
+                // 随机队列名
+                queue = channel.QueueDeclare().QueueName;
+                channel.QueueBind(queue, exchange, routingKey);
+                Console.WriteLine("创建队列成功！");
+            }
+            catch
+            {
+                Console.WriteLine("创建队列失败！");
+                return;
             }
             // 监听消息
-            if ((channel == null || !channel.IsOpen) && connection != null && connection.IsOpen)
+            try
             {
-                try
-                {
-                    // 创建交换机
-                    channel = connection.CreateModel();
-                    channel.ExchangeDeclare(exchange, ExchangeType.Topic, true, false, null);
-                    // 创建队列(随机名称)
-                    string receiveQueueName = channel.QueueDeclare().QueueName;
-                    channel.QueueBind(receiveQueueName, exchange, routingKey);
-                    // 监听消息
-                    EventingBasicConsumer consumer = new EventingBasicConsumer(channel);
-                    channel.BasicQos(0, 1, false);
-                    channel.BasicConsume(receiveQueueName, false, consumer);
-                    // 接收到消息
-                    consumer.Received += (model, msg) =>
-                    {
-                        string message = Encoding.UTF8.GetString(msg.Body.ToArray());
-                        Console.WriteLine("接收到消息：" + message);
-                        // 确认消息
-                        channel.BasicAck(msg.DeliveryTag, false);
-                    };
-                    Console.WriteLine("消息监听已建立！");
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("消息监听建立失败！等待重试...");
-                }
+                EventingBasicConsumer consumer = new EventingBasicConsumer(channel);
+                channel.BasicQos(0, 1, false);
+                channel.BasicConsume(queue, false, consumer);
+                // 接收消息处理
+                consumer.Received += Receive;
+                Console.WriteLine("监听消息成功！");
             }
+            catch
+            {
+                Console.WriteLine("监听消息失败！");
+            }
+        }
+
+        /// <summary>
+        /// 连接关闭处理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">ShutdownEventArgs</param>
+        private static void ConnectionShutdown(object sender, ShutdownEventArgs e)
+        {
+            Console.WriteLine("连接关闭！等待重连...");
+            RabbitInit();
+        }
+
+        /// <summary>
+        /// 接收消息处理
+        /// </summary>
+        /// <param name="model">IModel</param>
+        /// <param name="msg">BasicDeliverEventArgsparam>
+        private static void Receive(object model, BasicDeliverEventArgs msg)
+        {
+            // 确认消息
+            channel.BasicAck(msg.DeliveryTag, false);
+            Console.WriteLine("接收到消息：" + Encoding.UTF8.GetString(msg.Body.ToArray()));
         }
 
         /// <summary>
@@ -103,13 +136,13 @@ namespace RabbitDemo
             {
                 try
                 {
-                    byte[] body = Encoding.UTF8.GetBytes(message);
-                    channel.BasicPublish(exchange, routingKey, null, body);
+                    // 发送消息
+                    channel.BasicPublish(exchange, routingKey, null, Encoding.UTF8.GetBytes(message));
                     Console.WriteLine("发送消息：" + message);
                 }
-                catch (Exception)
+                catch
                 {
-                    Console.WriteLine("消息发送失败！");
+                    Console.WriteLine("发送消息失败！");
                 }
             }
             else
@@ -123,11 +156,7 @@ namespace RabbitDemo
             // RabbitMQ初始化
             new Thread(t =>
             {
-                while (true)
-                {
-                    RabbitInit();
-                    Thread.Sleep(10000);
-                }
+                RabbitInit();
             })
             {
                 IsBackground = true
@@ -135,8 +164,7 @@ namespace RabbitDemo
             // 发送消息
             while (true)
             {
-                string message = Console.ReadLine();
-                Send(message);
+                Send(Console.ReadLine());
             }
         }
 
