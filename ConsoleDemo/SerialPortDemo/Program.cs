@@ -29,29 +29,26 @@ namespace SerialPortDemo
         /// </summary>
         private static void SerialPortInit()
         {
+            // 接收消息处理
+            serialPort.DataReceived += Receive;
             // 建立连接(失败10秒后重连)
             while (true)
             {
-                // 连接串口
-                try
+                if (!serialPort.IsOpen)
                 {
-                    serialPort.Open();
-                    // 接收消息处理
-                    serialPort.DataReceived += Receive;
-                    serialPort.PinChanged += SerialPort_PinChanged;
-                    Console.WriteLine("建立连接成功！");
-                    break;
+                    // 连接串口
+                    try
+                    {
+                        serialPort.Open();
+                        Console.WriteLine("建立连接成功！");
+                    }
+                    catch
+                    {
+                        Console.WriteLine("建立连接失败！等待重连...");
+                    }
                 }
-                catch
-                {
-                    Console.WriteLine("建立连接失败！等待重连...");
-                    Thread.Sleep(10000);
-                }
+                Thread.Sleep(10000);
             }
-        }
-
-        private static void SerialPort_PinChanged(object sender, SerialPinChangedEventArgs e)
-        {
         }
 
         /// <summary>
