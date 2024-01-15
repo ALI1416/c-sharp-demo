@@ -61,6 +61,7 @@
     <Compile Include="Test\HttpService2Test.cs" />
     <Compile Include="Test\HttpService1Test.cs" />
     <Compile Include="Service\HttpService.cs" />
+    <Compile Include="Test\JsonTest.cs" />
     <Compile Include="Test\QrCodeTest.cs" />
     <Compile Include="Test\SocketServiceTest.cs" />
     <Compile Include="Test\WebSocketService3Test.cs" />
@@ -136,6 +137,9 @@
     </PackageReference>
     <PackageReference Include="log4net">
       <Version>2.0.15</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NUnit">
       <Version>3.14.0</Version>
