@@ -59,9 +59,13 @@ namespace SerialPortDemo
         private static void Receive(object sender, SerialDataReceivedEventArgs e)
         {
             // 读取串口数据
-            byte[] buffer = new byte[serialPort.BytesToRead];
-            serialPort.Read(buffer, 0, buffer.Length);
-            Console.WriteLine("收到消息：" + Encoding.UTF8.GetString(buffer) + " ，Hex：" + Bytes2Hex(buffer));
+            int length = serialPort.BytesToRead;
+            if (length > 0)
+            {
+                byte[] buffer = new byte[length];
+                serialPort.Read(buffer, 0, length);
+                Console.WriteLine("收到消息：" + Encoding.UTF8.GetString(buffer) + " ，Hex：" + Bytes2Hex(buffer));
+            }
         }
 
         /// <summary>
