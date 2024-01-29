@@ -51,6 +51,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="log4net">
+      <Version>2.0.15</Version>
+    </PackageReference>
     <PackageReference Include="RabbitMQ.Client">
       <Version>6.8.1</Version>
     </PackageReference>

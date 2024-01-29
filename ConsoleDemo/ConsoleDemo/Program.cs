@@ -39,6 +39,7 @@ namespace ConsoleDemo
             //WebSocketService2Test.Start();
             //WebSocketService2Test.Start2();
             //WebSocketService3Test.Start();
+            //SerialPortServiceTest.Start();
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0 重放:9\n" +
@@ -47,7 +48,9 @@ namespace ConsoleDemo
                     "socket服务8082\t-> 关闭:6 文本启动:7 图片启动:8\n" +
                     "webSocket服务1(使用HttpListener,性能差)8083\t-> 关闭:Q 文本启动:W 图片启动:E\n" +
                     "webSocket服务2(使用Socket)8084\t-> 关闭:R 文本启动:T 图片启动:Y\n" +
-                    "webSocket服务3(使用Socket)8085\t-> 关闭:U 启动:I\n");
+                    "webSocket服务3(使用Socket)8085\t-> 关闭:U 启动:I\n"+
+                    "串口服务COM3\t-> 关闭:O 启动:P\n"
+                    );
                 switch (Console.ReadKey().Key)
                 {
                     case ConsoleKey.D0:
@@ -136,6 +139,16 @@ namespace ConsoleDemo
                     case ConsoleKey.I:
                         {
                             WebSocketService3Test.Start();
+                            break;
+                        }
+                    case ConsoleKey.O:
+                        {
+                            SerialPortServiceTest.Close();
+                            break;
+                        }
+                    case ConsoleKey.P:
+                        {
+                            SerialPortServiceTest.Start();
                             break;
                         }
                 }
