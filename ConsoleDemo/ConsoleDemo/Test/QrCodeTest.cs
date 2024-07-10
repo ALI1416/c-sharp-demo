@@ -35,7 +35,7 @@ namespace ConsoleDemo.Test
             Result result = reader.Decode(bitmapResult);
             string contentResult = result.ToString();
             Console.WriteLine(contentResult);
-            Assert.AreEqual(content, contentResult);
+            Assert.That(content, Is.EqualTo(contentResult));
         }
 
     }
