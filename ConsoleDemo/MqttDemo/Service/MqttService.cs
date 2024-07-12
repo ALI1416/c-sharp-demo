@@ -28,7 +28,7 @@ namespace MqttDemo.Service
         /// </summary>
         private string[] subscribeTopicArray;
         /// <summary>
-        /// 接收消息回调函数&lt;主题,消息>
+        /// 接收消息回调函数 主题,消息
         /// </summary>
         private Action<string, byte[]> receiveCallback;
 
@@ -50,7 +50,7 @@ namespace MqttDemo.Service
         /// <param name="password">密码</param>
         /// <param name="reconnectTime">重连时间(秒，&lt;=0不重连)</param>
         /// <param name="subscribeTopicArray">订阅主题数组</param>
-        /// <param name="receiveCallback">接收消息回调函数&lt;主题,消息></param>
+        /// <param name="receiveCallback">接收消息回调函数 主题,消息</param>
         /// <returns>是否启动成功</returns>
         public bool Start(string ip, int port, string username, string password, int reconnectTime, string[] subscribeTopicArray, Action<string, byte[]> receiveCallback)
         {
@@ -63,10 +63,6 @@ namespace MqttDemo.Service
             this.reconnectTime = reconnectTime;
             this.subscribeTopicArray = subscribeTopicArray;
             this.receiveCallback = receiveCallback;
-            // 连接关闭处理
-            client.DisconnectedAsync += Disconnected;
-            // 接收消息处理
-            client.ApplicationMessageReceivedAsync += Receive;
             return Connect();
         }
 
@@ -75,7 +71,10 @@ namespace MqttDemo.Service
         /// </summary>
         public void Close()
         {
-            client.Dispose();
+            client.DisconnectedAsync -= Disconnected;
+            client.ApplicationMessageReceivedAsync -= Receive;
+            client.DisconnectAsync();
+            log.Info("MQTT连接关闭！");
         }
 
         /// <summary>
@@ -86,8 +85,13 @@ namespace MqttDemo.Service
         {
             try
             {
+                // 连接关闭处理
+                client.DisconnectedAsync += Disconnected;
+                // 接收消息处理
+                client.ApplicationMessageReceivedAsync += Receive;
                 // 建立连接
                 client.ConnectAsync(connectOptions).Wait();
+                log.Info("MQTT连接建立成功！");
             }
             catch (Exception e)
             {

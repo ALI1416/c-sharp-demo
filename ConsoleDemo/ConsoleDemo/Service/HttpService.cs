@@ -26,7 +26,7 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值>
+        /// 响应回调函数 HttpListenerRequest,HttpListenerResponse,返回值
         /// </summary>
         private Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback;
         /// <summary>
@@ -40,7 +40,7 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <param name="responseCallback">响应回调函数 HttpListenerRequest,HttpListenerResponse,返回值</param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
         {
@@ -55,7 +55,7 @@ namespace ConsoleDemo.Service
         /// <param name="account">账号</param>
         /// <param name="password">密码</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="responseCallback">响应回调函数&lt;HttpListenerRequest,HttpListenerResponse,返回值></param>
+        /// <param name="responseCallback">响应回调函数 HttpListenerRequest,HttpListenerResponse,返回值</param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, string account, string password, Action serviceCloseCallback, Func<HttpListenerRequest, HttpListenerResponse, byte[]> responseCallback)
         {

@@ -21,12 +21,12 @@ namespace MqttDemo
                         }
                     case ConsoleKey.D1:
                         {
-                            //MqttServiceTest.Close();
+                            MqttServiceTest.Close();
                             break;
                         }
                     case ConsoleKey.D2:
                         {
-                            //MqttServiceTest.Start();
+                            MqttServiceTest.Start();
                             break;
                         }
                     case ConsoleKey.D9:

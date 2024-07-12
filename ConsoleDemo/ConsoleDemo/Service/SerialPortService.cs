@@ -26,7 +26,7 @@ namespace ConsoleDemo.Service
         /// </summary>
         private SerialPort serialPort;
         /// <summary>
-        /// 接收消息回调函数&lt;消息>
+        /// 接收消息回调函数 消息
         /// </summary>
         private Action<byte[]> receiveCallback;
 
@@ -36,7 +36,7 @@ namespace ConsoleDemo.Service
         /// <param name="portName">端口名</param>
         /// <param name="baudRate">波特率</param>
         /// <param name="reconnectTime">重连时间(秒，&lt;=0不重连)</param>
-        /// <param name="receiveCallback">接收消息回调函数&lt;消息></param>
+        /// <param name="receiveCallback">接收消息回调函数 消息</param>
         /// <returns>是否启动成功</returns>
         public bool Start(string portName, int baudRate, int reconnectTime, Action<byte[]> receiveCallback)
         {
@@ -44,13 +44,14 @@ namespace ConsoleDemo.Service
             try
             {
                 serialPort = new SerialPort(portName, baudRate);
-                // 打开串口
+                // 开启串口
                 serialPort.Open();
                 isOpen = true;
+                log.Info("串口开启成功！");
             }
             catch (Exception e)
             {
-                log.Error("串口打开失败！", e);
+                log.Error("串口开启失败！", e);
             }
             this.receiveCallback = receiveCallback;
             // 接收消息
@@ -78,7 +79,6 @@ namespace ConsoleDemo.Service
                 {
                     try
                     {
-                        // 打开串口
                         serialPort.Open();
                         log.Info("串口重连成功！");
                     }
@@ -100,13 +100,14 @@ namespace ConsoleDemo.Service
             {
                 serialPort.DataReceived -= Receive;
                 serialPort.Close();
+                log.Info("串口关闭！");
             }
         }
 
         /// <summary>
-        /// 打开串口
+        /// 开启串口
         /// </summary>
-        /// <returns>串口是否打开成功</returns>
+        /// <returns>串口是否开启成功</returns>
         public bool Open()
         {
             if (serialPort == null)
@@ -117,7 +118,7 @@ namespace ConsoleDemo.Service
             {
                 try
                 {
-                    // 打开串口
+                    // 开启串口
                     serialPort.Open();
                 }
                 catch
@@ -129,9 +130,9 @@ namespace ConsoleDemo.Service
         }
 
         /// <summary>
-        /// 串口是否打开成功
+        /// 串口是否开启成功
         /// </summary>
-        /// <returns>串口是否打开成功</returns>
+        /// <returns>串口是否开启成功</returns>
         public bool IsOpen()
         {
             if (serialPort == null)

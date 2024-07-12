@@ -1,8 +1,8 @@
 ﻿using ConsoleDemo.Properties;
 using ExcelDataReader;
 using NUnit.Framework;
-using System;
 using System.IO;
+using log4net;
 
 namespace ConsoleDemo.Test
 {
@@ -10,8 +10,12 @@ namespace ConsoleDemo.Test
     /// <summary>
     /// Excel阅读器测试
     /// </summary>
+    [TestFixture]
     public class ExcelReaderTest
     {
+
+        private static readonly ILog log = LogManager.GetLogger(typeof(ExcelReaderTest));
+
         /// <summary>
         /// 测试
         /// </summary>
@@ -22,7 +26,7 @@ namespace ConsoleDemo.Test
             {
                 // 工作表个数
                 int shellCount = reader.ResultsCount;
-                Console.WriteLine("工作表个数 " + shellCount);
+                log.Info("工作表个数 " + shellCount);
                 do
                 {
                     // 工作表名称
@@ -31,7 +35,7 @@ namespace ConsoleDemo.Test
                     int rowCount = reader.RowCount;
                     // 列数
                     int colCount = reader.FieldCount;
-                    Console.WriteLine("工作表名称 " + shellName + " 行数 " + rowCount + " 列数 " + colCount);
+                    log.Info("工作表名称 " + shellName + " 行数 " + rowCount + " 列数 " + colCount);
                     // 读取一行
                     while (reader.Read())
                     {
@@ -40,7 +44,7 @@ namespace ConsoleDemo.Test
                         {
                             rowData += reader.GetString(i) + " ";
                         }
-                        Console.WriteLine(rowData);
+                        log.Info(rowData);
                     }
                     // 下一个工作表
                 } while (reader.NextResult());

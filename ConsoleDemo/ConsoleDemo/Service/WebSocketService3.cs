@@ -34,11 +34,11 @@ namespace ConsoleDemo.Service
         /// </summary>
         private Action serviceCloseCallback;
         /// <summary>
-        /// 客户端上下线回调函数&lt;客户端,上线或下线>
+        /// 客户端上下线回调函数 客户端,上线或下线
         /// </summary>
         private Action<SocketClient2, bool> clientCallback;
         /// <summary>
-        /// 响应回调函数&lt;客户端,解码后的byte[]>
+        /// 响应回调函数 客户端,解码后的byte[]
         /// </summary>
         private Action<SocketClient2, byte[]> responseCallback;
 
@@ -89,8 +89,8 @@ namespace ConsoleDemo.Service
         /// <param name="ip">IP地址</param>
         /// <param name="port">端口号</param>
         /// <param name="serviceCloseCallback">服务器关闭回调函数</param>
-        /// <param name="clientCallback">客户端上下线回调函数&lt;客户端,上线或下线></param>
-        /// <param name="responseCallback">响应回调函数&lt;客户端,解码后的byte[]></param>
+        /// <param name="clientCallback">客户端上下线回调函数 客户端,上线或下线</param>
+        /// <param name="responseCallback">响应回调函数 客户端,解码后的byte[]</param>
         /// <returns>是否启动成功</returns>
         public bool Start(IPAddress ip, int port, Action serviceCloseCallback, Action<SocketClient2, bool> clientCallback, Action<SocketClient2, byte[]> responseCallback)
         {
