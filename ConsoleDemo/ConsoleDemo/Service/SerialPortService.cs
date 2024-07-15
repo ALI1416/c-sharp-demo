@@ -15,7 +15,7 @@ namespace ConsoleDemo.Service
         /// <summary>
         /// 日志实例
         /// </summary>
-        private static readonly ILog log = LogManager.GetLogger(typeof(SocketService));
+        private static readonly ILog log = LogManager.GetLogger(typeof(SerialPortService));
 
         /// <summary>
         /// 已启动
