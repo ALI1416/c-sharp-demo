@@ -1,4 +1,4 @@
-﻿using log4net;
+using log4net;
 using MqttDemo.Service;
 using System.Text;
 using System.Threading;

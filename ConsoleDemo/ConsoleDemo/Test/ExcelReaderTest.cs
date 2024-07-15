@@ -1,4 +1,4 @@
-﻿using ConsoleDemo.Properties;
+using ConsoleDemo.Properties;
 using ExcelDataReader;
 using NUnit.Framework;
 using System.IO;
