@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("SerialPortDemo")]
+[assembly: AssemblyTitle("CosturaDemo")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SerialPortDemo")]
+[assembly: AssemblyProduct("CosturaDemo")]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("356c4157-c485-441b-b820-9391ba362fdf")]
+[assembly: Guid("08cb8b7f-13ac-4e87-bf3f-2f9798aace9e")]
 
 // 程序集的版本信息由下列四个值组成: 
 //

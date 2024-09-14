@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Obfuscar配置 -->
+<!-- https://docs.lextudio.com/obfuscar/getting-started/configuration -->
+<Obfuscator>
+  <!-- 输入路径 -->
+  <Var name="InPath" value="." />
+  <!-- 输出路径 -->
+  <Var name="OutPath" value=".\Obfuscator_Output" />
+  <!-- 公共API混淆 -->
+  <Var name="KeepPublicApi" value="false" />
+  <!-- 不混淆字符串 -->
+  <Var name="HideStrings" value="false" />
+  <!-- 混淆文件 -->
+  <Module file="$(InPath)\ObfuscarDemo.exe" />
+  <Module file="$(InPath)\Z.QRCodeEncoder.Net.dll" />
+</Obfuscator>

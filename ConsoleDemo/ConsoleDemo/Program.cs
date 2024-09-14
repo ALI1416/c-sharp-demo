@@ -17,13 +17,6 @@ namespace ConsoleDemo
         public static void Main(string[] args)
         {
 
-            // 把dll文件打包进exe文件，需要安装`Costura.Fody`包
-            // 修改`.csproj`文件，找到`Costura.Fody`，在`IncludeAssets`里加上`compile;`
-            // 运行，会生成`FodyWeavers.xml`文件，内容如下
-            // <Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
-            //   < Costura />
-            // </Weavers>
-
             //Log4NetTest.Test();
             //QrCodeDataGenerationTest.Test();
             //QrCodeZXingTest.Test();
