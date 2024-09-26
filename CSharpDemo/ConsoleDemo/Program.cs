@@ -23,6 +23,8 @@ namespace ConsoleDemo
             //QrCodeTest.Test();
             //JsonTest.Test();
             //ExcelReaderTest.Test();
+            //IniTest.Test();
+            IniParserTest.Test();
             //HttpService1Test.Start();
             //HttpService1Test.Start2();
             //HttpService2Test.Start();
