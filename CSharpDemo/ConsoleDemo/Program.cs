@@ -1,4 +1,5 @@
 using ConsoleDemo.Test;
+using ConsoleDemo.Util;
 using System;
 
 namespace ConsoleDemo
@@ -16,8 +17,7 @@ namespace ConsoleDemo
         /// <param name="args">参数</param>
         public static void Main(string[] args)
         {
-
-            Log4NetTest.Test();
+            //Log4NetTest.Test();
             //QrCodeDataGenerationTest.Test();
             //QrCodeZXingTest.Test();
             //QrCodeTest.Test();
@@ -36,6 +36,8 @@ namespace ConsoleDemo
             //WebSocketService2Test.Start2();
             //WebSocketService3Test.Start();
             //SerialPortServiceTest.Start();
+            //RegistryUtils.AutoLaunchOpen();
+            //RegistryUtils.AutoLaunchClose();
             while (true)
             {
                 Console.WriteLine("\n关闭程序:0 重放:9\n" +

@@ -87,6 +87,7 @@
     <Compile Include="Model\SocketClient.cs" />
     <Compile Include="Test\Log4NetTest.cs" />
     <Compile Include="Test\NUnitTest.cs" />
+    <Compile Include="Util\RegistryUtils.cs" />
     <Compile Include="Util\ImageUtils.cs" />
     <Compile Include="Util\IniUtils.cs" />
     <Compile Include="Util\Utils.cs" />
