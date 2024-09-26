@@ -19,14 +19,14 @@ namespace ConsoleDemo.Test
             Console.WriteLine(IniUtils.GetSection("A", filePath));
             Console.WriteLine(IniUtils.GetInt("A", "int", filePath));
             Console.WriteLine(IniUtils.GetString("A", "string", filePath));
-            Console.WriteLine(IniUtils.GetStruct("A", "string", filePath));
+            Console.WriteLine(IniUtils.GetStruct("A", "struct", filePath));
             // 写
             Dictionary<string, string> dic = new Dictionary<string, string>();
-            dic["a"] = "test";
-            dic["b"] = "123";
+            dic["s"] = "test";
+            dic["i"] = "123";
             Console.WriteLine(IniUtils.WriteSection("B", dic, filePath));
-            Console.WriteLine(IniUtils.WriteString("B", "C", "TEST", filePath));
-            Console.WriteLine(IniUtils.WriteStruct("B", "D", "TEST", filePath));
+            Console.WriteLine(IniUtils.WriteString("B", "string", "TEST", filePath));
+            Console.WriteLine(IniUtils.WriteStruct("B", "struct", "TEST", filePath));
         }
 
     }
